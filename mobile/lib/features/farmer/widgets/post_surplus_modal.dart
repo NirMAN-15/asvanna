@@ -102,11 +102,15 @@ class _PostSurplusModalState extends State<PostSurplusModal> {
 
               DropdownButtonFormField<Crop>(
                 value: _selectedCrop,
+                isExpanded: true,
                 decoration: const InputDecoration(labelText: 'Select Crop', prefixIcon: Icon(Icons.eco)),
                 items: appState.availableCrops.map((c) {
                   return DropdownMenuItem(
                     value: c,
-                    child: Text('${c.iconEmoji} ${c.name} (${c.sinhalaName})'),
+                    child: Text(
+                      '${c.iconEmoji} ${c.name} (${c.sinhalaName})',
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   );
                 }).toList(),
                 onChanged: (c) {

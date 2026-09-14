@@ -234,7 +234,7 @@ class RoleSelectionScreen extends StatelessWidget {
                         );
                       },
                       child: Text(
-                        'New Farmer Registration',
+                        tr('new_farmer_reg'),
                         style: GoogleFonts.inter(
                           fontWeight: FontWeight.w600,
                           color: AppColors.primaryDark,
@@ -250,7 +250,7 @@ class RoleSelectionScreen extends StatelessWidget {
                         );
                       },
                       child: Text(
-                        'Buyer Onboarding',
+                        tr('buyer_onboarding'),
                         style: GoogleFonts.inter(
                           fontWeight: FontWeight.w600,
                           color: AppColors.accent,

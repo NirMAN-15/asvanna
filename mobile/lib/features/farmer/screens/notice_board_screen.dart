@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/providers/app_state_provider.dart';
 import '../../../core/models/notice_model.dart';
+import '../../../core/localization/app_translations.dart';
 
 class NoticeBoardScreen extends StatelessWidget {
   const NoticeBoardScreen({super.key});
@@ -12,12 +13,15 @@ class NoticeBoardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppStateProvider>(context);
+    final lang = appState.currentLanguage;
+    String tr(String key) => AppTranslations.tr(lang, key);
+
     final notices = appState.notices;
     final dateFormat = DateFormat('MMM dd, yyyy');
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Agrarian Notice Board'),
+        title: Text(tr('notice_board_title')),
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
@@ -27,16 +31,16 @@ class NoticeBoardScreen extends StatelessWidget {
 
           Color priorityColor = AppColors.primary;
           Color priorityBg = AppColors.primarySoft;
-          String priorityLabel = 'GENERAL';
+          String priorityLabel = tr('general_priority');
 
           if (n.priority == NoticePriority.urgent) {
             priorityColor = AppColors.riskCritical;
             priorityBg = AppColors.riskCriticalBg;
-            priorityLabel = 'URGENT DIRECTIVE';
+            priorityLabel = tr('urgent_directive');
           } else if (n.priority == NoticePriority.high) {
             priorityColor = AppColors.riskModerate;
             priorityBg = AppColors.riskModerateBg;
-            priorityLabel = 'HIGH PRIORITY';
+            priorityLabel = tr('high_priority');
           }
 
           return Container(
@@ -80,7 +84,7 @@ class NoticeBoardScreen extends StatelessWidget {
                         const Icon(Icons.verified, size: 14, color: AppColors.primary),
                         const SizedBox(width: 4),
                         Text(
-                          'Official',
+                          tr('official_badge'),
                           style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.primary),
                         ),
                       ],

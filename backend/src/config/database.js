@@ -160,13 +160,20 @@ module.exports = {
       }
       return { rows };
     }
-    if (lower.includes('from crops where id =')) {
-      const idVal = Number(params[0]);
-      const found = fileDb.crops.find(c => Number(c.id) === idVal);
+    if (lower.includes('from crops where id =') || lower.includes('from crops where crop_id =') || lower.includes('from crops where upper(crop_code) =')) {
+      const rawVal = params[0];
+      const idVal = Number(rawVal);
+      const strVal = String(rawVal).replace(/^crop_/i, '').toLowerCase();
+      const found = fileDb.crops.find(c =>
+        (!isNaN(idVal) && Number(c.id) === idVal) ||
+        c.crop_code.toLowerCase() === strVal ||
+        c.name_en.toLowerCase() === strVal ||
+        `crop_${c.crop_code.toLowerCase()}` === String(rawVal).toLowerCase()
+      );
       return { rows: found ? [found] : [] };
     }
-    if (lower.includes('from crops where lower(crop_code) like')) {
-      const search = params[0].replace(/%/g, '').toLowerCase();
+    if (lower.includes('from crops where lower(crop_code) like') || lower.includes('from crops\n       where lower(crop_code) like')) {
+      const search = params[0].replace(/%/g, '').toLowerCase().replace(/^crop_/i, '');
       const matches = fileDb.crops.filter(c =>
         c.crop_code.toLowerCase().includes(search) ||
         c.name_en.toLowerCase().includes(search) ||
