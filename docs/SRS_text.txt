@@ -1,0 +1,371 @@
+
+
+Institute of Technology University of Moratuwa
+ASVANNA
+The Zero-Waste Marketplace: Guided by Real-Time Data from Seed to Harvest Distribution
+Software Requirements Specification
+Version 1.0
+
+
+Student Details:
+W. N. A. Wedikkara	23IT0544
+K. A. H. I. Lakshitha	23IT0503
+G. W. T. Jayampathi	23IT0487
+R. R. L. Geeganage	23IT0476
+K. H. M. Dewanga	23IT0467
+
+Supervised by:
+Mrs. Uthpala Athukorala
+
+Division of Information Technology
+Institute of Technology University of Moratuwa
+March 2026
+
+
+
+
+
+Figures
+
+Figure 1- Asvenna high-level diagram	4
+Figure 2: Use Case Diagram	9
+Figure 3: Loging View	31
+Figure 4: Mobile App Farmer's view	32
+Figure 5: Buyer's view	32
+
+
+
+
+
+Tables 
+Table 1: User Classes & Characteristics	4
+Table 2: Use Case - Register / Login	10
+Table 3: Use Case - Log Planting Data	11
+Table 4: Use Case - Enter Proxy Data	12
+Table 5: View Risk Status & Recommendations	13
+Table 6: Use Case - Broadcast Warnings	14
+Table 7: Use Case - View Regional Heat-map & Analytics	15
+Table 8: Use Case - Search Surplus Produce	16
+Table 9: Use Case - Place Direct Order	17
+Table 10: Use Case - Receive Over-Planting Alert Notification	18
+Table 11: Use Case - Manage Farmer Profile	19
+
+
+
+1  Introduction
+1.1.  Purpose
+This Software Requirements Specification (SRS) document defines the functional and non-functional requirements for the development of ASVANNA a collaborative digital ecosystem designed to stabilize the Sri Lankan agricultural market. This document serves as a comprehensive guide for developers, stakeholders, and quality assurance teams throughout the project lifecycle. It outlines what the system will do, how users will interact with it, and the constraints within which it must operate.
+By defining the system's scope and capabilities, this SRS aims to prevent the recurring cycle of "trend planting", whereby farmers collectively plant the same high-priced crops, leading to market gluts, price crashes, and post-harvest waste estimated at 30% to 40% of annual agricultural output.
+1.2  Product Scope
+1.2.1  Aim and Objectives
+Aim:
+The primary aim of ASVANNA is to stabilize the Sri Lankan agricultural economy by creating a data-driven ecosystem that prevents over-planting and minimizes post-harvest waste for upcountry farmers. The project seeks to transform the traditional "trend planting" cycle into a collaborative, informed decision-making process to ensure food security and financial stability.
+Objectives:
+Develop a digital platform where upcountry farmers log planting data to create a transparent regional map, powered by an analytical engine that compares this data against national demand to warn farmers of over-planting risks before they sow.
+Provide farmers with profitable, alternative crop suggestions tailored to regional suitability, current weather patterns, and identified market gaps.
+Integrate a geo-fenced local digital marketplace that connects farmers to buyers within a 5 km radius to rapidly sell perishable surpluses, minimizing spoilage and helping stabilize market prices by balancing supply.
+Allow Divisional Officers to manually enter data for farmers without smartphones, ensuring a comprehensive and inclusive regional data map.
+Launch the platform as a targeted pilot program in the Bandarawela area, built with a robust foundation to eventually scale across all agricultural zones in Sri Lanka.
+
+1.2.2  Project Boundary
+The project encompasses the development of a fully functional cross-platform mobile application (farmer-facing) and a web-based administrative dashboard (Divisional Officer and buyer-facing). The scope includes:
+Geographic Scope: Focused on upcountry regions, initially piloting in Bandarawela, targeting perishable vegetables such as leeks, cabbage, carrots, and beetroot.
+Operational Environment: Monitoring is primarily focused on outdoor cultivation tracking and marketplace proximity matching within a 5 km radius.
+User Access: System access is restricted to authenticated farmers, local buyers, and regional Divisional Officers via role-based authentication.
+Phase One: Regional cultivation monitoring, over-planting alerts, and smart crop recommendations.
+Phase Two: Geo-fenced zero-waste marketplace for direct surplus sales.
+The system does not cover physical logistics, large-scale national distribution, or financial transaction processing beyond direct buyer-to-farmer communication in Phase Two.
+2  Overall Description
+2.1  Product Perspective
+The ASVANNA software ecosystem operates across three primary layers:
+Sensing Layer: Farmer data input via mobile application.
+Communication Layer: Cloud synchroniation via RESTful APIs and Firebase.
+Application Layer: Software dashboards for officers and buyers, and mobile app for farmers.
+It operates as an independent entity that interfaces with external Weather Forecasting APIs and government data infrastructures such as the CROPIX National Platform. The system consists of the following major components:
+Mobile Application (Android/iOS) — Farmer-facing interface for planting data entry, risk alerts, and crop recommendations.
+Web Dashboard - Administrative interface for Divisional Officers (heat-maps, proxy entry, warning broadcasts) and Buyer interface (local marketplace, proximity search).
+Backend API - RESTful services built on Node.js/Express.js for business logic and data management.
+Predictive Risk Engine - Analytical module that compares regional planting volumes against national market demand to generate over-planting alerts.
+Database Layer - PostgreSQL for persistent data; Firebase for real-time services.
+
+Figure - Asvenna high-level diagram
+
+2.2  User Classes and Characteristics
+The system serves three primary user classes:
+
+Table : User Classes & Characteristics
+2.3  Operating Environment
+Mobile Environment:
+Android: Version 8.0 and above.
+iOS: Version 13.0 and above.
+Network: 4G/LTE or Wi-Fi connectivity for optimal performance; offline data caching for areas with limited connectivity.
+Backend Environment:
+Cloud Platform: AWS / Azure Cloud Services.
+Server OS: Linux-based operating systems.
+Runtime: Node.js with Express.js framework.
+Database: PostgreSQL 12+ and Firebase Real-time Database.
+Web Environment:
+Frontend Framework: React.js (administrative and buyer dashboards).
+Browser Support: Latest versions of Chrome, Firefox, and Edge.
+2.4  Design and Implementation Constraints
+Mandatory Technology Stack: Use of React.js, Node.js, and PostgreSQL is mandatory as defined by academic project requirements.
+Multi-language Support: System must support Sinhala, Tamil, and English for both UI and notifications to accommodate regional users with varying literacy levels.
+Offline Functionality: The mobile application must cache planting data locally and synchronize once connectivity is restored, ensuring usability in rural upcountry areas.
+API Dependencies: Relies on Google Maps Platform for geofencing and coordinate visualization, CROPIX National Platform for market demand data, and Weather Forecasting APIs for agronomic recommendations.
+Performance Standards: Data synchronization to the cloud must occur within 5 seconds; risk engine calculations must resolve within 3 seconds of data submission.
+Security: All data transmissions must use HTTPS encryption; user credentials must be securely stored using bcrypt hashing.
+2.5  Assumptions and Dependencies
+Assumptions:
+Farmers will provide accurate planting data regarding their land and crop choices.
+Consistent 4G/5G or Wi-Fi network coverage exists in the targeted upcountry pilot region.
+Divisional Officers will verify physical records before performing proxy data entry.
+Local buyers (caterers, event planners) within a 5 km radius are willing to engage in direct produce procurement.
+
+
+
+Dependencies:
+External APIs: Google Maps Platform for location services and geofencing.
+Government Platforms: CROPIX National Digital Platform for national agricultural market demand data.
+Third-party Services: Firebase Cloud Messaging (FCM) for real-time push notifications; Weather Forecasting APIs for climatic intelligence.
+Mobile Framework: Flutter for cross-platform mobile application development.
+3  External Interface Requirements
+3.1  User Interfaces
+The system provides dedicated interfaces for three primary user types(Apendix-A)
+Farmer Mobile Interface:
+Login/Registration with phone number and profile creation (name, location, land size).
+Personal Dashboard showing planting history, acreage usage, and crop progress.
+Planting Entry form for logging crop type and cultivated land area.
+Smart Search — search a vegetable before planting to receive over-planting risk status and alternative recommendations.
+Risk Status indicator: Safe / At Risk / Over-Planted, updated in real-time.
+Notice Board for government notifications, fertilizer subsidies, and emergency agricultural alerts.
+Direct Contact link to local Divisional Officer.
+Support for dark/light theme and multilingual interface (Sinhala, Tamil, English).
+Divisional Officer Web Dashboard:
+Farmer directory management: register new farmers and manage land profiles.
+Proxy Data Entry form for inputting planting records on behalf of offline farmers.
+Regional Heat-maps and graphs showing live cultivation distribution.
+Manual Warning Broadcast system for uploading government directives and crop bans.
+Regional Forecasting analytics for proactive community advisories.
+Buyer Interface (Web and Mobile):
+Business registration and profile creation.
+Local Marketplace browsing available surplus crops.
+Proximity Search filtered within a configurable radius (default 5 km).
+Direct Messaging interface for price negotiation with farmers.
+Order Management for tracking active purchases and history.
+
+
+
+
+3.2  Hardware Interfaces
+GPS/Location Services:
+Device GPS receiver for real-time location data used in proximity matching.
+Compatibility with various smartphone GPS chipsets.
+Support for network-based location (Wi-Fi and cellular triangulation) as a backup in areas with poor satellite reception.
+3.3  Software Interfaces
+External Software Components and APIs:
+Google Maps Platform SDK for mapping, geocoding, and geofencing.
+CROPIX National Digital Platform (API) for national market demand datasets.
+Weather Forecasting API (e.g., OpenWeatherMap) for localized upcountry climate intelligence.
+Firebase Cloud Messaging (FCM) for real-time push notifications across mobile and web clients.
+PostgreSQL 12+ for persistent data storage; Firebase Real-time Database for live synchronization.
+AWS / Azure cloud services for backend hosting, storage, and compute resources.
+3.4  Communications Interfaces
+HTTP/HTTPS:
+All API communications between the mobile application, web dashboards, and backend use HTTPS protocol for secure data transmission.
+RESTful API design with JSON payloads for all service-to-service communication.
+Real-time Communications:
+Firebase Real-time Database / WebSockets for live synchronization of planting data and marketplace listings.
+FCM push notifications for over-planting alerts, government warnings, and order updates.
+SMS fallback: if push notifications fail, the system dispatches an automated SMS to the farmer's registered phone number.
+4  System Designs
+This section organizes the functional requirements by primary use cases. The use case diagram (see Appendix A) illustrates the interactions between the three user classes — Farmer, Divisional Officer, and Local Buyer — and the ASVANNA system. The detailed use case descriptions below elaborate on each key interaction.
+4.1  Use Case Diagram
+
+
+4.1.1  Use Case Descriptions
+Table: Use Case – Register / Login
+Table : Use Case - Register / Login
+
+Table: Use Case – Log Planting Data
+Table : Use Case - Log Planting Data
+
+
+
+
+Table: Use Case – Enter Proxy Data
+Table : Use Case - Enter Proxy Data
+
+
+
+
+Table: Use Case – View Risk Status & Recommendations
+Table : View Risk Status & Recommendations
+Table: Use Case – Broadcast Warnings
+Table : Use Case - Broadcast Warnings
+Table: Use Case – View Regional Heat-map & Analytics
+Table : Use Case - View Regional Heat-map & Analytics
+
+
+Table: Use Case – Search Surplus Produce
+Table : Use Case - Search Surplus Produce
+Table: Use Case – Place Direct Order
+Table : Use Case - Place Direct Order
+
+
+Table: Use Case – Receive Over-Planting Alert Notification
+Table : Use Case - Receive Over-Planting Alert Notification
+Table: Use Case – Manage Farmer Profile
+Table : Use Case - Manage Farmer Profile
+5  System Features
+This section details the major services provided by the ASVANNA agricultural platform. The features are organized by core functionality, each with a description, stimulus/response sequences, and specific functional requirements.
+5.1  Regional Monitoring & Over-Planting Alerts
+5.1.1  Description and Priority
+This feature is the core intelligence layer of ASVANNA. It aggregates cultivation data logged by farmers and entered by Divisional Officers and compares regional planting volumes against national market demand data sourced from the CROPIX platform. It generates real-time risk status indicators and triggers over-planting alerts before farmers make irreversible sowing decisions. Priority: High
+5.1.2  Stimulus/Response Sequences
+Stimulus: Farmer logs a new planting entry for 2 acres of leeks. Response: System updates the regional leek cultivation total. Risk Engine compares updated total against national demand. If threshold exceeded, in-app risk status updates to 'Over-Planted' and a push notification is dispatched.
+Stimulus: Divisional Officer submits proxy entry for 5 offline farmers planting carrots. Response: System batch-processes entries, updates regional map, and re-evaluates risk status for carrots. Officers see updated heat-map within 5 seconds.
+Stimulus: Risk Engine detects a crop approaching saturation threshold (80%). Response: System pre-emptively sets status to 'At Risk' and displays advisory suggesting farmers consider alternative crops before committing.
+5.1.3  Functional Requirements
+REQ-MON-1: The system shall aggregate all planting entries in real-time to calculate regional supply density per crop type per district.
+REQ-MON-2: The system shall trigger an 'Over-Planting Alert' push notification and update in-app risk status when a crop's regional volume exceeds a configurable threshold (default: 85% of estimated market demand).
+REQ-MON-3: The Risk Engine shall retrieve and cache national market demand data from the CROPIX API at least once every 24 hours.
+REQ-MON-4: Risk status shall be one of three states: Safe (green), At Risk (amber), Over-Planted (red), displayed prominently on the Farmer Dashboard and Smart Search results.
+REQ-MON-5: Divisional Officers shall be able to configure alert thresholds per crop type for their jurisdiction.
+5.2  Smart Crop Recommendation Engine
+5.2.1  Description and Priority
+When a crop is flagged as 'At Risk' or 'Over-Planted', ASVANNA's recommendation engine suggests profitable alternative crops. Recommendations are tailored to regional soil suitability, current weather patterns, historical yield data, and identified market gaps. This transforms reactive decision-making into proactive agricultural planning. Priority: High
+5.2.2  Stimulus/Response Sequences
+Stimulus: Farmer searches for 'Cabbage' using Smart Search. Response: System displays current risk status for cabbage (e.g., 'At Risk'). Recommendation engine returns 3–5 alternative crops (e.g., Beetroot, Spring Onions) with market gap scores and suitability ratings.
+Stimulus: Risk Engine triggers an Over-Planting Alert for leeks. Response: Alert notification includes a 'See Alternatives' button. Tapping it opens the recommendation screen with data-driven crop suggestions and price intelligence for each.
+5.2.3  Functional Requirements
+REQ-REC-1: The recommendation engine shall suggest at least 3 alternative crops when a queried crop's risk status is 'At Risk' or 'Over-Planted'.
+REQ-REC-2: Recommendations shall be ranked using a composite score considering: current market gap (from CROPIX), regional soil suitability, historical price trends, and current weather forecasts.
+REQ-REC-3: The system shall display current and 3-month historical price trends for each recommended crop to support farmer decision-making.
+REQ-REC-4: Weather intelligence shall integrate with a third-party Weather API to provide localized upcountry forecasts (rainfall, frost risk, disease alerts) alongside crop recommendations.
+
+
+5.3  Geo-Fenced Zero-Waste Marketplace
+5.3.1  Description and Priority
+Phase Two of ASVANNA introduces a direct sales channel activated during periods of overproduction. The geo-fenced marketplace connects farmers who have listed surplus produce to local buyers (caterers, event planners, retailers) within a configurable radius (default 5 km). This eliminates transport costs, prevents physical food waste, and secures immediate revenue for the farmer. Priority: Medium
+5.3.2  Stimulus/Response Sequences
+Stimulus: Farmer harvests surplus leeks and lists 50 kg on the marketplace with an asking price. Response: System creates a geotagged surplus listing visible to all verified buyers within 5 km. Nearby buyers receive a push notification.
+Stimulus: Buyer searches for 'Leeks' with proximity filter active. Response: System returns nearby listings sorted by distance. Each result shows farm name, quantity, price, and distance. Buyer can open a direct messaging thread or place an immediate order.
+Stimulus: Buyer places an order and farmer accepts. Response: Order status changes to 'Confirmed'. Both parties receive a push notification with order details and contact information.
+
+5.3.3  Functional Requirements
+REQ-MKT-1: The system shall use GPS coordinates from the buyer's registered business location to filter surplus listings within a configurable radius (default 5 km; adjustable up to 20 km).
+REQ-MKT-2: Farmers shall be able to create surplus listings with: crop type, quantity (kg), asking price, and available pickup dates.
+REQ-MKT-3: The system shall provide a direct in-app messaging interface between buyer and farmer for price negotiation, with message history stored per order.
+REQ-MKT-4: Farmers must be able to accept, decline, or counter-offer on buyer orders within a 30-minute window; expired requests shall be automatically cancelled.
+REQ-MKT-5: Each completed marketplace transaction shall be logged in the system for analytics and farmer sales history.
+
+5.4  Admin & Proxy Data Management
+5.4.1  Description and Priority
+Divisional Officers serve as platform administrators for their jurisdiction. This feature enables them to manage the farmer directory, perform proxy data entry for offline farmers, configure regional alert thresholds, view visual analytics, and coordinate regional agricultural advisories. This feature is critical to ensuring data completeness and digital inclusivity. Priority: High
+5.4.2  Stimulus/Response Sequences
+Stimulus: Officer registers a new farmer at the Agrarian Development office. Response: System creates a verified farmer profile with GPS-pinned land location. Farmer receives an SMS with their login credentials.
+Stimulus: Officer enters proxy planting data for 10 offline farmers. Response: System batch-processes entries, updates regional cultivation map, triggers risk re-evaluation, and logs officer's ID against each proxy record for audit purposes.
+Stimulus: Officer opens Regional Forecasting section. Response: System displays heatmaps showing crop distribution, risk zones, and projected surplus volumes for the next 30 days based on current planting data.
+5.4.3  Functional Requirements
+REQ-ADMIN-1: Divisional Officers shall be able to register, edit, and deactivate farmer profiles. All actions shall be logged with officer ID and timestamp.
+REQ-ADMIN-2: The proxy data entry form shall allow officers to submit planting records (crop type, acreage, location) on behalf of any farmer in their directory without requiring farmer's credentials.
+REQ-ADMIN-3: Officers shall be able to configure over-planting alert thresholds per crop type for their assigned district.
+REQ-ADMIN-4: The Regional Analytics dashboard shall render heat-maps and trend charts using aggregated planting data, refreshed at least every 24 hours.
+REQ-ADMIN-5: Officers shall be able to export regional cultivation reports as PDF or CSV for external submission to the Department of Agriculture.
+
+5.5  Broadcast Warning & Notification System
+5.5.1  Description and Priority
+This feature enables Divisional Officers to disseminate official government directives, fertilizer subsidy notices, crop bans, and emergency agricultural warnings to all farmers in their region. The system ensures critical information is received even by farmers with limited connectivity using FCM push notifications and SMS fallback. Priority: High
+5.5.2  Stimulus/Response Sequences
+Stimulus: Government issues an emergency crop ban on tomatoes due to disease outbreak. Response: Officer creates a broadcast warning, selects 'Bandarawela' as the target region, and publishes. All 200 registered farmers in the region receive a push notification labelled 'URGENT: Crop Ban'. Those without push receive an SMS.
+Stimulus: Government announces a fertilizer subsidy. Response: Officer uploads the official notice document and drafts a summary message. Notification is sent to all farmers. Notice is pinned to the Farmer Notice Board in-app.
+5.5.3  Functional Requirements
+REQ-NOTIF-1: Officers shall be able to broadcast notices to: all farmers in their district, a selected sub-region, or a specific crop group (e.g., all leek farmers).
+REQ-NOTIF-2: All broadcasts shall be delivered via FCM push notification. If push fails for a farmer, the system shall automatically send an SMS to the farmer's registered phone number.
+REQ-NOTIF-3: Broadcast notices shall be archived in the Farmer Notice Board within the app for 90 days and accessible without internet connectivity if previously cached.
+REQ-NOTIF-4: The system shall track delivery status (Sent / Delivered / Failed) for each farmer per broadcast, and present a delivery summary report to the officer.
+REQ-NOTIF-5: Automated over-planting alert notifications shall be triggered by the Risk Engine without officer intervention and shall follow the same delivery mechanism.
+
+5.6  User Account & Authentication Management
+5.6.1  Description and Priority
+This feature manages the registration, authentication, and role-based access of all three user types: Farmer, Divisional Officer, and Local Buyer. It ensures that each user interacts only with the features and data appropriate to their role, and that platform integrity is maintained through verified accounts. Priority: High
+5.6.2  Stimulus/Response Sequences
+Stimulus: New farmer downloads the app and taps 'Register'. Response: System displays registration form with fields for name, NIC number, phone, GPS-pinned land location, and total land size. Upon submission, account is created and a welcome SMS with credentials is sent.
+Stimulus: Registered user enters phone number and password and taps 'Login'. Response: System validates credentials, retrieves user role, and loads the appropriate dashboard (Farmer / Officer / Buyer).
+5.6.3  Functional Requirements
+REQ-AUTH-1: The system shall allow users to register with a unique phone number, selecting one of three roles: Farmer, Divisional Officer, or Local Buyer.
+REQ-AUTH-2: Divisional Officer accounts shall require manual approval by a Super Admin before access is granted.
+REQ-AUTH-3: The system shall enforce role-based access control: Farmers cannot access the Officer dashboard; Buyers cannot view individual farmer planting data.
+REQ-AUTH-4: All passwords shall be hashed using bcrypt with a minimum of 10 salt rounds before storage.
+REQ-AUTH-5: The system shall support password reset via OTP sent to the registered phone number.
+6  Other Non-Functional Requirements
+6.1  Performance Requirements
+The system shall synchronize planting data to the cloud in real-time with network latency under 5 seconds.
+Calculations from the Predictive Risk Engine shall resolve within 3 seconds of a data submission or Smart Search query.
+The marketplace proximity search shall return results within 2 seconds for up to 10,000 active listings.
+The mobile application shall load the initial dashboard within 3 seconds on a 4G network connection.
+API response time for all endpoints shall not exceed 1 second for 95% of requests under normal load.
+6.2  Safety Requirements
+The system shall ensure that agricultural directives (crop bans, emergency warnings) are broadcast instantly to prevent environmental or market damage.
+Proxy data entry by Divisional Officers must require identity verification (officer login) to prevent unauthorized data manipulation.
+The system must detect and flag anomalous planting entries (e.g., single farmer registering unrealistically large acreage) for officer review.
+The system must maintain full audit logs of all critical data modifications, proxy entries, and broadcast events.
+
+
+
+
+
+6.3  Security Requirements
+All data transmission shall use HTTPS with TLS 1.2 or higher encryption.
+User passwords shall be stored using bcrypt with a minimum of 10 salt rounds; plain-text passwords shall never be stored.
+Authentication tokens shall use JWT with an expiration time of 24 hours for farmers and 8 hours for officers.
+Role-based access control (RBAC) must strictly enforce permission boundaries across all API endpoints.
+Farmer personal data (NIC, phone number, land coordinates) must be encrypted at rest in the database.
+Security audits shall be conducted at the end of each development phase prior to deployment.
+6.4  Scalability Requirements
+The system architecture must support scaling from the Bandarawela pilot to a national deployment covering all 25 districts of Sri Lanka.
+The database must be capable of handling records for a minimum of 500,000 registered farmers at national scale.
+The backend API must support horizontal scaling via cloud load balancers (AWS / Azure) to accommodate peak planting seasons.
+The Risk Engine's threshold configuration system must be scalable to support district-level customization for all 25 districts.
+6.5  Availability and Reliability
+The system must maintain 99.5% uptime availability, excluding scheduled maintenance windows.
+Planting data entered offline by farmers must be queued locally and synchronized automatically with no data loss upon reconnection.
+The system must include automated health monitoring and alerting for all backend services.
+Database backups must be performed daily with a maximum recovery point objective (RPO) of 24 hours.
+Failure of any single micro-service (e.g., Notification Service) must not impact core planting data submission or risk engine functionality.
+6.6  Usability Requirements
+The mobile application interface must be accessible to users with limited technical literacy, validated through user testing with farmers in the upcountry region.
+The system must support trilingual interfaces: Sinhala, Tamil, and English, with all core user actions (planting entry, risk status, alerts) fully localized.
+Font sizes must meet minimum readability standards; the app must support system-level accessibility features such as large-text mode.
+All critical alerts (over-planting warnings, government broadcasts) must be visually prominent with high contrast color coding.
+The offline mode must clearly indicate to the user that they are viewing cached data, with the cache timestamp displayed.
+6.7  Compatibility Requirements
+The mobile application must be compatible with Android 8.0 and above.
+The mobile application must be compatible with iOS 13.0 and above.
+The web dashboard must support the latest stable versions of Google Chrome, Mozilla Firefox, and Microsoft Edge.
+The system must operate on devices with as little as 2 GB RAM to accommodate the range of smartphones used in rural areas.
+All APIs must be versioned to ensure backward compatibility during incremental updates.
+7  References
+Building a Digital Future for Sri Lanka's Farmers | FAO, accessed March 3, 2026, https://www.fao.org/family-farming/detail/en/c/1754464/
+
+CROPIX National Digital Platform, accessed March 3, 2026, https://mode.gov.lk/blog/cropix
+
+CROPIX – Department of Agriculture Sri Lanka, accessed March 3, 2026, https://digital.doa.gov.lk/
+
+HARTI (2021). Present Status of Postharvest Practices and Losses in Sri Lanka. Hector Kobbekaduwa Agrarian Research and Training Institute, Colombo. http://www.harti.gov.lk/
+
+IEEE 830-1998 Standard: IEEE Guide to Software Requirements Specifications.
+
+National Audit Office of Sri Lanka (2024). Agricultural Output and Waste Analysis. https://www.auditorgeneral.gov.lk/
+
+Sri Lanka Government Agriculture Enterprise Architecture (SL-GAEA v1.3), accessed March 3, 2026, https://agrimin.gov.lk/wp-content/uploads/2026/01/SL-GAEA_V1.3.pdf
+
+Sri Lanka launches CROPIX DPI to bridge gaps in agriculture – Biometric Update, accessed March 3, 2026, https://www.biometricupdate.com/202602/sri-lanka-launches-cropix-dpi-to-bridge-gaps-in-agriculture
+
+Sri Lanka launches tools, digital platform for data-driven agriculture | EconomyNext, accessed March 3, 2026, https://economynext.com/sri-lanka-launches-tools-digital-platform-for-data-driven-agriculture-258673/
+
+Value Chain of High Value Highly Perishable Vegetables – Hector Kobbekaduwa Agrarian Research and Training Institute, accessed March 3, 2026, https://www.harti.gov.lk/images/download/reasearch_report/new1/181.pdf
+Appendix-A – user interfaces
+
+
+

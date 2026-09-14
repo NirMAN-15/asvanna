@@ -1,0 +1,21 @@
+
+Project Title:
+
+
+
+Name of the group leader (both index number and student name are required):
+
+
+Group members (Others):
+	
+Project idea (in brief):
+
+  Asvanna is a dual-purpose web platform designed to reduce financial risks for Sri Lankan  farmers by addressing market saturation and post-harvest waste.
+Phase 1 (Crop Balancer): Uses a traffic-light dashboard to analyze national agricultural data (via the CROPIX API) to warn farmers if a specific crop is being over-planted in their district.
+Phase 2 (D2C Marketplace): A geo-fenced marketplace that allows farmers to broadcast local alerts (within a 5km radius) to consumers, enabling them to sell perishable surpluses directly from the farm gate.
+Quick Reference for Your Presentation
+Technology: React.js, AWS Lambda, DynamoDB
+Target Audience: Sri Lankan farmers, local consumers, and regional planners.
+Primary Problem: 40% of produce is lost post-harvest, and market saturation crashes wholesale prices.
+
+
