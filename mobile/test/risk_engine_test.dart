@@ -29,6 +29,101 @@ void main() {
       expect(beansRisk!.riskLevel, equals(CropRiskLevel.safe));
       expect(carrotRisk!.riskLevel, equals(CropRiskLevel.moderate));
     });
+
+    test('Should parse backend 4-factor risk JSON correctly into CropRiskAnalysis', () {
+      final sampleBackendJson = {
+        'crop': {
+          'id': 1,
+          'code': 'LEEKS',
+          'nameEn': 'Leeks',
+          'nameSi': 'ලීක්ස්',
+          'category': 'Upcountry Vegetable',
+          'standardPricePerKg': 280.0
+        },
+        'district': 'Badulla',
+        'division': 'Bandarawela',
+        'activePlotsCount': 3,
+        'totalPlantedAcres': 4.5,
+        'estimatedSupplyKg': 36000.0,
+        'targetDemandKg': 25000.0,
+        'riskPercentage': 75,
+        'riskLevel': 'OVER_PLANTED',
+        'factors': {
+          'overPlanting': {
+            'score': 85,
+            'weight': '45%',
+            'ratio': 144,
+            'demandQuotaKg': 25000.0,
+            'currentPlantedKg': 36000.0
+          },
+          'weather': {
+            'score': 15,
+            'weight': '25%',
+            'temperatureScore': 95.0,
+            'rainfallScore': 80.0,
+            'advisory': 'Optimal growing temperatures in Bandarawela.'
+          },
+          'seasonal': {
+            'score': 10,
+            'weight': '15%',
+            'currentSeason': 'MAHA',
+            'status': 'IN_SEASON'
+          },
+          'price': {
+            'score': 40,
+            'weight': '15%',
+            'volatilityPercentage': 18.5,
+            'currentPrice': 280.0
+          }
+        },
+        'evaluatedAt': '2026-09-15T02:00:00.000Z'
+      };
+
+      final parsed = CropRiskAnalysis.fromJson(sampleBackendJson);
+
+      expect(parsed.cropId, equals('crop_leeks'));
+      expect(parsed.cropName, equals('Leeks'));
+      expect(parsed.cropEmoji, equals('🥬'));
+      expect(parsed.riskLevel, equals(CropRiskLevel.critical));
+      expect(parsed.isLiveBackend, isTrue);
+      expect(parsed.activePlotsCount, equals(3));
+      expect(parsed.totalPlantedAcres, equals(4.5));
+      expect(parsed.saturationPercentage, equals(144.0));
+      expect(parsed.factors, isNotNull);
+      expect(parsed.factors!.overPlantingScore, equals(85));
+      expect(parsed.factors!.weatherScore, equals(15));
+      expect(parsed.factors!.seasonalScore, equals(10));
+      expect(parsed.factors!.priceScore, equals(40));
+      expect(parsed.factors!.currentSeason, equals('MAHA'));
+    });
+
+    test('Should parse backend recommendations JSON properly', () {
+      final sampleRecJson = {
+        'crop': {
+          'id': 4,
+          'code': 'BEETROOT',
+          'nameEn': 'Beetroot',
+          'nameSi': 'බීට්රූට්',
+          'standardPricePerKg': 260.0,
+          'avgYieldPerAcreKg': 8000.0
+        },
+        'scores': {
+          'compositeScore': 88,
+          'marketGapScore': 80
+        },
+        'rationale': {
+          'en': 'High market demand in Badulla with 80% unmet quota.',
+          'si': 'බණ්ඩාරවෙල කලාපයේ 80%ක ඉහළ වෙළෙඳපොළ ඉල්ලුමක් පවතී.'
+        }
+      };
+
+      final rec = CropRecommendation.fromJson(sampleRecJson, lang: 'en');
+      expect(rec.cropId, equals('crop_beetroot'));
+      expect(rec.cropName, equals('Beetroot'));
+      expect(rec.emoji, equals('🟣'));
+      expect(rec.profitBoostPercentage, greaterThan(20.0));
+      expect(rec.estimatedRevenuePerAcreLkr, equals(2080000.0));
+    });
   });
 
   group('Farmer Land Acreage Validation Tests', () {

@@ -28,6 +28,9 @@ class AppStateProvider with ChangeNotifier {
   Crop? _selectedCropForRisk;
   double _selectedRadiusKm = 5.0;
   bool _isOnline = true;
+  bool _isBackendConnected = false;
+  bool _isLoadingRisk = false;
+  String? _riskErrorMessage;
   int _pendingOfflineSyncs = 0;
 
   AppStateProvider() {
@@ -73,6 +76,9 @@ class AppStateProvider with ChangeNotifier {
       _pendingOfflineSyncs = queue.length;
       notifyListeners();
     } catch (_) {}
+
+    // Synchronize live data from backend
+    await fetchLiveRiskData();
   }
 
   // Getters
@@ -86,15 +92,111 @@ class AppStateProvider with ChangeNotifier {
   Crop? get selectedCropForRisk => _selectedCropForRisk;
   double get selectedRadiusKm => _selectedRadiusKm;
   bool get isOnline => _isOnline;
+  bool get isBackendConnected => _isBackendConnected;
+  bool get isLoadingRisk => _isLoadingRisk;
+  String? get riskErrorMessage => _riskErrorMessage;
   int get pendingOfflineSyncs => _pendingOfflineSyncs;
 
   CropRiskAnalysis? getRiskForCrop(String cropId) {
-    return _riskAnalyses[cropId];
+    if (_riskAnalyses.containsKey(cropId)) {
+      return _riskAnalyses[cropId];
+    }
+    // Search without prefix
+    final clean = cropId.replaceFirst(RegExp(r'^crop_'), '');
+    for (final entry in _riskAnalyses.entries) {
+      if (entry.key.toLowerCase().contains(clean.toLowerCase()) ||
+          clean.toLowerCase().contains(entry.key.toLowerCase())) {
+        return entry.value;
+      }
+    }
+    return MockDataService.getRiskAnalyses()[cropId];
   }
 
   CropRiskAnalysis? get currentCropRisk {
     if (_selectedCropForRisk == null) return null;
-    return _riskAnalyses[_selectedCropForRisk!.id];
+    return getRiskForCrop(_selectedCropForRisk!.id);
+  }
+
+  // Fetch live regional risk data and master crops from backend
+  Future<void> fetchLiveRiskData() async {
+    _isLoadingRisk = true;
+    notifyListeners();
+
+    try {
+      final isHealthy = await ApiService.checkBackendHealth();
+      _isBackendConnected = isHealthy;
+
+      if (isHealthy) {
+        // 1. Fetch live master crops
+        final backendCrops = await ApiService.getCrops();
+        if (backendCrops.isNotEmpty) {
+          _availableCrops = backendCrops;
+          if (_selectedCropForRisk == null || !_availableCrops.any((c) => c.id == _selectedCropForRisk!.id)) {
+            _selectedCropForRisk = _availableCrops.first;
+          }
+        }
+
+        // 2. Fetch regional risk summary across all crops
+        final langCode = _currentLanguage == AppLanguage.sinhala ? 'si' : (_currentLanguage == AppLanguage.tamil ? 'ta' : 'en');
+        final liveRisks = await ApiService.getRegionalRiskSummary(
+          district: 'Badulla',
+          lang: langCode,
+        );
+
+        if (liveRisks.isNotEmpty) {
+          _riskAnalyses.addAll(liveRisks);
+        }
+
+        // 3. Fetch detailed single crop risk for selected crop
+        if (_selectedCropForRisk != null) {
+          final detailed = await ApiService.getRiskAnalysis(
+            _selectedCropForRisk!.id,
+            district: 'Badulla',
+            division: _farmerProfile.agrarianDivision,
+            lang: langCode,
+          );
+          if (detailed != null) {
+            _riskAnalyses[_selectedCropForRisk!.id] = detailed;
+          }
+        }
+      }
+    } catch (e) {
+      _riskErrorMessage = e.toString();
+      _isBackendConnected = false;
+    } finally {
+      _isLoadingRisk = false;
+      notifyListeners();
+    }
+  }
+
+  // Fetch detailed live risk for single selected crop
+  Future<CropRiskAnalysis?> fetchDetailedRiskForCrop(String cropId) async {
+    final langCode = _currentLanguage == AppLanguage.sinhala ? 'si' : (_currentLanguage == AppLanguage.tamil ? 'ta' : 'en');
+    try {
+      final detailed = await ApiService.getRiskAnalysis(
+        cropId,
+        district: 'Badulla',
+        division: _farmerProfile.agrarianDivision,
+        lang: langCode,
+      );
+      if (detailed != null) {
+        _riskAnalyses[cropId] = detailed;
+        _isBackendConnected = true;
+        notifyListeners();
+        return detailed;
+      }
+    } catch (_) {}
+    return getRiskForCrop(cropId);
+  }
+
+  // Smart Search for crops using backend risk engine
+  Future<List<CropRiskAnalysis>> searchCropsWithRiskEngine(String query) async {
+    final langCode = _currentLanguage == AppLanguage.sinhala ? 'si' : (_currentLanguage == AppLanguage.tamil ? 'ta' : 'en');
+    return await ApiService.smartSearchRisk(
+      query,
+      district: 'Badulla',
+      lang: langCode,
+    );
   }
 
   // Setters & Actions
@@ -107,12 +209,15 @@ class AppStateProvider with ChangeNotifier {
     _currentLanguage = lang;
     final code = lang == AppLanguage.sinhala ? 'si' : (lang == AppLanguage.tamil ? 'ta' : 'en');
     OfflineStorageService.saveLanguage(code);
+    fetchLiveRiskData();
     notifyListeners();
   }
 
   void selectCropForRisk(Crop crop) {
     _selectedCropForRisk = crop;
     notifyListeners();
+    // Asynchronously update with latest live risk from backend
+    fetchDetailedRiskForCrop(crop.id);
   }
 
   void setMarketRadius(double radiusKm) {

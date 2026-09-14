@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/providers/app_state_provider.dart';
 import '../../../core/models/crop_model.dart';
 import '../../../core/models/notice_model.dart';
+import '../../../core/localization/app_translations.dart';
 import 'crop_detail_screen.dart';
 import 'farm_land_map_screen.dart';
 import 'pre_planting_risk_screen.dart';
@@ -20,6 +21,8 @@ class FarmerDashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final appState = Provider.of<AppStateProvider>(context);
     final farmer = appState.farmerProfile;
+    final lang = appState.currentLanguage;
+    String tr(String key) => AppTranslations.tr(lang, key);
 
     // Calculate active metrics
     final totalAcreagePlanted = farmer.usedAcres;
@@ -60,11 +63,11 @@ class FarmerDashboardScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // 1. Header: Profile picture on left, Greeting & Date in center, Alert Bell on right
-                _buildHeader(context, farmer.fullName, formattedDate, hasRedAlert),
+                _buildHeader(context, farmer.fullName, formattedDate, hasRedAlert, tr),
                 const SizedBox(height: 14),
 
                 // 2. Localized Agro-Weather Widget (Directly after Header)
-                _buildWeatherCard(context),
+                _buildWeatherCard(context, tr),
                 const SizedBox(height: 16),
 
                 // 3. Summary KPI Metric Cards (Acreage Planted, Active Crops, Risk Alerts)
@@ -73,19 +76,20 @@ class FarmerDashboardScreen extends StatelessWidget {
                   totalAcreagePlanted: totalAcreagePlanted,
                   activeCropsCount: activeCropsCount,
                   riskAlertsCount: riskAlertsCount,
+                  tr: tr,
                 ),
                 const SizedBox(height: 24),
 
                 // 4. "My Current Crops" Section Header with "Manage" link
-                _buildCurrentCropsHeader(context),
+                _buildCurrentCropsHeader(context, tr),
                 const SizedBox(height: 12),
 
                 // 5. Horizontal Scrollable List of Crop Cards
-                _buildCurrentCropsList(context, appState, farmer.activePlantings),
+                _buildCurrentCropsList(context, appState, farmer.activePlantings, tr),
                 const SizedBox(height: 20),
 
                 // 6. Farmland Acreage Utilization Card
-                _buildLandUtilizationCard(context, farmer),
+                _buildLandUtilizationCard(context, farmer, tr),
                 const SizedBox(height: 30),
               ],
             ),
@@ -101,6 +105,7 @@ class FarmerDashboardScreen extends StatelessWidget {
     String fullName,
     String dateText,
     bool hasRedAlert,
+    String Function(String) tr,
   ) {
     final firstName = fullName.trim().isEmpty ? 'Nirman' : fullName.split(' ').first;
 
@@ -147,7 +152,7 @@ class FarmerDashboardScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Good morning, $firstName',
+                      '${tr('greeting')}, $firstName',
                       style: GoogleFonts.poppins(
                         fontSize: 18.5,
                         fontWeight: FontWeight.w700,
@@ -238,6 +243,7 @@ class FarmerDashboardScreen extends StatelessWidget {
     required double totalAcreagePlanted,
     required int activeCropsCount,
     required int riskAlertsCount,
+    required String Function(String) tr,
   }) {
     return Row(
       children: [
@@ -248,8 +254,8 @@ class FarmerDashboardScreen extends StatelessWidget {
             icon: Icons.map_outlined,
             iconBg: AppColors.dashMetricMapBg,
             iconColor: AppColors.asvannaButtonGreen,
-            value: '${totalAcreagePlanted.toStringAsFixed(1)} Ac',
-            label: 'Acreage Planted',
+            value: '${totalAcreagePlanted.toStringAsFixed(1)} ${tr('acre_unit')}',
+            label: tr('acreage_planted'),
             hasAlertDot: false,
             onTap: () {
               Navigator.push(
@@ -269,7 +275,7 @@ class FarmerDashboardScreen extends StatelessWidget {
             iconBg: AppColors.dashMetricSproutBg,
             iconColor: AppColors.asvannaButtonGreen,
             value: '$activeCropsCount',
-            label: 'Active Crops',
+            label: tr('active_crops'),
             hasAlertDot: false,
             onTap: () {
               Navigator.push(
@@ -289,7 +295,7 @@ class FarmerDashboardScreen extends StatelessWidget {
             iconBg: AppColors.dashMetricAlertBg,
             iconColor: AppColors.dashAlertRed,
             value: '$riskAlertsCount',
-            label: 'Risk Alerts',
+            label: tr('risk_alerts'),
             hasAlertDot: true,
             onTap: () {
               Navigator.push(
@@ -367,10 +373,12 @@ class FarmerDashboardScreen extends StatelessWidget {
             Text(
               value,
               style: GoogleFonts.poppins(
-                fontSize: 18,
+                fontSize: 16,
                 fontWeight: FontWeight.w700,
                 color: AppColors.dashHeaderTitle,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
             Text(
               label,
@@ -389,16 +397,19 @@ class FarmerDashboardScreen extends StatelessWidget {
   }
 
   // 3. Section Header: My Current Crops & Manage
-  Widget _buildCurrentCropsHeader(BuildContext context) {
+  Widget _buildCurrentCropsHeader(BuildContext context, String Function(String) tr) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          'My Current Crops',
-          style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: AppColors.dashHeaderTitle,
+        Expanded(
+          child: Text(
+            tr('my_current_crops'),
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: AppColors.dashHeaderTitle,
+            ),
+            overflow: TextOverflow.ellipsis,
           ),
         ),
         GestureDetector(
@@ -409,7 +420,7 @@ class FarmerDashboardScreen extends StatelessWidget {
             );
           },
           child: Text(
-            'Manage',
+            tr('manage'),
             style: GoogleFonts.inter(
               fontSize: 13.5,
               fontWeight: FontWeight.w600,
@@ -426,6 +437,7 @@ class FarmerDashboardScreen extends StatelessWidget {
     BuildContext context,
     AppStateProvider appState,
     List<PlantedCropEntry> plantings,
+    String Function(String) tr,
   ) {
     if (plantings.isEmpty) {
       return Container(
@@ -438,7 +450,7 @@ class FarmerDashboardScreen extends StatelessWidget {
         ),
         child: Center(
           child: Text(
-            'No active crops planted yet.',
+            tr('no_active_crops'),
             style: GoogleFonts.inter(color: AppColors.dashHeaderDate),
           ),
         ),
@@ -453,7 +465,7 @@ class FarmerDashboardScreen extends StatelessWidget {
           final risk = appState.getRiskForCrop(p.cropId);
           return Padding(
             padding: const EdgeInsets.only(right: 12.0),
-            child: _buildCropCard(context, appState, p, risk),
+            child: _buildCropCard(context, appState, p, risk, tr),
           );
         }).toList(),
       ),
@@ -465,24 +477,25 @@ class FarmerDashboardScreen extends StatelessWidget {
     AppStateProvider appState,
     PlantedCropEntry planting,
     dynamic risk,
+    String Function(String) tr,
   ) {
     // Determine status badge details
     Color dotColor = AppColors.dashSafeGreen;
     Color pillBg = AppColors.dashPillGreenBg;
     Color pillTextColor = AppColors.dashSafeText;
-    String badgeText = 'Safe';
+    String badgeText = tr('safe_badge');
 
     if (risk != null) {
       if (risk.riskLevel == CropRiskLevel.critical) {
         dotColor = AppColors.dashAlertRed;
         pillBg = AppColors.dashPillRedBg;
         pillTextColor = AppColors.dashAlertRed;
-        badgeText = 'Over-Planted';
+        badgeText = tr('overplanted_badge');
       } else if (risk.riskLevel == CropRiskLevel.moderate) {
         dotColor = AppColors.dashCautionAmber;
         pillBg = AppColors.dashPillAmberBg;
         pillTextColor = AppColors.dashCautionText;
-        badgeText = 'Caution';
+        badgeText = tr('caution_badge');
       }
     } else {
       // Fallback based on crop name matching screenshot
@@ -491,12 +504,12 @@ class FarmerDashboardScreen extends StatelessWidget {
         dotColor = AppColors.dashAlertRed;
         pillBg = AppColors.dashPillRedBg;
         pillTextColor = AppColors.dashAlertRed;
-        badgeText = 'Over-Planted';
+        badgeText = tr('overplanted_badge');
       } else if (nameLower.contains('carrot')) {
         dotColor = AppColors.dashCautionAmber;
         pillBg = AppColors.dashPillAmberBg;
         pillTextColor = AppColors.dashCautionText;
-        badgeText = 'Caution';
+        badgeText = tr('caution_badge');
       }
     }
 
@@ -515,7 +528,7 @@ class FarmerDashboardScreen extends StatelessWidget {
       },
       borderRadius: BorderRadius.circular(20),
       child: Container(
-        width: 140,
+        width: 145,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -566,7 +579,7 @@ class FarmerDashboardScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${planting.allocatedAcres.toStringAsFixed(1)} Acre',
+                  '${planting.allocatedAcres.toStringAsFixed(1)} ${tr('acre_unit')}',
                   style: GoogleFonts.inter(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w500,
@@ -575,7 +588,7 @@ class FarmerDashboardScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${planting.daysRemaining} days to harvest',
+                  '${planting.daysRemaining} ${tr('days_to_harvest')}',
                   style: GoogleFonts.inter(
                     fontSize: 11,
                     fontWeight: FontWeight.w400,
@@ -608,10 +621,8 @@ class FarmerDashboardScreen extends StatelessWidget {
     );
   }
 
-
-
   // 2. Weather Card (Directly below Header)
-  Widget _buildWeatherCard(BuildContext context) {
+  Widget _buildWeatherCard(BuildContext context, String Function(String) tr) {
     return InkWell(
       onTap: () {
         Navigator.push(
@@ -640,58 +651,69 @@ class FarmerDashboardScreen extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF0FDF4),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFFDCFCE7), width: 1.5),
+                Expanded(
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF0FDF4),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: const Color(0xFFDCFCE7), width: 1.5),
+                        ),
+                        child: const Center(
+                          child: Text('⛅', style: TextStyle(fontSize: 22)),
+                        ),
                       ),
-                      child: const Center(
-                        child: Text('⛅', style: TextStyle(fontSize: 22)),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.baseline,
-                          textBaseline: TextBaseline.alphabetic,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              '21°C',
-                              style: GoogleFonts.poppins(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.dashHeaderTitle,
-                              ),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.baseline,
+                              textBaseline: TextBaseline.alphabetic,
+                              children: [
+                                Text(
+                                  '21°C',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.dashHeaderTitle,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Flexible(
+                                  child: Text(
+                                    tr('partly_cloudy'),
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.dashHeaderDate,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 6),
                             Text(
-                              'Partly Cloudy',
+                              tr('weather_optimal'),
                               style: GoogleFonts.inter(
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w500,
-                                color: AppColors.dashHeaderDate,
+                                fontSize: 11,
+                                color: const Color(0xFF9CA3AF),
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),
-                        Text(
-                          'Optimal soil moisture for upcountry crops',
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            color: const Color(0xFF9CA3AF),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
+                const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
@@ -743,15 +765,17 @@ class FarmerDashboardScreen extends StatelessWidget {
                       children: [
                         const Text('🌧️', style: TextStyle(fontSize: 12)),
                         const SizedBox(width: 5),
-                        Text(
-                          'Rain at 4 PM (80%)',
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF0284C7),
+                        Flexible(
+                          child: Text(
+                            tr('rain_forecast'),
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF0284C7),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
@@ -770,15 +794,17 @@ class FarmerDashboardScreen extends StatelessWidget {
                       children: [
                         const Text('💧', style: TextStyle(fontSize: 12)),
                         const SizedBox(width: 5),
-                        Text(
-                          'Humidity 82%',
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.asvannaButtonGreen,
+                        Flexible(
+                          child: Text(
+                            tr('humidity_label'),
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.asvannaButtonGreen,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
@@ -793,7 +819,7 @@ class FarmerDashboardScreen extends StatelessWidget {
   }
 
   // 8. Farmland Utilization Card
-  Widget _buildLandUtilizationCard(BuildContext context, dynamic farmer) {
+  Widget _buildLandUtilizationCard(BuildContext context, dynamic farmer, String Function(String) tr) {
     final used = farmer.usedAcres;
     final total = farmer.totalLandAcres;
     final percent = farmer.landUtilizationPercentage / 100.0;
@@ -829,7 +855,7 @@ class FarmerDashboardScreen extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      'Land Usage',
+                      tr('land_usage'),
                       style: GoogleFonts.poppins(
                         fontSize: 14.5,
                         fontWeight: FontWeight.w600,
@@ -847,7 +873,7 @@ class FarmerDashboardScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Text(
-                    '${(percent * 100).toStringAsFixed(0)}% Utilized',
+                    '${(percent * 100).toStringAsFixed(0)}% ${tr('utilized')}',
                     style: GoogleFonts.inter(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -871,9 +897,9 @@ class FarmerDashboardScreen extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildStatItem('Total Land', '$total Ac', Icons.landscape_outlined),
-                _buildStatItem('Cultivated', '${used.toStringAsFixed(1)} Ac', Icons.eco_outlined),
-                _buildStatItem('Available', '${farmer.availableAcres.toStringAsFixed(1)} Ac', Icons.check_circle_outline),
+                _buildStatItem(tr('total_land'), '$total ${tr('acre_unit')}', Icons.landscape_outlined),
+                _buildStatItem(tr('cultivated_label'), '${used.toStringAsFixed(1)} ${tr('acre_unit')}', Icons.eco_outlined),
+                _buildStatItem(tr('available_land'), '${farmer.availableAcres.toStringAsFixed(1)} ${tr('acre_unit')}', Icons.check_circle_outline),
               ],
             ),
           ],

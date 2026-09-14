@@ -84,7 +84,7 @@ class CropDetailScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          'Maturity: ~${crop.maturityDays} Days • Avg Yield: ${crop.expectedYieldKgPerAcre.toStringAsFixed(0)} Kg/Acre',
+                          '${tr('maturity_label')} ~${crop.maturityDays} Days • ${tr('avg_yield_label')} ${crop.expectedYieldKgPerAcre.toStringAsFixed(0)} Kg/Acre',
                           style: GoogleFonts.inter(fontSize: 11, color: AppColors.textMuted),
                         ),
                       ],
@@ -129,7 +129,7 @@ class CropDetailScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Current Risk: ${risk.riskTitle} (${risk.saturationPercentage.toStringAsFixed(1)}% Saturation)',
+                            'Current Risk: ${risk.riskTitle} (${risk.saturationPercentage.toStringAsFixed(1)}% ${tr('saturation')})',
                             style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: risk.riskLevel == CropRiskLevel.critical ? AppColors.riskCritical : AppColors.primaryDark),
                           ),
                           Text(
@@ -147,7 +147,7 @@ class CropDetailScreen extends StatelessWidget {
 
             // 4-Stage Growth Lifecycle Timeline
             Text(
-              'Cultivation Stages & Growth Timeline',
+              tr('growth_stages_title'),
               style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
@@ -196,7 +196,7 @@ class CropDetailScreen extends StatelessWidget {
                       const Icon(Icons.terrain_rounded, color: AppColors.primary, size: 20),
                       const SizedBox(width: 8),
                       Text(
-                        'Upcountry Soil & Climate Suitability',
+                        tr('soil_climate_title'),
                         style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold),
                       ),
                     ],
@@ -227,7 +227,7 @@ class CropDetailScreen extends StatelessWidget {
                       const Icon(Icons.recycling_rounded, color: AppColors.primaryDark, size: 20),
                       const SizedBox(width: 8),
                       Text(
-                        'Asvanna Zero-Waste Handling Guide',
+                        tr('zero_waste_guide_title'),
                         style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.primaryDark),
                       ),
                     ],
@@ -245,7 +245,7 @@ class CropDetailScreen extends StatelessWidget {
             // Action Button: Sowing
             ElevatedButton.icon(
               icon: const Icon(Icons.add_chart_rounded),
-              label: Text('Log ${crop.name} Planting Entry'),
+              label: Text('${tr('log_sowing_btn')} (${crop.name})'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 padding: const EdgeInsets.symmetric(vertical: 16),

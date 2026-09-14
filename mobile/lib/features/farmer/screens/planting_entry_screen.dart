@@ -184,7 +184,7 @@ class _PlantingEntryScreenState extends State<PlantingEntryScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(
-          _selectedStage == 0 ? tr('log_planting_title') : 'Post Surplus Produce',
+          _selectedStage == 0 ? tr('log_planting_title') : tr('post_surplus_title'),
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -211,7 +211,7 @@ class _PlantingEntryScreenState extends State<PlantingEntryScreen> {
                   Expanded(
                     child: _buildStageTab(
                       stageIndex: 0,
-                      label: 'Log New Planting',
+                      label: tr('log_planting_tab'),
                       icon: Icons.eco_outlined,
                       activeColor: AppColors.asvannaButtonGreen,
                       isSelected: _selectedStage == 0,
@@ -220,7 +220,7 @@ class _PlantingEntryScreenState extends State<PlantingEntryScreen> {
                   Expanded(
                     child: _buildStageTab(
                       stageIndex: 1,
-                      label: 'Post Surplus',
+                      label: tr('post_surplus_tab'),
                       icon: Icons.storefront_rounded,
                       activeColor: AppColors.badgeHarvest,
                       isSelected: _selectedStage == 1,
@@ -238,7 +238,7 @@ class _PlantingEntryScreenState extends State<PlantingEntryScreen> {
               duration: const Duration(milliseconds: 250),
               child: _selectedStage == 0
                   ? _buildLogPlantingStage(context, appState, tr)
-                  : _buildPostSurplusStage(context, appState),
+                  : _buildPostSurplusStage(context, appState, tr),
             ),
           ),
         ],
@@ -331,14 +331,18 @@ class _PlantingEntryScreenState extends State<PlantingEntryScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    tr('available_free_land'),
-                    style: GoogleFonts.inter(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.dashHeaderTitle,
+                  Expanded(
+                    child: Text(
+                      tr('available_free_land'),
+                      style: GoogleFonts.inter(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.dashHeaderTitle,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  const SizedBox(width: 8),
                   Text(
                     '${farmer.availableAcres.toStringAsFixed(1)} / ${farmer.totalLandAcres} Acres',
                     style: GoogleFonts.inter(
@@ -364,8 +368,9 @@ class _PlantingEntryScreenState extends State<PlantingEntryScreen> {
             const SizedBox(height: 8),
             DropdownButtonFormField<Crop>(
               value: _selectedPlantingCrop,
+              isExpanded: true,
               decoration: InputDecoration(
-                labelText: 'Upcountry Vegetable',
+                labelText: tr('upcountry_veg_label'),
                 prefixIcon: const Icon(Icons.eco_outlined, color: AppColors.asvannaButtonGreen),
                 filled: true,
                 fillColor: Colors.white,
@@ -385,7 +390,12 @@ class _PlantingEntryScreenState extends State<PlantingEntryScreen> {
                     children: [
                       Text(c.iconEmoji, style: const TextStyle(fontSize: 18)),
                       const SizedBox(width: 10),
-                      Text('${c.name} (${c.sinhalaName})'),
+                      Expanded(
+                        child: Text(
+                          '${c.name} (${c.sinhalaName})',
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                     ],
                   ),
                 );
@@ -465,9 +475,9 @@ class _PlantingEntryScreenState extends State<PlantingEntryScreen> {
               controller: _acresController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               decoration: InputDecoration(
-                labelText: 'Cultivated Area (Acres)',
+                labelText: tr('cultivated_area_acres'),
                 prefixIcon: const Icon(Icons.square_foot_outlined, color: AppColors.asvannaButtonGreen),
-                suffixText: 'Acres',
+                suffixText: tr('acre_unit'),
                 filled: true,
                 fillColor: Colors.white,
                 border: OutlineInputBorder(
@@ -522,7 +532,7 @@ class _PlantingEntryScreenState extends State<PlantingEntryScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Sowing / Planting Date',
+                          tr('sowing_date'),
                           style: GoogleFonts.inter(fontSize: 11, color: AppColors.dashHeaderDate),
                         ),
                         Text(
@@ -558,7 +568,7 @@ class _PlantingEntryScreenState extends State<PlantingEntryScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Expected Harvest Date (~${_selectedPlantingCrop.maturityDays} days)',
+                          '${tr('expected_harvest_date')} (~${_selectedPlantingCrop.maturityDays} ${tr('days_left')})',
                           style: GoogleFonts.inter(fontSize: 11, color: AppColors.dashHeaderDate),
                         ),
                         Text(
@@ -596,7 +606,7 @@ class _PlantingEntryScreenState extends State<PlantingEntryScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Projected Yield:',
+                        tr('projected_yield_label'),
                         style: GoogleFonts.inter(fontSize: 13, color: AppColors.dashHeaderDate),
                       ),
                       Text(
@@ -614,7 +624,7 @@ class _PlantingEntryScreenState extends State<PlantingEntryScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Est. Farmgate Revenue:',
+                        tr('est_revenue'),
                         style: GoogleFonts.inter(fontSize: 13, color: AppColors.dashHeaderDate),
                       ),
                       Text(
@@ -656,7 +666,7 @@ class _PlantingEntryScreenState extends State<PlantingEntryScreen> {
   // ==========================================
   // STAGE 2: Post Surplus Produce
   // ==========================================
-  Widget _buildPostSurplusStage(BuildContext context, AppStateProvider appState) {
+  Widget _buildPostSurplusStage(BuildContext context, AppStateProvider appState, String Function(String) tr) {
     final qty = double.tryParse(_surplusQuantityController.text) ?? 0.0;
     final price = double.tryParse(_surplusPriceController.text) ?? 0.0;
     final totalEstimatedValue = qty * price;
@@ -698,7 +708,7 @@ class _PlantingEntryScreenState extends State<PlantingEntryScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '5km Proximity Zero-Waste Market',
+                          tr('proximity_market_banner_title'),
                           style: GoogleFonts.poppins(
                             fontSize: 13.5,
                             fontWeight: FontWeight.bold,
@@ -707,7 +717,7 @@ class _PlantingEntryScreenState extends State<PlantingEntryScreen> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'Broadcast directly to registered event caterers, hotels, and bulk buyers within 5km for immediate pickup.',
+                          tr('proximity_market_banner_sub'),
                           style: GoogleFonts.inter(
                             fontSize: 11.5,
                             color: const Color(0xFF78350F),
@@ -724,7 +734,7 @@ class _PlantingEntryScreenState extends State<PlantingEntryScreen> {
 
             // Select Crop Dropdown
             Text(
-              'Select Harvested Crop',
+              tr('select_harvested_crop'),
               style: GoogleFonts.poppins(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
@@ -734,8 +744,9 @@ class _PlantingEntryScreenState extends State<PlantingEntryScreen> {
             const SizedBox(height: 8),
             DropdownButtonFormField<Crop>(
               value: _selectedSurplusCrop,
+              isExpanded: true,
               decoration: InputDecoration(
-                labelText: 'Crop Produce',
+                labelText: tr('crop_produce'),
                 prefixIcon: const Icon(Icons.eco_outlined, color: AppColors.badgeHarvest),
                 filled: true,
                 fillColor: Colors.white,
@@ -755,7 +766,12 @@ class _PlantingEntryScreenState extends State<PlantingEntryScreen> {
                     children: [
                       Text(c.iconEmoji, style: const TextStyle(fontSize: 18)),
                       const SizedBox(width: 10),
-                      Text('${c.name} (${c.sinhalaName})'),
+                      Expanded(
+                        child: Text(
+                          '${c.name} (${c.sinhalaName})',
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                     ],
                   ),
                 );
@@ -774,7 +790,7 @@ class _PlantingEntryScreenState extends State<PlantingEntryScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Available Quantity',
+                        tr('available_quantity'),
                         style: GoogleFonts.inter(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
@@ -811,7 +827,7 @@ class _PlantingEntryScreenState extends State<PlantingEntryScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Asking Price',
+                        tr('asking_price'),
                         style: GoogleFonts.inter(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
@@ -847,7 +863,7 @@ class _PlantingEntryScreenState extends State<PlantingEntryScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              'Wholesale Market Benchmark: Rs. ${_selectedSurplusCrop.currentMarketPricePerKg.toStringAsFixed(0)}/Kg',
+              '${tr('wholesale_benchmark')} Rs. ${_selectedSurplusCrop.currentMarketPricePerKg.toStringAsFixed(0)}/Kg',
               style: GoogleFonts.inter(fontSize: 11, color: AppColors.dashHeaderDate),
             ),
             const SizedBox(height: 16),
@@ -862,7 +878,7 @@ class _PlantingEntryScreenState extends State<PlantingEntryScreen> {
               child: SwitchListTile(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
                 title: Text(
-                  'Urgent Perishable Clearance',
+                  tr('urgent_switch_title'),
                   style: GoogleFonts.inter(
                     fontWeight: FontWeight.w600,
                     fontSize: 13.5,
@@ -870,7 +886,7 @@ class _PlantingEntryScreenState extends State<PlantingEntryScreen> {
                   ),
                 ),
                 subtitle: Text(
-                  'Priority push notification to buyers within 5km radius',
+                  tr('urgent_switch_sub'),
                   style: GoogleFonts.inter(fontSize: 11, color: AppColors.dashHeaderDate),
                 ),
                 value: _isUrgentSurplus,
@@ -882,7 +898,7 @@ class _PlantingEntryScreenState extends State<PlantingEntryScreen> {
 
             // Quality & Condition Notes
             Text(
-              'Produce Condition / Packaging Notes',
+              tr('produce_notes_title'),
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -894,7 +910,7 @@ class _PlantingEntryScreenState extends State<PlantingEntryScreen> {
               controller: _surplusNotesController,
               maxLines: 2,
               decoration: InputDecoration(
-                hintText: 'e.g. Freshly harvested this morning, washed and bagged in 25kg crates.',
+                hintText: tr('produce_notes_hint'),
                 filled: true,
                 fillColor: Colors.white,
                 border: OutlineInputBorder(
@@ -928,7 +944,7 @@ class _PlantingEntryScreenState extends State<PlantingEntryScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Total Listing Value:',
+                    tr('total_listing_value'),
                     style: GoogleFonts.inter(fontSize: 13.5, color: AppColors.dashHeaderDate),
                   ),
                   Text(
@@ -948,7 +964,7 @@ class _PlantingEntryScreenState extends State<PlantingEntryScreen> {
             ElevatedButton.icon(
               icon: const Icon(Icons.send_rounded, color: Colors.white),
               label: Text(
-                'Publish to 5km Marketplace',
+                tr('publish_surplus_btn'),
                 style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold),
               ),
               style: ElevatedButton.styleFrom(
