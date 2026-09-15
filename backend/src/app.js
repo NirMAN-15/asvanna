@@ -27,8 +27,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
-// Health Check Endpoint
-app.get('/health', (req, res) => {
+// Health Check Endpoints
+app.get(['/health', '/api/health', '/api/v1/health', '/v1/health'], (req, res) => {
   return ApiResponse.success(res, {
     status: 'UP',
     service: 'ASVANNA Agricultural Intelligence Platform API',
@@ -38,18 +38,20 @@ app.get('/health', (req, res) => {
   }, 'Service healthy');
 });
 
-// API Routes
-app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/planting', plantingRoutes);
-app.use('/api/v1/risk', riskRoutes);
-app.use('/api/v1/recommendations', recommendationRoutes);
-app.use('/api/v1/marketplace', marketplaceRoutes);
-app.use('/api/v1/officer', officerRoutes);
-app.use('/api/v1/broadcasts', broadcastRoutes);
-app.use('/api/v1/weather', weatherRoutes);
-app.use('/api/v1/prices', priceRoutes);
-app.use('/api/v1/crops', cropRoutes);
-app.use('/api/v1/notifications', notificationRoutes);
+// API Routes (Mounted on both /api/v1 and /v1 for seamless Nginx reverse-proxy compatibility)
+['/api/v1', '/v1'].forEach((prefix) => {
+  app.use(`${prefix}/auth`, authRoutes);
+  app.use(`${prefix}/planting`, plantingRoutes);
+  app.use(`${prefix}/risk`, riskRoutes);
+  app.use(`${prefix}/recommendations`, recommendationRoutes);
+  app.use(`${prefix}/marketplace`, marketplaceRoutes);
+  app.use(`${prefix}/officer`, officerRoutes);
+  app.use(`${prefix}/broadcasts`, broadcastRoutes);
+  app.use(`${prefix}/weather`, weatherRoutes);
+  app.use(`${prefix}/prices`, priceRoutes);
+  app.use(`${prefix}/crops`, cropRoutes);
+  app.use(`${prefix}/notifications`, notificationRoutes);
+});
 
 // 404 Handler
 app.use((req, res) => {
