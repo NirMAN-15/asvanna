@@ -2,7 +2,6 @@ import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import { LanguageContext } from '../../context/LanguageContext';
-import farmerBg from '../../assets/farmer-bg.jpg';
 
 export default function FarmerAuth() {
   const navigate = useNavigate();
@@ -60,10 +59,7 @@ export default function FarmerAuth() {
   };
 
   return (
-    <div 
-      className="relative min-h-screen text-on-surface font-body-md pb-16 bg-cover bg-center bg-fixed bg-no-repeat"
-      style={{ backgroundImage: `url(${farmerBg})` }}
-    >
+    <div className="bg-background text-on-surface font-body-md min-h-screen pb-16">
       {/* Top Navigation Anchor (Stitch Design) */}
       <header className="bg-surface-bright shadow-sm h-20 flex items-center justify-between px-margin-mobile md:px-margin-desktop sticky top-0 z-50 border-b border-outline-variant/30">
         <div className="flex items-center gap-4">
@@ -144,7 +140,7 @@ export default function FarmerAuth() {
         {/* Form Container */}
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* 1. Personal Information */}
-          <div className="bg-white rounded-2xl p-6 md:p-8 shadow-lg border border-outline-variant/30 border-t-4 border-primary">
+          <div className="bg-surface-container-lowest rounded-2xl p-6 md:p-8 shadow-card border border-outline-variant/30 border-t-4 border-primary">
             <h2 className="font-headline text-headline-sm text-primary mb-5 flex items-center gap-2">
               <span className="material-symbols-outlined text-secondary">person</span>
               Personal Information
@@ -207,7 +203,7 @@ export default function FarmerAuth() {
           </div>
 
           {/* 2. Farm & Cultivation Details */}
-          <div className="bg-white rounded-2xl p-6 md:p-8 shadow-lg border border-outline-variant/30 border-t-4 border-secondary">
+          <div className="bg-surface-container-lowest rounded-2xl p-6 md:p-8 shadow-card border border-outline-variant/30 border-t-4 border-secondary">
             <h2 className="font-headline text-headline-sm text-secondary mb-5 flex items-center gap-2">
               <span className="material-symbols-outlined text-secondary">nature_people</span>
               Farm & Cultivation Telemetry
@@ -318,7 +314,7 @@ export default function FarmerAuth() {
 
           {/* Submit button */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <Link to="/login" className="text-sm font-bold text-primary hover:underline bg-white/80 backdrop-blur-xs px-4 py-2 rounded-xl shadow-sm">
+            <Link to="/login" className="text-sm font-bold text-primary hover:underline">
               Already registered? Sign in here
             </Link>
             <button
