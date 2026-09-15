@@ -3,9 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/providers/app_state_provider.dart';
-import '../../../core/models/crop_model.dart';
-import '../../../core/models/risk_analysis_model.dart';
-import '../../../core/models/surplus_listing_model.dart';
 
 class PresentationDemoPanel extends StatelessWidget {
   const PresentationDemoPanel({super.key});
@@ -28,15 +25,20 @@ class PresentationDemoPanel extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    const Text('🪄', style: TextStyle(fontSize: 22)),
-                    const SizedBox(width: 8),
-                    Text(
-                      'University Presentation Showcase',
-                      style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                  ],
+                Expanded(
+                  child: Row(
+                    children: [
+                      const Text('🪄', style: TextStyle(fontSize: 22)),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          'University Presentation Showcase',
+                          style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.close),

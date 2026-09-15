@@ -26,17 +26,60 @@ class Crop {
   });
 
   factory Crop.fromJson(Map<String, dynamic> json) {
+    final code = json['crop_code']?.toString() ?? json['code']?.toString() ?? '';
+    final rawId = json['id']?.toString() ?? code.toLowerCase();
+    final normalizedId = rawId.startsWith('crop_') ? rawId : (code.isNotEmpty ? 'crop_${code.toLowerCase()}' : rawId);
+
+    final name = json['name_en'] ?? json['nameEn'] ?? json['name'] ?? 'Crop';
+    final sinhala = json['name_si'] ?? json['nameSi'] ?? json['sinhalaName'] ?? name;
+    
+    // Auto map emoji
+    final lower = (code.isNotEmpty ? code : name).toLowerCase();
+    String emoji = json['iconEmoji'] ?? '🌱';
+    if (emoji == '🌱') {
+      if (lower.contains('leek')) emoji = '🥬';
+      else if (lower.contains('cabbage')) emoji = '🥗';
+      else if (lower.contains('carrot')) emoji = '🥕';
+      else if (lower.contains('beet')) emoji = '🟣';
+      else if (lower.contains('potato')) emoji = '🥔';
+      else if (lower.contains('bean')) emoji = '🫘';
+      else if (lower.contains('tomato')) emoji = '🍅';
+      else if (lower.contains('capsicum') || lower.contains('pepper') || lower.contains('bell')) emoji = '🫑';
+      else if (lower.contains('radish')) emoji = '🥢';
+      else if (lower.contains('knol')) emoji = '🥦';
+      else if (lower.contains('onion') || lower.contains('spring')) emoji = '🧅';
+      else if (lower.contains('lettuce')) emoji = '🥬';
+      else if (lower.contains('celery')) emoji = '🌿';
+      else if (lower.contains('broccoli') || lower.contains('cauliflower')) emoji = '🥦';
+      else if (lower.contains('pumpkin')) emoji = '🎃';
+      else if (lower.contains('gourd') || lower.contains('cucumber')) emoji = '🥒';
+      else if (lower.contains('chili')) emoji = '🌶️';
+    }
+
+    final price = (json['standard_price_per_kg'] as num?)?.toDouble() ??
+        (json['currentMarketPricePerKg'] as num?)?.toDouble() ??
+        (json['current_price_per_kg'] as num?)?.toDouble() ?? 150.0;
+
+    final histPrice = (json['historicalAveragePricePerKg'] as num?)?.toDouble() ??
+        (json['price_range_min'] as num?)?.toDouble() ?? price * 0.9;
+
+    final yieldKg = (json['avg_yield_per_acre_kg'] as num?)?.toDouble() ??
+        (json['expectedYieldKgPerAcre'] as num?)?.toDouble() ?? 5000.0;
+
+    final maturity = (json['growth_duration_days'] as num?)?.toInt() ??
+        (json['maturityDays'] as num?)?.toInt() ?? 90;
+
     return Crop(
-      id: json['id'] ?? '',
-      name: json['name'] ?? '',
-      sinhalaName: json['sinhalaName'] ?? '',
-      category: json['category'] ?? 'Vegetable',
-      maturityDays: json['maturityDays'] ?? 90,
-      expectedYieldKgPerAcre: (json['expectedYieldKgPerAcre'] as num?)?.toDouble() ?? 5000.0,
-      currentMarketPricePerKg: (json['currentMarketPricePerKg'] as num?)?.toDouble() ?? 150.0,
-      historicalAveragePricePerKg: (json['historicalAveragePricePerKg'] as num?)?.toDouble() ?? 140.0,
-      iconEmoji: json['iconEmoji'] ?? '🌱',
-      imageUrl: json['imageUrl'] ?? '',
+      id: normalizedId,
+      name: name,
+      sinhalaName: sinhala,
+      category: json['category'] ?? 'Upcountry Vegetable',
+      maturityDays: maturity,
+      expectedYieldKgPerAcre: yieldKg,
+      currentMarketPricePerKg: price,
+      historicalAveragePricePerKg: histPrice,
+      iconEmoji: emoji,
+      imageUrl: json['image_url'] ?? json['imageUrl'] ?? '',
     );
   }
 }

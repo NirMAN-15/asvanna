@@ -5,6 +5,7 @@ import 'package:fl_chart/fl_chart.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/providers/app_state_provider.dart';
 import '../../../core/models/crop_model.dart';
+import '../../../core/localization/app_translations.dart';
 
 class PriceTrendsScreen extends StatefulWidget {
   const PriceTrendsScreen({super.key});
@@ -26,10 +27,12 @@ class _PriceTrendsScreenState extends State<PriceTrendsScreen> {
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppStateProvider>(context);
+    final lang = appState.currentLanguage;
+    String tr(String key) => AppTranslations.tr(lang, key);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Market & Price Intelligence'),
+        title: Text(tr('price_intel_title')),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -47,7 +50,7 @@ class _PriceTrendsScreenState extends State<PriceTrendsScreen> {
                   final c = appState.availableCrops[i];
                   final isSelected = c.id == _selectedCrop.id;
                   return ChoiceChip(
-                    label: Text('${c.iconEmoji} ${c.name}'),
+                    label: Text('${c.iconEmoji} ${c.name} (${c.sinhalaName})'),
                     selected: isSelected,
                     selectedColor: AppColors.primary,
                     labelStyle: TextStyle(
@@ -81,7 +84,7 @@ class _PriceTrendsScreenState extends State<PriceTrendsScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Current Manning / HARTI Price',
+                            tr('current_manning_price'),
                             style: GoogleFonts.inter(fontSize: 12, color: AppColors.textMuted),
                           ),
                           Text(
@@ -101,7 +104,7 @@ class _PriceTrendsScreenState extends State<PriceTrendsScreen> {
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
-                          'Avg: Rs. ${_selectedCrop.historicalAveragePricePerKg.toStringAsFixed(0)}/kg',
+                          '${tr('historical_avg')} Rs. ${_selectedCrop.historicalAveragePricePerKg.toStringAsFixed(0)}/kg',
                           style: GoogleFonts.inter(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
@@ -114,7 +117,7 @@ class _PriceTrendsScreenState extends State<PriceTrendsScreen> {
                   const SizedBox(height: 18),
 
                   Text(
-                    '6-Month Price Trend (LKR / Kg)',
+                    tr('price_trend_6m'),
                     style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 16),
@@ -172,7 +175,7 @@ class _PriceTrendsScreenState extends State<PriceTrendsScreen> {
 
             // Wholesale Market Benchmark Table
             Text(
-              'Wholesale Center Benchmarks',
+              tr('wholesale_benchmarks'),
               style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
