@@ -2,6 +2,40 @@ import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { LanguageContext } from '../context/LanguageContext';
+import farmerImage from '../assets/landing-bg.jpg';
+
+const roleInfo = {
+  FARMER: {
+    badge: 'Upcountry Farmer Portal',
+    icon: 'agriculture',
+    image: farmerImage,
+    points: [
+      'Direct 5km Market Access',
+      'Smart Crop Alternation Engine',
+      'Regional Over-Planting Alerts',
+    ],
+  },
+  BUYER: {
+    badge: 'Local Buyer Marketplace',
+    icon: 'shopping_cart',
+    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBNk1wX2H-y8LO9hhNsxoJOL6gustwoKeAt6tmhDtLh7nJ395qPdmChA6Q4aNRugaWxSodwTMXLOHOu7ZN2hkwF3yFF5j650sMgTzullF9wgMpRNldAb3VS_TA2QcwRyej74ZRFjpnfgr-RLZ8yk9tFBI4Lm1qNRer3uuLYaah4KqgurH6DXATzKY57Pt_fmFZX5JW75MMaZxJEe8vgCseG2KPOgaQ7zpMVpSp1leZ9oJhHCZ0XgBUoSw',
+    points: [
+      'Geo-Fenced 5km Surplus Procurement',
+      'Verified Quality & Organic Produce',
+      'Real-Time Supply Chain Telemetry',
+    ],
+  },
+  OFFICER: {
+    badge: 'Divisional Agrarian Portal',
+    icon: 'admin_panel_settings',
+    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAK11Qn_efj9lI0oTZcTNxN6WHr9zH5YFDW9ggrls56gJDpdvqaKsbkQZPTmoFBOrqOdt9XCB909CwoLMqvGjLtOp8zDhMmLurFgNYgmfrw1ilavtAe3lY46Xv47oQJgKZXC9c51Mj9izLQT-ELKpeSt9DZkrz-wrN5R3lVGlr3H_RWB_YyEGD9QNN8EDnTmMjr1qgNhrZIXWuq5R4nOXijxBYmygq9pl3PBYei4trc7E7pFJHbkJIPgMqhx9BmmEBq-ws',
+    points: [
+      'Regional Crop Heatmaps & Saturation',
+      'Proxy Data Entry for Offline Farmers',
+      'Emergency Broadcast Alert System',
+    ],
+  },
+};
 
 export default function Login() {
   const { login } = useContext(AuthContext);
@@ -9,8 +43,8 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [role, setRole] = useState('OFFICER'); // 'FARMER', 'BUYER', 'OFFICER'
-  const [identifier, setIdentifier] = useState('0771234567');
+  const [role, setRole] = useState('FARMER'); // 'FARMER', 'BUYER', 'OFFICER'
+  const [identifier, setIdentifier] = useState('0712345678');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberSession, setRememberSession] = useState(true);
@@ -79,36 +113,57 @@ export default function Login() {
   return (
     <main className="flex min-h-screen bg-surface font-body-md text-on-surface overflow-x-hidden">
       {/* Left Side: Visual/Branding Section (Stitch Design) */}
-      <section className="hidden lg:flex lg:w-1/2 relative flex-col p-xl overflow-hidden justify-between">
-        {/* Background Image */}
+      <section className="hidden lg:flex lg:w-1/2 relative flex-col p-xl overflow-hidden justify-between min-h-screen">
+        {/* Background Image with role-based switching */}
         <div
-          className="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-700 hover:scale-105"
+          key={role}
+          className="absolute inset-0 z-0 bg-cover bg-center transition-all duration-700 animate-fadeIn"
           style={{
-            backgroundImage: `url('https://lh3.googleusercontent.com/aida-public/AB6AXuAK11Qn_efj9lI0oTZcTNxN6WHr9zH5YFDW9ggrls56gJDpdvqaKsbkQZPTmoFBOrqOdt9XCB909CwoLMqvGjLtOp8zDhMmLurFgNYgmfrw1ilavtAe3lY46Xv47oQJgKZXC9c51Mj9izLQT-ELKpeSt9DZkrz-wrN5R3lVGlr3H_RWB_YyEGD9QNN8EDnTmMjr1qgNhrZIXWuq5R4nOXijxBYmygq9pl3PBYei4trc7E7pFJHbkJIPgMqhx9BmmEBq-ws')`,
+            backgroundImage: `url('${roleInfo[role]?.image || roleInfo.FARMER.image}')`,
           }}
         />
         {/* Overlay Gradient */}
-        <div className="absolute inset-0 z-10 bg-gradient-to-t from-primary via-primary/60 to-transparent" />
+        <div className="absolute inset-0 z-10 bg-gradient-to-t from-primary/95 via-primary/75 to-primary/40" />
 
         {/* Top-Left Content Container */}
-        <div className="relative z-20 flex flex-col items-start gap-6 max-w-lg mt-4">
+        <div className="relative z-20 flex flex-col items-start gap-4 max-w-lg mt-2">
           <Link to="/" className="inline-block transition-transform hover:scale-105">
             <img
               alt="ASVANNA Logo"
-              className="w-28 h-28 object-contain rounded-full shadow-2xl filter drop-shadow-xl hover:scale-105 transition-transform"
+              className="w-24 h-24 object-contain rounded-full shadow-2xl filter drop-shadow-xl hover:scale-105 transition-transform"
               src="/logo.png"
             />
           </Link>
-          <h1 className="text-white text-headline-lg font-extrabold leading-tight drop-shadow-lg font-headline">
-            The Zero-Waste Marketplace: Guided by Real-Time Data from Seed to Harvest Distribution
-          </h1>
-          <p className="text-primary-fixed-dim font-body-lg opacity-90 leading-relaxed">
-            Eliminating destructive market gluts and stabilizing Sri Lanka's upcountry agriculture through real-time regional transparency.
-          </p>
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-white text-xs font-bold uppercase tracking-wider border border-white/30 shadow-sm">
+              <span className="material-symbols-outlined text-sm">{roleInfo[role]?.icon}</span>
+              <span>{roleInfo[role]?.badge}</span>
+            </div>
+            <h1 className="text-white text-headline-lg font-extrabold leading-tight drop-shadow-lg font-headline">
+              The Zero-Waste Marketplace: Guided by Real-Time Data from Seed to Harvest Distribution
+            </h1>
+            <p className="text-primary-fixed-dim font-body-lg opacity-90 leading-relaxed text-sm md:text-base">
+              Eliminating destructive market gluts and stabilizing Sri Lanka's upcountry agriculture through real-time regional transparency.
+            </p>
+          </div>
+
+          {/* Dynamic 3 Feature Points for Selected Role */}
+          <div key={`features-${role}`} className="w-full bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl shadow-xl mt-1 animate-fadeIn">
+            <ul className="space-y-2.5">
+              {roleInfo[role]?.points.map((point, idx) => (
+                <li key={idx} className="flex items-center gap-2.5 text-white font-semibold text-sm sm:text-base">
+                  <span className="material-symbols-outlined text-secondary-fixed text-xl flex-shrink-0">
+                    check_circle
+                  </span>
+                  <span>{point}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
 
         {/* Bottom Metrics Pill Row */}
-        <div className="relative z-20 flex gap-4 w-full mt-auto pt-8">
+        <div className="relative z-20 flex gap-4 w-full mt-auto pt-6">
           <div className="flex-1 bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-xl flex flex-col gap-1 shadow-lg">
             <span className="material-symbols-outlined text-secondary-fixed text-3xl">preventative</span>
             <span className="text-secondary-fixed font-extrabold text-2xl md:text-3xl font-headline">30-40%</span>
