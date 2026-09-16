@@ -23,5 +23,6 @@ router.post(
 
 router.get('/farmer/:farmerId?', authenticate, PlantingController.getFarmerPlantings);
 router.get('/regional-map', authenticate, PlantingController.getRegionalPlantings);
+router.delete('/:id', authenticate, authorizeRoles('FARMER', 'OFFICER', 'ADMIN'), PlantingController.deletePlanting);
 
 module.exports = router;
