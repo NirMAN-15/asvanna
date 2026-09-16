@@ -114,6 +114,25 @@ class PlantingController {
       next(err);
     }
   }
+
+  static async deletePlanting(req, res, next) {
+    try {
+      const { id } = req.params;
+      
+      // Ensure the user owns this record or is an officer/admin
+      const checkRes = await db.query('SELECT farmer_id FROM planting_records WHERE id = $1', [id]);
+      if (checkRes.rows.length === 0) return ApiResponse.error(res, 'Record not found', 404);
+      
+      if (req.user.role === 'FARMER' && checkRes.rows[0].farmer_id !== req.user.id) {
+        return ApiResponse.error(res, 'Unauthorized to delete this record', 403);
+      }
+
+      await db.query('DELETE FROM planting_records WHERE id = $1', [id]);
+      return ApiResponse.success(res, null, 'Planting record removed successfully');
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 module.exports = PlantingController;

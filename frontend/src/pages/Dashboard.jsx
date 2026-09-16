@@ -68,6 +68,18 @@ export default function Dashboard() {
     }
   }, [role]);
 
+  const handleDeleteCrop = async (cropId) => {
+    if (!window.confirm('Are you sure you want to remove this planting record?')) return;
+    try {
+      await API.delete(`/planting/${cropId}`);
+      triggerToast('Crop record removed successfully!');
+      fetchFarmerCrops();
+    } catch (err) {
+      console.error('Failed to delete crop:', err);
+      triggerToast('Failed to remove crop. Please try again.', 'error');
+    }
+  };
+
   const handleQuickProxySubmit = async (e) => {
     e.preventDefault();
     setProxyLoading(true);
@@ -98,14 +110,19 @@ export default function Dashboard() {
   // 1. FARMER ROLE VIEW (Recreating Stitch 'Farmer Home')
   // ----------------------------------------------------
   if (role === 'FARMER') {
+    const totalLand = user?.total_land_size || 5;
+    const utilizedLand = farmerCrops.reduce((sum, crop) => sum + (parseFloat(crop.land_size_acres) || 0), 0);
+    const utilPercentage = Math.min(Math.round((utilizedLand / totalLand) * 100), 100);
+    const availableLand = Math.max(0, totalLand - utilizedLand);
+
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8 animate-fadeIn font-body-md text-on-surface">
         {/* Verification Status Warning Banner */}
         {user?.verification_status === 'PENDING' && (
-          <div className="bg-amber-50 border border-amber-300 p-4 rounded-2xl flex items-center gap-3.5 text-amber-900 text-xs shadow-sm">
-            <span className="material-symbols-outlined text-amber-600 text-2xl flex-shrink-0">pending_actions</span>
+          <div className="bg-warning-container text-on-warning-container px-5 py-4 rounded-xl flex items-start gap-4 shadow-sm border border-warning/20">
+            <span className="material-symbols-outlined text-warning flex-shrink-0 text-xl">hourglass_top</span>
             <div>
-              <strong className="block text-sm font-bold text-amber-950">Profile Awaiting Divisional Officer Verification</strong>
+              <p className="font-bold text-sm">Account pending physical verification</p>
               <span>Your registration details have been queued for physical validation by the Bandarawela Agrarian Development Division. You can view weather and market rates; crop planting logs and marketplace surplus listings will activate once approved.</span>
             </div>
           </div>
@@ -127,20 +144,28 @@ export default function Dashboard() {
               {t('farmer_hero_desc')}
             </p>
 
-            {/* Quick Metrics Badges */}
-            <div className="flex flex-wrap items-center gap-3 mt-4 pt-2">
-              <div className="flex items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded-xl border border-outline-variant/30">
-                <span className="material-symbols-outlined text-primary text-lg">landscape</span>
-                <span className="text-xs text-on-surface-variant font-medium">{t('active_plot')}: <strong className="text-primary font-bold">{t('acres_val', { val: '2.5' })}</strong></span>
+            {/* Land Utilization Progress */}
+            <div className="mt-5 max-w-md bg-surface-container-low border border-outline-variant/30 rounded-xl p-3.5 shadow-sm">
+              <div className="flex justify-between items-end mb-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-on-surface-variant flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-sm">pie_chart</span>
+                  {t('land_utilization') || 'Land Utilization'}
+                </span>
+                <span className="text-sm font-bold text-primary">
+                  {utilizedLand.toFixed(1)} / {totalLand.toFixed(1)} Acres ({utilPercentage}%)
+                </span>
               </div>
-              <div className="flex items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded-xl border border-outline-variant/30">
-                <span className="material-symbols-outlined text-secondary text-lg">schedule</span>
-                <span className="text-xs text-on-surface-variant font-medium">{t('harvest_window')}: <strong className="text-secondary font-bold">{t('days_val', { val: '24' })}</strong></span>
+              <div className="w-full h-2.5 bg-surface-variant rounded-full overflow-hidden">
+                <div 
+                  className={`h-full rounded-full transition-all duration-1000 ease-out ${utilPercentage > 90 ? 'bg-error' : 'bg-primary'}`} 
+                  style={{ width: `${utilPercentage}%` }}
+                />
               </div>
-              <div className="flex items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded-xl border border-outline-variant/30">
-                <span className="material-symbols-outlined text-primary text-lg">payments</span>
-                <span className="text-xs text-on-surface-variant font-medium">{t('est_yield_value')}: <strong className="text-primary font-bold">LKR 420,000</strong></span>
-              </div>
+              <p className="text-[10px] text-on-surface-variant mt-1.5">
+                {utilPercentage >= 100 
+                  ? 'Your land is fully utilized based on registered plots.' 
+                  : `You have ${availableLand.toFixed(1)} acres available for new cultivation.`}
+              </p>
             </div>
           </div>
 
@@ -207,33 +232,43 @@ export default function Dashboard() {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead className="bg-surface-container-low text-on-surface-variant text-xs uppercase tracking-wider">
-                  <tr>
-                    <th className="px-4 py-3">Crop</th>
-                    <th className="px-4 py-3">Land Size (Acres)</th>
-                    <th className="px-4 py-3">Planting Date</th>
-                    <th className="px-4 py-3">Expected Harvest</th>
-                    <th className="px-4 py-3">Expected Yield</th>
-                    <th className="px-4 py-3">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-surface-variant text-sm">
-                  {farmerCrops.map(crop => (
-                    <tr key={crop.id} className="hover:bg-surface-container-low/50 transition">
-                      <td className="px-4 py-3 font-semibold text-on-surface">
-                        {lang === 'si' ? crop.name_si : `${crop.name_en} (${crop.name_si})`}
-                      </td>
-                      <td className="px-4 py-3">{crop.land_size_acres}</td>
-                      <td className="px-4 py-3">{new Date(crop.planting_date).toLocaleDateString()}</td>
-                      <td className="px-4 py-3 text-secondary font-medium">{new Date(crop.expected_harvest_date).toLocaleDateString()}</td>
-                      <td className="px-4 py-3 font-medium">{crop.expected_yield_kg} kg</td>
-                      <td className="px-4 py-3">
-                        <span className="px-2 py-1 rounded bg-primary/10 text-primary text-xs font-bold">
-                          {crop.status}
-                        </span>
-                      </td>
+                    <tr>
+                      <th className="px-4 py-3">Crop</th>
+                      <th className="px-4 py-3">Land Size (Acres)</th>
+                      <th className="px-4 py-3">Planting Date</th>
+                      <th className="px-4 py-3">Expected Harvest</th>
+                      <th className="px-4 py-3">Expected Yield</th>
+                      <th className="px-4 py-3">Status</th>
+                      <th className="px-4 py-3 text-right">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
+                  </thead>
+                  <tbody className="divide-y divide-surface-variant text-sm">
+                    {farmerCrops.map(crop => (
+                      <tr key={crop.id} className="hover:bg-surface-container-low/50 transition">
+                        <td className="px-4 py-3 font-semibold text-on-surface">
+                          {lang === 'si' ? crop.name_si : `${crop.name_en} (${crop.name_si})`}
+                        </td>
+                        <td className="px-4 py-3">{crop.land_size_acres}</td>
+                        <td className="px-4 py-3">{new Date(crop.planting_date).toLocaleDateString()}</td>
+                        <td className="px-4 py-3 text-secondary font-medium">{new Date(crop.expected_harvest_date).toLocaleDateString()}</td>
+                        <td className="px-4 py-3 font-medium">{crop.expected_yield_kg} kg</td>
+                        <td className="px-4 py-3">
+                          <span className="px-2 py-1 rounded bg-primary/10 text-primary text-xs font-bold">
+                            {crop.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <button
+                            onClick={() => handleDeleteCrop(crop.id)}
+                            className="text-error hover:bg-error/10 p-1.5 rounded transition"
+                            title="Remove Crop"
+                          >
+                            <span className="material-symbols-outlined text-lg">delete</span>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
               </table>
             </div>
           </section>
