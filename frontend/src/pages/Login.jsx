@@ -2,13 +2,15 @@ import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { LanguageContext } from '../context/LanguageContext';
-import farmerImage from '../assets/landing-bg.jpg';
+import farmerBg from '../assets/login-farmer-bg.jpg';
+import buyerBg from '../assets/login-buyer-bg.jpg';
+import officerBg from '../assets/login-officer-bg.jpg';
 
 const roleInfo = {
   FARMER: {
     badge: 'Upcountry Farmer Portal',
     icon: 'agriculture',
-    image: farmerImage,
+    image: farmerBg,
     points: [
       'Direct 5km Market Access',
       'Smart Crop Alternation Engine',
@@ -18,7 +20,7 @@ const roleInfo = {
   BUYER: {
     badge: 'Local Buyer Marketplace',
     icon: 'shopping_cart',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBNk1wX2H-y8LO9hhNsxoJOL6gustwoKeAt6tmhDtLh7nJ395qPdmChA6Q4aNRugaWxSodwTMXLOHOu7ZN2hkwF3yFF5j650sMgTzullF9wgMpRNldAb3VS_TA2QcwRyej74ZRFjpnfgr-RLZ8yk9tFBI4Lm1qNRer3uuLYaah4KqgurH6DXATzKY57Pt_fmFZX5JW75MMaZxJEe8vgCseG2KPOgaQ7zpMVpSp1leZ9oJhHCZ0XgBUoSw',
+    image: buyerBg,
     points: [
       'Geo-Fenced 5km Surplus Procurement',
       'Verified Quality & Organic Produce',
@@ -28,7 +30,7 @@ const roleInfo = {
   OFFICER: {
     badge: 'Divisional Agrarian Portal',
     icon: 'admin_panel_settings',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAK11Qn_efj9lI0oTZcTNxN6WHr9zH5YFDW9ggrls56gJDpdvqaKsbkQZPTmoFBOrqOdt9XCB909CwoLMqvGjLtOp8zDhMmLurFgNYgmfrw1ilavtAe3lY46Xv47oQJgKZXC9c51Mj9izLQT-ELKpeSt9DZkrz-wrN5R3lVGlr3H_RWB_YyEGD9QNN8EDnTmMjr1qgNhrZIXWuq5R4nOXijxBYmygq9pl3PBYei4trc7E7pFJHbkJIPgMqhx9BmmEBq-ws',
+    image: officerBg,
     points: [
       'Regional Crop Heatmaps & Saturation',
       'Proxy Data Entry for Offline Farmers',
