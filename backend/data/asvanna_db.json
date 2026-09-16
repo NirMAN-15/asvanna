@@ -1,6 +1,106 @@
 {
   "users": [
     {
+      "id": 1789516738014,
+      "full_name": "R. M. Jayasundara (New Registrant)",
+      "phone": "0703344556",
+      "nic": "199245678901",
+      "password_hash": "jayasundara.farm@gmail.com",
+      "role": "$2a$10$5b5vZyf5cAjd/50TYeQ0peaw.tgnwIGC1QUFwvhe9pMWa74BZzDj2",
+      "district": "FARMER",
+      "division": "Badulla",
+      "gnd_division": "Bandarawela",
+      "address": 6.834,
+      "latitude": 81.002,
+      "longitude": 1.75,
+      "total_land_size": 5,
+      "business_name": "Jayasundara Farmlands",
+      "business_type": "Farm",
+      "verification_status": "PENDING",
+      "is_verified": false,
+      "created_at": "2026-09-15T23:58:58.014Z"
+    },
+    {
+      "id": 1789516737970,
+      "full_name": "Chaminda Silva",
+      "phone": "0719876543",
+      "nic": "198234567890",
+      "password_hash": "chaminda.farmer@gmail.com",
+      "role": "$2a$10$5b5vZyf5cAjd/50TYeQ0peaw.tgnwIGC1QUFwvhe9pMWa74BZzDj2",
+      "district": "FARMER",
+      "division": "Badulla",
+      "gnd_division": "Bandarawela",
+      "address": 6.815,
+      "latitude": 80.985,
+      "longitude": 3.25,
+      "total_land_size": 5,
+      "business_name": "Hilltop Bio Cultivations",
+      "business_type": "Farm",
+      "verification_status": "APPROVED",
+      "is_verified": true,
+      "created_at": "2026-09-15T23:58:57.970Z"
+    },
+    {
+      "id": 1789516737929,
+      "full_name": "Kapila Bandara",
+      "phone": "0712345678",
+      "nic": "197823456789",
+      "password_hash": "kapila.farmer@gmail.com",
+      "role": "$2a$10$5b5vZyf5cAjd/50TYeQ0peaw.tgnwIGC1QUFwvhe9pMWa74BZzDj2",
+      "district": "FARMER",
+      "division": "Badulla",
+      "gnd_division": "Bandarawela",
+      "address": 6.832,
+      "latitude": 81.012,
+      "longitude": 2.5,
+      "total_land_size": 5,
+      "business_name": "Green Valley Holdings",
+      "business_type": "Farm",
+      "verification_status": "APPROVED",
+      "is_verified": true,
+      "created_at": "2026-09-15T23:58:57.929Z"
+    },
+    {
+      "id": 1789516737906,
+      "full_name": "Sunil Weerasinghe (Divisional Officer)",
+      "phone": "0771234567",
+      "nic": "198512345678",
+      "password_hash": "officer.bandarawela@agrarian.gov.lk",
+      "role": "$2a$10$5b5vZyf5cAjd/50TYeQ0peaw.tgnwIGC1QUFwvhe9pMWa74BZzDj2",
+      "district": "OFFICER",
+      "division": "Badulla",
+      "gnd_division": "Bandarawela",
+      "address": 6.829,
+      "latitude": 80.9995,
+      "longitude": 80.9878,
+      "total_land_size": 15,
+      "business_name": "Agrarian Services Centre Bandarawela",
+      "business_type": "Government",
+      "verification_status": "APPROVED",
+      "is_verified": true,
+      "created_at": "2026-09-15T23:58:57.906Z"
+    },
+    {
+      "id": 1789516737895,
+      "full_name": "System Super Admin",
+      "phone": "0770000000",
+      "nic": "199500000000",
+      "password_hash": "admin@asvanna.lk",
+      "role": "$2a$10$5b5vZyf5cAjd/50TYeQ0peaw.tgnwIGC1QUFwvhe9pMWa74BZzDj2",
+      "district": "ADMIN",
+      "division": "Badulla",
+      "gnd_division": "Bandarawela",
+      "address": 6.8258,
+      "latitude": 80.9982,
+      "longitude": 80.9878,
+      "total_land_size": 20,
+      "business_name": null,
+      "business_type": null,
+      "verification_status": "APPROVED",
+      "is_verified": true,
+      "created_at": "2026-09-15T23:58:57.895Z"
+    },
+    {
       "id": 1789244652526,
       "full_name": "Miyuni Dewanga (Local Buyer & Caterer)",
       "phone": "0741699017",
@@ -1164,6 +1264,26 @@
       "status": "DELIVERED",
       "fcm_token": null,
       "attempted_at": "2026-09-12T20:37:02.766Z"
+    }
+  ],
+  "farmer_verifications": [
+    {
+      "farmer_id": 1789516737929,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-15T23:58:57.948Z"
+    },
+    {
+      "farmer_id": 1789516737970,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-15T23:58:57.994Z"
+    },
+    {
+      "farmer_id": 1789516738014,
+      "verification_status": "APPROVED",
+      "verified_by": "PENDING",
+      "verified_at": "2026-09-15T23:58:58.108Z"
     }
   ]
 }

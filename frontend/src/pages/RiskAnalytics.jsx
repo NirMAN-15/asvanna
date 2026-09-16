@@ -91,7 +91,12 @@ export default function RiskAnalytics() {
                  item.crop.id === 9 ? '/crops/radish.jpg' :
                  item.crop.id === 11 ? '/crops/spring_onion.jpg' :
                  item.crop.id === 6 ? '/crops/bush_beans.jpg' :
-                 item.crop.id === 3 ? '/crops/carrot.jpg' : '/crops/leek.jpg'
+                 item.crop.id === 3 ? '/crops/carrot.jpg' : 
+                 item.crop.id === 10 ? '/crops/knol_khol.jpg' : 
+                 item.crop.id === 22 ? '/crops/gotukola.jpg' : 
+                 item.crop.id === 23 ? '/crops/kangkung.jpg' : 
+                 item.crop.id === 24 ? '/crops/mukunuwenna.jpg' : 
+                 item.crop.id === 25 ? '/crops/spinach.jpg' : '/crops/leek.jpg'
         }));
         setRecommendations(mapped);
       }
