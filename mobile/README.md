@@ -61,8 +61,7 @@ lib/
     │   │   └── officer_contact_screen.dart  # Direct Chat & Hotline to Bandarawela DO
     │   └── widgets/
     │       ├── crop_comparison_modal.dart   # Side-by-Side Crop Comparison Matrix
-    │       ├── post_surplus_modal.dart      # Publish Surplus Lot to 5km Market
-    │       └── presentation_demo_panel.dart # ✨ University Presentation Showcase Drawer
+    │       └── post_surplus_modal.dart      # Publish Surplus Lot to 5km Market
     └── buyer/
         ├── buyer_main_nav.dart              # Buyer Navigation Bar
         └── screens/
@@ -87,7 +86,6 @@ lib/
 | **🏢 5km Zero-Waste Market** | Interactive proximity radius slider (1–10 km), visual radar map, and urgent perishable clearance cards. |
 | **🎟️ Digital Pickup Voucher** | Generates verifiable order vouchers (`#ASV-5KM-XXXX`) with QR codes, pickup pins, and savings calculations. |
 | **💾 Offline-First Storage** | Local caching with `SharedPreferences` and automatic offline sync queue when internet is restored. |
-| **✨ Presentation Showcase** | Dedicated panel for university examiners to instantly trigger test scenarios (Leek Crisis, Beetroot Deficit, Buyer Clearance). |
 
 ---
 

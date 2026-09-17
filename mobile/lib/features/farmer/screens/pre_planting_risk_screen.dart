@@ -7,7 +7,6 @@ import '../../../core/models/risk_analysis_model.dart';
 import '../../../core/providers/app_state_provider.dart';
 import '../../../core/localization/app_translations.dart';
 import 'planting_entry_screen.dart';
-import '../widgets/crop_comparison_modal.dart';
 
 class PrePlantingRiskScreen extends StatefulWidget {
   final Crop? initialCrop;
@@ -55,129 +54,177 @@ class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
         title: Text(tr('risk_engine')),
         actions: [
           IconButton(
-            tooltip: 'Side-by-Side Comparison',
-            icon: const Icon(Icons.compare_arrows_rounded, color: AppColors.primary),
-            onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                ),
-                builder: (_) => CropComparisonModal(primaryCrop: _selectedCrop),
-              );
-            },
-          ),
-          IconButton(
-            tooltip: 'How Risk is Calculated',
+            tooltip: tr('how_risk_calculated'),
             icon: const Icon(Icons.info_outline, color: AppColors.primary),
-            onPressed: () => _showRiskCalculationExplainer(context),
+            onPressed: () => _showRiskCalculationExplainer(context, tr),
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Search Bar
-            TextField(
-              controller: _searchController,
-              onChanged: (val) => setState(() => _searchQuery = val),
-              decoration: InputDecoration(
-                hintText: tr('search_crop'),
-                prefixIcon: const Icon(Icons.search, color: AppColors.primary),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() => _searchQuery = '');
-                        },
-                      )
-                    : null,
-              ),
-            ),
-            const SizedBox(height: 14),
-
-            // Horizontal Crop Selector Chips
-            SizedBox(
-              height: 48,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: filteredCrops.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder: (context, index) {
-                  final crop = filteredCrops[index];
-                  final isSelected = crop.id == _selectedCrop.id;
-                  final cropRisk = appState.getRiskForCrop(crop.id);
-
-                  Color dotColor = AppColors.riskSafe;
-                  if (cropRisk?.riskLevel == CropRiskLevel.critical) {
-                    dotColor = AppColors.riskCritical;
-                  } else if (cropRisk?.riskLevel == CropRiskLevel.moderate) {
-                    dotColor = AppColors.riskModerate;
-                  }
-
-                  return ChoiceChip(
-                    label: Row(
+      body: RefreshIndicator(
+        color: AppColors.primary,
+        onRefresh: () async {
+          await appState.fetchLiveRiskData();
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Live Backend Connection & Intelligence Badge
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: appState.isBackendConnected ? const Color(0xFFE8F5E9) : const Color(0xFFFFF3E0),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: appState.isBackendConnected ? AppColors.riskSafe.withOpacity(0.5) : AppColors.riskModerate.withOpacity(0.5),
+                      ),
+                    ),
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(crop.iconEmoji, style: const TextStyle(fontSize: 16)),
-                        const SizedBox(width: 6),
-                        Text(
-                          '${crop.name} (${crop.sinhalaName})',
-                          style: TextStyle(
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                            color: isSelected ? Colors.white : AppColors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
                         Container(
                           width: 8,
                           height: 8,
                           decoration: BoxDecoration(
-                            color: isSelected ? Colors.white : dotColor,
+                            color: appState.isBackendConnected ? AppColors.riskSafe : AppColors.riskModerate,
                             shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          appState.isBackendConnected ? '⚡ Live AI Risk Engine (Bandarawela)' : '📶 Local Intelligence Engine',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: appState.isBackendConnected ? AppColors.primaryDark : AppColors.riskModerate,
                           ),
                         ),
                       ],
                     ),
-                    selected: isSelected,
-                    selectedColor: AppColors.primary,
-                    backgroundColor: Colors.white,
-                    side: BorderSide(
-                      color: isSelected ? AppColors.primary : const Color(0xFFDCE6DC),
+                  ),
+                  if (appState.isLoadingRisk)
+                    const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
                     ),
-                    onSelected: (selected) {
-                      if (selected) {
-                        setState(() => _selectedCrop = crop);
-                        appState.selectCropForRisk(crop);
-                      }
-                    },
-                  );
-                },
+                ],
               ),
-            ),
-            const SizedBox(height: 18),
+              const SizedBox(height: 10),
 
-            if (risk == null)
-              const Center(child: Text('No risk analysis data available for this crop.'))
-            else ...[
-              // Main Risk Gauge Card
-              _buildRiskAssessmentCard(risk, tr),
+              // Search Bar
+              TextField(
+                controller: _searchController,
+                onChanged: (val) => setState(() => _searchQuery = val),
+                decoration: InputDecoration(
+                  hintText: tr('search_crop'),
+                  prefixIcon: const Icon(Icons.search, color: AppColors.primary),
+                  suffixIcon: _searchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() => _searchQuery = '');
+                          },
+                        )
+                      : null,
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              // Horizontal Crop Selector Chips
+              SizedBox(
+                height: 48,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: filteredCrops.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  itemBuilder: (context, index) {
+                    final crop = filteredCrops[index];
+                    final isSelected = crop.id == _selectedCrop.id;
+                    final cropRisk = appState.getRiskForCrop(crop.id);
+
+                    Color dotColor = AppColors.riskSafe;
+                    if (cropRisk?.riskLevel == CropRiskLevel.critical) {
+                      dotColor = AppColors.riskCritical;
+                    } else if (cropRisk?.riskLevel == CropRiskLevel.moderate) {
+                      dotColor = AppColors.riskModerate;
+                    }
+
+                    return ChoiceChip(
+                      visualDensity: VisualDensity.compact,
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                      labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+                      label: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(crop.iconEmoji, style: const TextStyle(fontSize: 16)),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${crop.name} (${crop.sinhalaName})',
+                            style: TextStyle(
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                              color: isSelected ? Colors.white : AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: isSelected ? Colors.white : dotColor,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ],
+                      ),
+                      selected: isSelected,
+                      selectedColor: AppColors.primary,
+                      backgroundColor: Colors.white,
+                      side: BorderSide(
+                        color: isSelected ? AppColors.primary : const Color(0xFFDCE6DC),
+                      ),
+                      onSelected: (selected) {
+                        if (selected) {
+                          setState(() => _selectedCrop = crop);
+                          appState.selectCropForRisk(crop);
+                        }
+                      },
+                    );
+                  },
+                ),
+              ),
               const SizedBox(height: 18),
 
-              // Interactive Acreage Simulation Card
-              _buildAcreageSimulatorCard(risk),
-              const SizedBox(height: 18),
+              if (risk == null)
+                const Center(child: Text('No risk analysis data available for this crop.'))
+              else ...[
+                // Main Risk Gauge Card
+                _buildRiskAssessmentCard(risk, tr),
+                const SizedBox(height: 18),
 
-              // Regional Planted vs Target Demand
-              _buildAcreageComparisonCard(risk),
+                // Multi-Factor Risk Assessment Breakdown Card (4 Backend Weighted Factors)
+                if (risk.factors != null) ...[
+                  _buildMultiFactorBreakdownCard(risk, tr),
+                  const SizedBox(height: 18),
+                ],
+
+                // Interactive Acreage Simulation Card
+                _buildAcreageSimulatorCard(risk, tr),
+                const SizedBox(height: 18),
+
+                // Regional Planted vs Target Demand
+                _buildAcreageComparisonCard(risk, tr),
               const SizedBox(height: 18),
 
               // Price Impact Forecast
-              _buildPriceImpactCard(risk),
+              _buildPriceImpactCard(risk, tr),
               const SizedBox(height: 18),
 
               // Alternative Crop Recommendations
@@ -186,58 +233,39 @@ class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
                 const SizedBox(height: 20),
               ],
 
-              // Action Buttons: Compare vs Proceed
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      icon: const Icon(Icons.compare_arrows_rounded),
-                      label: const Text('Compare Crops'),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      onPressed: () {
-                        showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                          ),
-                          builder: (_) => CropComparisonModal(primaryCrop: _selectedCrop),
-                        );
-                      },
+              // Action Button: Proceed to Plant
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.check_circle_outline),
+                  label: Text('${tr('plant_crop_btn')} ${_selectedCrop.name}'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: risk.riskLevel == CropRiskLevel.critical
+                        ? AppColors.riskModerate
+                        : AppColors.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      icon: const Icon(Icons.check_circle_outline),
-                      label: Text('Plant ${_selectedCrop.name}'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: risk.riskLevel == CropRiskLevel.critical
-                            ? AppColors.riskModerate
-                            : AppColors.primary,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => PlantingEntryScreen(preSelectedCrop: _selectedCrop),
                       ),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => PlantingEntryScreen(preSelectedCrop: _selectedCrop),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
+                    );
+                  },
+                ),
               ),
               const SizedBox(height: 24),
             ],
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildRiskAssessmentCard(CropRiskAnalysis risk, String Function(String) tr) {
     Color statusColor;
@@ -312,7 +340,7 @@ class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${risk.cropEmoji} ${risk.cropName} Risk Status',
+                      '${risk.cropEmoji} ${risk.cropName} ${tr('risk_status')}',
                       style: GoogleFonts.poppins(
                         fontSize: 17,
                         fontWeight: FontWeight.bold,
@@ -334,7 +362,7 @@ class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
                     ),
                   ),
                   Text(
-                    'Saturation',
+                    tr('saturation'),
                     style: GoogleFonts.inter(fontSize: 11, color: AppColors.textMuted),
                   ),
                 ],
@@ -365,7 +393,160 @@ class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
     );
   }
 
-  Widget _buildAcreageSimulatorCard(CropRiskAnalysis risk) {
+  Widget _buildMultiFactorBreakdownCard(CropRiskAnalysis risk, String Function(String) tr) {
+    final factors = risk.factors;
+    if (factors == null) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2EBE2)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Text('⚙️', style: TextStyle(fontSize: 18)),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Multi-Factor AI Assessment',
+                    style: GoogleFonts.poppins(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.primarySoft,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '${risk.district} / ${risk.division}',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primaryDark,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+
+          // 1. Overplanting factor (45%)
+          _buildFactorRow(
+            icon: '🌾',
+            title: 'Over-Planting Risk (${factors.overPlantingWeight} Weight)',
+            detail: '${factors.currentPlantedKg.toStringAsFixed(0)} Kg Planted / ${factors.demandQuotaKg.toStringAsFixed(0)} Kg Target Quota (${factors.overPlantingRatio}% ratio)',
+            status: factors.overPlantingScore >= 65 ? 'High Glut Risk' : (factors.overPlantingScore >= 40 ? 'Moderate' : 'Safe Window'),
+            statusColor: factors.overPlantingScore >= 65 ? AppColors.riskCritical : (factors.overPlantingScore >= 40 ? AppColors.riskModerate : AppColors.riskSafe),
+          ),
+          const Divider(height: 20),
+
+          // 2. Weather factor (25%)
+          _buildFactorRow(
+            icon: '⛅',
+            title: 'Agro-Weather Suitability (${factors.weatherWeight} Weight)',
+            detail: factors.weatherAdvisory.isNotEmpty ? factors.weatherAdvisory : 'Temp Score: ${factors.temperatureScore.toStringAsFixed(0)}% • Rain Score: ${factors.rainfallScore.toStringAsFixed(0)}%',
+            status: factors.weatherScore <= 20 ? 'Optimal' : (factors.weatherScore <= 50 ? 'Favorable' : 'Weather Risk'),
+            statusColor: factors.weatherScore <= 20 ? AppColors.riskSafe : (factors.weatherScore <= 50 ? AppColors.riskModerate : AppColors.riskCritical),
+          ),
+          const Divider(height: 20),
+
+          // 3. Seasonal factor (15%)
+          _buildFactorRow(
+            icon: '🗓️',
+            title: 'Seasonal Fit (${factors.seasonalWeight} Weight)',
+            detail: 'Current Season: ${factors.currentSeason} • Status: ${factors.seasonStatus.replaceAll('_', ' ')}',
+            status: factors.seasonStatus == 'IN_SEASON' ? 'In Season' : 'Off Season',
+            statusColor: factors.seasonStatus == 'IN_SEASON' ? AppColors.riskSafe : AppColors.riskModerate,
+          ),
+          const Divider(height: 20),
+
+          // 4. Price Volatility factor (15%)
+          _buildFactorRow(
+            icon: '📈',
+            title: 'Price Volatility Risk (${factors.priceWeight} Weight)',
+            detail: 'Spot Price: Rs. ${factors.currentPrice.toStringAsFixed(0)}/kg • Volatility: ${factors.volatilityPercentage.toStringAsFixed(1)}%',
+            status: factors.priceScore >= 60 ? 'High Volatility' : (factors.priceScore >= 35 ? 'Moderate' : 'Stable'),
+            statusColor: factors.priceScore >= 60 ? AppColors.riskCritical : (factors.priceScore >= 35 ? AppColors.riskModerate : AppColors.riskSafe),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFactorRow({
+    required String icon,
+    required String title,
+    required String detail,
+    required String status,
+    required Color statusColor,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Text(icon, style: const TextStyle(fontSize: 14)),
+                const SizedBox(width: 6),
+                Text(
+                  title,
+                  style: GoogleFonts.poppins(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: statusColor.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                status,
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: statusColor,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          detail,
+          style: GoogleFonts.inter(fontSize: 11.5, color: AppColors.textSecondary, height: 1.3),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAcreageSimulatorCard(CropRiskAnalysis risk, String Function(String) tr) {
     final simulatedSaturation = ((risk.regionalPlantedAcres + _simulatedAcreage) / risk.regionalMaxTargetAcres) * 100;
     final simulatedYieldKg = _simulatedAcreage * _selectedCrop.expectedYieldKgPerAcre;
     final projectedHarvestPrice = risk.predictedHarvestPriceLkr;
@@ -387,16 +568,22 @@ class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  const Text('🧮', style: TextStyle(fontSize: 18)),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Interactive Sowing Simulator',
-                    style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold),
-                  ),
-                ],
+              Expanded(
+                child: Row(
+                  children: [
+                    const Text('🧮', style: TextStyle(fontSize: 18)),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        tr('simulator_title'),
+                        style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
@@ -404,7 +591,7 @@ class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  '${_simulatedAcreage.toStringAsFixed(1)} Acres',
+                  '${_simulatedAcreage.toStringAsFixed(1)} ${tr('acre_unit')}',
                   style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryDark),
                 ),
               ),
@@ -412,7 +599,7 @@ class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            'Adjust the slider to see how your planned land area impacts the regional market & revenue:',
+            tr('simulator_desc'),
             style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary),
           ),
           const SizedBox(height: 10),
@@ -427,7 +614,7 @@ class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
               min: 0.25,
               max: 3.0,
               divisions: 11,
-              label: '${_simulatedAcreage.toStringAsFixed(2)} Acres',
+              label: '${_simulatedAcreage.toStringAsFixed(2)} ${tr('acre_unit')}',
               onChanged: (val) => setState(() => _simulatedAcreage = val),
             ),
           ),
@@ -445,7 +632,7 @@ class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Simulated Saturation:', style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary)),
+                    Text(tr('simulated_saturation'), style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary)),
                     Text(
                       '${risk.saturationPercentage.toStringAsFixed(1)}% ➔ ${simulatedSaturation.toStringAsFixed(1)}%',
                       style: GoogleFonts.inter(
@@ -460,7 +647,7 @@ class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Est. Harvest Volume:', style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary)),
+                    Text(tr('est_harvest_vol'), style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary)),
                     Text('~${simulatedYieldKg.toStringAsFixed(0)} Kg', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold)),
                   ],
                 ),
@@ -468,7 +655,7 @@ class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Projected Revenue:', style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary)),
+                    Text(tr('projected_revenue'), style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary)),
                     Text('Rs. ${simulatedRevenue.toStringAsFixed(0)}', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.primaryDark)),
                   ],
                 ),
@@ -478,7 +665,7 @@ class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Glut Price Drop Risk Loss:', style: GoogleFonts.inter(fontSize: 12, color: AppColors.riskCritical, fontWeight: FontWeight.w600)),
+                      Text(tr('glut_risk_loss'), style: GoogleFonts.inter(fontSize: 12, color: AppColors.riskCritical, fontWeight: FontWeight.w600)),
                       Text(
                         '- Rs. ${potentialLoss.toStringAsFixed(0)}',
                         style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.riskCritical),
@@ -494,7 +681,7 @@ class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
     );
   }
 
-  Widget _buildAcreageComparisonCard(CropRiskAnalysis risk) {
+  Widget _buildAcreageComparisonCard(CropRiskAnalysis risk, String Function(String) tr) {
     final saturation = risk.saturationPercentage;
     final ratio = (saturation / 100.0).clamp(0.0, 2.0);
 
@@ -511,16 +698,20 @@ class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Regional Planting vs Market Target',
-                style: GoogleFonts.poppins(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+              Expanded(
+                child: Text(
+                  tr('regional_planting_target'),
+                  style: GoogleFonts.poppins(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: 8),
               Text(
-                'Bandarawela Division',
+                tr('division_label'),
                 style: GoogleFonts.inter(fontSize: 11, color: AppColors.textMuted),
               ),
             ],
@@ -548,20 +739,28 @@ class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildMiniMetric(
-                'Currently Sown',
-                '${risk.regionalPlantedAcres.toStringAsFixed(0)} Acres',
-                AppColors.textPrimary,
+              Expanded(
+                child: _buildMiniMetric(
+                  tr('currently_sown'),
+                  '${risk.regionalPlantedAcres.toStringAsFixed(0)} ${tr('acre_unit')}',
+                  AppColors.textPrimary,
+                ),
               ),
-              _buildMiniMetric(
-                'Max Market Demand',
-                '${risk.regionalMaxTargetAcres.toStringAsFixed(0)} Acres',
-                AppColors.primaryDark,
+              const SizedBox(width: 6),
+              Expanded(
+                child: _buildMiniMetric(
+                  tr('max_demand'),
+                  '${risk.regionalMaxTargetAcres.toStringAsFixed(0)} ${tr('acre_unit')}',
+                  AppColors.primaryDark,
+                ),
               ),
-              _buildMiniMetric(
-                'Status',
-                saturation > 100 ? '+${(saturation - 100).toStringAsFixed(0)}% Excess' : '${(100 - saturation).toStringAsFixed(0)}% Room',
-                saturation > 100 ? AppColors.riskCritical : AppColors.riskSafe,
+              const SizedBox(width: 6),
+              Expanded(
+                child: _buildMiniMetric(
+                  tr('status_label'),
+                  saturation > 100 ? '+${(saturation - 100).toStringAsFixed(0)}% ${tr('excess_label')}' : '${(100 - saturation).toStringAsFixed(0)}% ${tr('room_label')}',
+                  saturation > 100 ? AppColors.riskCritical : AppColors.riskSafe,
+                ),
               ),
             ],
           ),
@@ -574,21 +773,28 @@ class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: GoogleFonts.inter(fontSize: 11, color: AppColors.textMuted)),
+        Text(
+          title,
+          style: GoogleFonts.inter(fontSize: 11, color: AppColors.textMuted),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
         const SizedBox(height: 2),
         Text(
           value,
           style: GoogleFonts.inter(
-            fontSize: 14,
+            fontSize: 13.5,
             fontWeight: FontWeight.bold,
             color: valueColor,
           ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
       ],
     );
   }
 
-  Widget _buildPriceImpactCard(CropRiskAnalysis risk) {
+  Widget _buildPriceImpactCard(CropRiskAnalysis risk, String Function(String) tr) {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -603,7 +809,7 @@ class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Price Forecast at Harvest Time',
+                tr('price_forecast_harvest'),
                 style: GoogleFonts.poppins(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
@@ -626,7 +832,7 @@ class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Current Spot Price', style: GoogleFonts.inter(fontSize: 11, color: AppColors.textMuted)),
+                      Text(tr('current_spot_price'), style: GoogleFonts.inter(fontSize: 11, color: AppColors.textMuted)),
                       const SizedBox(height: 4),
                       Text(
                         'Rs. ${risk.currentMarketPriceLkr.toStringAsFixed(0)} /kg',
@@ -648,7 +854,7 @@ class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Predicted Harvest Price',
+                        tr('predicted_harvest_price'),
                         style: GoogleFonts.inter(
                           fontSize: 11,
                           color: risk.priceDropRiskPercentage > 0 ? AppColors.riskCritical : AppColors.riskSafe,
@@ -710,7 +916,7 @@ class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
         ),
         const SizedBox(height: 4),
         Text(
-          'Planting these crops balances the regional market and protects your revenue.',
+          tr('alt_crops_desc'),
           style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary),
         ),
         const SizedBox(height: 12),
@@ -790,19 +996,19 @@ class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
     );
   }
 
-  void _showRiskCalculationExplainer(BuildContext context) {
+  void _showRiskCalculationExplainer(BuildContext context, String Function(String) tr) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('How Asvanna Calculates Risk', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        title: Text(tr('how_asvanna_calc_title'), style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
         content: Text(
-          'Asvanna compares total registered farmer acreage in the Bandarawela Agrarian Division against historical consumption and national wholesale purchasing benchmarks (HARTI / Manning Market datasets).\n\nWhen registered planting exceeds 85% of regional demand, early warning alerts are triggered to prevent market glut at harvest time.',
+          tr('how_asvanna_calc_body'),
           style: GoogleFonts.inter(fontSize: 13, height: 1.4),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Understood'),
+            child: Text(tr('understood')),
           ),
         ],
       ),

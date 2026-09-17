@@ -217,9 +217,9 @@ class _WeatherScreenState extends State<WeatherScreen> {
                           color: Colors.white.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Text(
-                          'RADAR SYNCED',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10),
+                        child: Text(
+                          tr('radar_synced'),
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10),
                         ),
                       ),
                     ],
@@ -271,7 +271,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
 
             // Hourly Rain Forecast Carousel
             Text(
-              'Hourly Rain & Sunlight Radar',
+              tr('hourly_forecast'),
               style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
@@ -317,7 +317,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
 
             // Crop Disease Vulnerability Index
             Text(
-              'Crop Disease & Fungal Vulnerability Index',
+              tr('disease_advisories'),
               style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),

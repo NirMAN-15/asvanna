@@ -5,9 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/providers/app_state_provider.dart';
 import '../../../core/localization/app_translations.dart';
 import 'farm_land_map_screen.dart';
-import '../widgets/presentation_demo_panel.dart';
 import '../../auth/login_screen.dart';
-
 class FarmerProfileScreen extends StatelessWidget {
   const FarmerProfileScreen({super.key});
 
@@ -75,7 +73,7 @@ class FarmerProfileScreen extends StatelessWidget {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(
-          'Farmer Profile',
+          tr('profile_title'),
           style: GoogleFonts.poppins(
             fontWeight: FontWeight.bold,
             fontSize: 18,
@@ -86,21 +84,7 @@ class FarmerProfileScreen extends StatelessWidget {
         backgroundColor: Colors.transparent,
         actions: [
           IconButton(
-            tooltip: 'University Demo Showcase',
-            icon: const Icon(Icons.auto_awesome_rounded, color: AppColors.goldAccent),
-            onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                ),
-                builder: (_) => const PresentationDemoPanel(),
-              );
-            },
-          ),
-          IconButton(
-            tooltip: 'Log Out',
+            tooltip: tr('sign_out'),
             icon: const Icon(Icons.logout_rounded, color: AppColors.primary),
             onPressed: () {
               appState.logout();
@@ -192,12 +176,16 @@ class FarmerProfileScreen extends StatelessWidget {
                       children: [
                         const Icon(Icons.verified_rounded, size: 15, color: AppColors.asvannaButtonGreen),
                         const SizedBox(width: 6),
-                        Text(
-                          'Verified Agrarian Registered Farmer',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.asvannaButtonGreen,
+                        Flexible(
+                          child: Text(
+                            tr('verified_farmer'),
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.asvannaButtonGreen,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
@@ -229,7 +217,7 @@ class FarmerProfileScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Farmland Holdings',
+                        tr('farmland_holdings'),
                         style: GoogleFonts.poppins(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -244,7 +232,7 @@ class FarmerProfileScreen extends StatelessWidget {
                           );
                         },
                         child: Text(
-                          'View Map',
+                          tr('view_map'),
                           style: GoogleFonts.inter(
                             fontWeight: FontWeight.w600,
                             color: AppColors.asvannaButtonGreen,
@@ -258,24 +246,24 @@ class FarmerProfileScreen extends StatelessWidget {
                     children: [
                       Expanded(
                         child: _buildHoldingItem(
-                          'Total Land',
-                          '${farmer.totalLandAcres.toStringAsFixed(1)} Ac',
+                          tr('total_land'),
+                          '${farmer.totalLandAcres.toStringAsFixed(1)} ${tr('acre_unit')}',
                           Icons.landscape_outlined,
                           AppColors.asvannaButtonGreen,
                         ),
                       ),
                       Expanded(
                         child: _buildHoldingItem(
-                          'Cultivated',
-                          '${farmer.usedAcres.toStringAsFixed(1)} Ac',
+                          tr('cultivated_label'),
+                          '${farmer.usedAcres.toStringAsFixed(1)} ${tr('acre_unit')}',
                           Icons.eco_outlined,
                           AppColors.dashSafeGreen,
                         ),
                       ),
                       Expanded(
                         child: _buildHoldingItem(
-                          'Available',
-                          '${farmer.availableAcres.toStringAsFixed(1)} Ac',
+                          tr('available_land'),
+                          '${farmer.availableAcres.toStringAsFixed(1)} ${tr('acre_unit')}',
                           Icons.check_circle_outline,
                           AppColors.goldAccent,
                         ),
@@ -312,7 +300,7 @@ class FarmerProfileScreen extends StatelessWidget {
                       child: const Icon(Icons.language_rounded, color: AppColors.asvannaButtonGreen, size: 20),
                     ),
                     title: Text(
-                      'App Language',
+                      tr('app_language'),
                       style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14),
                     ),
                     trailing: Row(
@@ -340,39 +328,13 @@ class FarmerProfileScreen extends StatelessWidget {
                     leading: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFEF3C7),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(Icons.auto_awesome_rounded, color: Color(0xFFD97706), size: 20),
-                    ),
-                    title: Text(
-                      'Presentation Demo Panel',
-                      style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14),
-                    ),
-                    trailing: const Icon(Icons.chevron_right_rounded, color: Colors.grey),
-                    onTap: () {
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                        ),
-                        builder: (_) => const PresentationDemoPanel(),
-                      );
-                    },
-                  ),
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
                         color: AppColors.dashMetricAlertBg,
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Icon(Icons.logout_rounded, color: AppColors.dashAlertRed, size: 20),
                     ),
                     title: Text(
-                      'Sign Out',
+                      tr('sign_out'),
                       style: GoogleFonts.inter(
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
@@ -406,10 +368,12 @@ class FarmerProfileScreen extends StatelessWidget {
         Text(
           value,
           style: GoogleFonts.poppins(
-            fontSize: 16,
+            fontSize: 15,
             fontWeight: FontWeight.bold,
             color: AppColors.dashHeaderTitle,
           ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: 2),
         Text(
@@ -418,6 +382,8 @@ class FarmerProfileScreen extends StatelessWidget {
             fontSize: 11,
             color: AppColors.dashHeaderDate,
           ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
       ],
     );

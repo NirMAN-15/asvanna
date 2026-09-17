@@ -14,22 +14,22 @@ const MASTER_CROPS = [
   { id: 7, code: 'TOMATO', nameEn: 'Tomato', nameSi: 'තක්කාලි', nameTa: 'தக்காளி', benchmark: 220, min: 150, max: 800, emoji: '🍅', image: '/crops/beetroot.jpg' },
   { id: 8, code: 'CAPSICUM', nameEn: 'Capsicum', nameSi: 'මාළු මිරිස්', nameTa: 'குடை மிளகாய்', benchmark: 460, min: 300, max: 800, emoji: '🫑', image: '/crops/leek.jpg' },
   { id: 9, code: 'RADISH', nameEn: 'Radish', nameSi: 'රාබු', nameTa: 'முள்ளங்கி', benchmark: 140, min: 100, max: 250, emoji: '🥣', image: '/crops/radish.jpg' },
-  { id: 10, code: 'KNOLKHOL', nameEn: 'Knol-Khol', nameSi: 'නෝකෝල්', nameTa: 'நூல்கோல்', benchmark: 180, min: 150, max: 350, emoji: '🥦', image: '/crops/radish.jpg' },
-  { id: 11, code: 'SPRING_ONION', nameEn: 'Spring Onion', nameSi: 'ළූණු කොළ', nameTa: 'வெங்காய இலை', benchmark: 280, min: 200, max: 400, emoji: '🌱', image: '/crops/spring_onion.jpg' },
-  { id: 12, code: 'LETTUCE', nameEn: 'Lettuce', nameSi: 'සලාද කොළ', nameTa: 'லெட்யூஸ்', benchmark: 320, min: 250, max: 500, emoji: '🥬', image: '/crops/leek.jpg' },
+  { id: 10, code: 'KNOLKHOL', nameEn: 'Knol-Khol', nameSi: 'නෝල්කෝල්', nameTa: 'நூல்கோல்', benchmark: 180, min: 150, max: 350, emoji: '🥬', image: '/crops/knol_khol.jpg' },
+  { id: 11, code: 'SPRING_ONION', nameEn: 'Spring Onion', nameSi: 'ලූනු කොළ', nameTa: 'வெங்காயத்தாள்', benchmark: 280, min: 200, max: 400, emoji: '🧅', image: '/crops/spring_onion.jpg' },
+  { id: 12, code: 'LETTUCE', nameEn: 'Lettuce', nameSi: 'සලාද කොළ', nameTa: 'சலாதுஇலை', benchmark: 320, min: 250, max: 500, emoji: '🥬', image: '/crops/leek.jpg' },
   { id: 13, code: 'CELERY', nameEn: 'Celery', nameSi: 'සැල්දිරි', nameTa: 'செலரி', benchmark: 420, min: 300, max: 700, emoji: '🌿', image: '/crops/spring_onion.jpg' },
   { id: 14, code: 'BROCCOLI', nameEn: 'Broccoli', nameSi: 'බ්‍රොකොලි', nameTa: 'ப்ரோக்கோலி', benchmark: 680, min: 500, max: 1200, emoji: '🥦', image: '/crops/leek.jpg' },
-  { id: 15, code: 'CAULIFLOWER', nameEn: 'Cauliflower', nameSi: 'මල්ගෝවා', nameTa: 'காலிஃபிளவர்', benchmark: 380, min: 300, max: 700, emoji: '🤍', image: '/crops/radish.jpg' },
-  { id: 16, code: 'PUMPKIN', nameEn: 'Pumpkin', nameSi: 'වට්ටක්කා', nameTa: 'பூசணி', benchmark: 160, min: 100, max: 250, emoji: '🎃', image: '/crops/carrot.jpg' },
+  { id: 15, code: 'CAULIFLOWER', nameEn: 'Cauliflower', nameSi: 'මල් ගෝවා', nameTa: 'காலிபிளவர்', benchmark: 380, min: 300, max: 700, emoji: '🥦', image: '/crops/radish.jpg' },
+  { id: 16, code: 'PUMPKIN', nameEn: 'Pumpkin', nameSi: 'වට්ටක්කා', nameTa: 'பூசணிக்காய்', benchmark: 160, min: 100, max: 250, emoji: '🎃', image: '/crops/carrot.jpg' },
   { id: 17, code: 'BITTER_GOURD', nameEn: 'Bitter Gourd', nameSi: 'කරවිල', nameTa: 'பாகற்காய்', benchmark: 340, min: 200, max: 500, emoji: '🥒', image: '/crops/bush_beans.jpg' },
   { id: 18, code: 'SNAKE_GOURD', nameEn: 'Snake Gourd', nameSi: 'පතෝල', nameTa: 'புடலங்காய்', benchmark: 210, min: 150, max: 350, emoji: '🥒', image: '/crops/bush_beans.jpg' },
   { id: 19, code: 'CUCUMBER', nameEn: 'Cucumber', nameSi: 'පිපිඤ්ඤා', nameTa: 'வெள்ளரிக்காய்', benchmark: 160, min: 100, max: 300, emoji: '🥒', image: '/crops/bush_beans.jpg' },
   { id: 20, code: 'GREEN_CHILI', nameEn: 'Green Chili', nameSi: 'අමු මිරිස්', nameTa: 'பச்சை மிளகாய்', benchmark: 540, min: 300, max: 900, emoji: '🌶️', image: '/crops/bush_beans.jpg' },
-  { id: 21, code: 'RED_ONION', nameEn: 'Red Onion', nameSi: 'රතු ළූණු', nameTa: 'சிவப்பு வெங்காயம்', benchmark: 390, min: 250, max: 600, emoji: '🧅', image: '/crops/beetroot.jpg' },
-  { id: 22, code: 'GOTUKOLA', nameEn: 'Gotukola', nameSi: 'ගොටුකොළ', nameTa: 'வல்லாரை', benchmark: 260, min: 200, max: 400, emoji: '☘️', image: '/crops/spring_onion.jpg' },
-  { id: 23, code: 'KANGKUNG', nameEn: 'Water Spinach', nameSi: 'කංකුං', nameTa: 'வள்ளல் கீரை', benchmark: 140, min: 100, max: 200, emoji: '🌱', image: '/crops/spring_onion.jpg' },
-  { id: 24, code: 'MUKUNUWENNA', nameEn: 'Mukunuwenna', nameSi: 'මුකුණුවැන්න', nameTa: 'முக்குனுவென்ன', benchmark: 210, min: 150, max: 350, emoji: '🌿', image: '/crops/spring_onion.jpg' },
-  { id: 25, code: 'SPINACH', nameEn: 'Spinach', nameSi: 'නිවිති', nameTa: 'பசலைக் கீரை', benchmark: 220, min: 150, max: 300, emoji: '🍃', image: '/crops/spring_onion.jpg' }
+  { id: 21, code: 'RED_ONION', nameEn: 'Red Onion', nameSi: 'රතු ලූනු', nameTa: 'சிவப்பு வெங்காயம்', benchmark: 390, min: 250, max: 600, emoji: '🧅', image: '/crops/beetroot.jpg' },
+  { id: 22, code: 'GOTUKOLA', nameEn: 'Gotukola', nameSi: 'ගොටුකොළ', nameTa: 'வல்லாரை', benchmark: 260, min: 200, max: 400, emoji: '🥗', image: '/crops/gotukola.jpg' },
+  { id: 23, code: 'KANGKUNG', nameEn: 'Water Spinach', nameSi: 'කන්කුන්', nameTa: 'வள்ளல் கீரை', benchmark: 140, min: 100, max: 200, emoji: '🌿', image: '/crops/kangkung.jpg' },
+  { id: 24, code: 'MUKUNUWENNA', nameEn: 'Mukunuwenna', nameSi: 'මුකුණුවැන්න', nameTa: 'முக்குனுவென்ன', benchmark: 210, min: 150, max: 350, emoji: '🌿', image: '/crops/mukunuwenna.jpg' },
+  { id: 25, code: 'SPINACH', nameEn: 'Spinach', nameSi: 'නිවිති', nameTa: 'பசலைக் கீரை', benchmark: 220, min: 150, max: 300, emoji: '🥬', image: '/crops/spinach.jpg' }
 ];
 
 export default function MarketplaceSurplus() {

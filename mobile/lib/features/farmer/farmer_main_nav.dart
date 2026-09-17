@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/providers/app_state_provider.dart';
+import '../../core/localization/app_translations.dart';
 import 'screens/farmer_dashboard_screen.dart';
 import 'screens/pre_planting_risk_screen.dart';
 import 'screens/price_trends_screen.dart';
@@ -46,6 +49,10 @@ class _FarmerMainNavState extends State<FarmerMainNav> {
 
   @override
   Widget build(BuildContext context) {
+    final appState = Provider.of<AppStateProvider>(context);
+    final lang = appState.currentLanguage;
+    String tr(String key) => AppTranslations.tr(lang, key);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: IndexedStack(
@@ -78,14 +85,14 @@ class _FarmerMainNavState extends State<FarmerMainNav> {
                   children: [
                     _buildNavItem(
                       index: 0,
-                      label: 'Home',
+                      label: tr('nav_home'),
                       icon: Icons.home_outlined,
                       activeIcon: Icons.home_rounded,
                       isActive: _currentIndex == 0,
                     ),
                     _buildNavItem(
                       index: 1,
-                      label: 'Search',
+                      label: tr('nav_search'),
                       icon: Icons.search_rounded,
                       activeIcon: Icons.search_rounded,
                       isActive: _currentIndex == 1,
@@ -93,14 +100,14 @@ class _FarmerMainNavState extends State<FarmerMainNav> {
                     _buildCenterAddButton(),
                     _buildNavItem(
                       index: 2,
-                      label: 'Market',
+                      label: tr('nav_market'),
                       icon: Icons.storefront_outlined,
                       activeIcon: Icons.storefront_rounded,
                       isActive: _currentIndex == 2,
                     ),
                     _buildNavItem(
                       index: 3,
-                      label: 'Profile',
+                      label: tr('nav_profile'),
                       icon: Icons.person_outline_rounded,
                       activeIcon: Icons.person_rounded,
                       isActive: _currentIndex == 3,

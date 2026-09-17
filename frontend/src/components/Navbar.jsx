@@ -152,7 +152,10 @@ export default function Navbar() {
           </div>
 
           {/* Notifications Icon with Badge */}
-          <div className="relative cursor-pointer hover:scale-105 transition-transform p-1">
+          <div 
+            className="relative cursor-pointer hover:scale-105 transition-transform p-1"
+            onClick={() => navigate('/broadcasts')}
+          >
             <span className="material-symbols-outlined text-on-surface-variant text-[26px]">
               notifications
             </span>
@@ -160,7 +163,10 @@ export default function Navbar() {
 
           {/* Avatar with Ring */}
           <div className="flex items-center gap-2">
-            <div className="h-10 w-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary font-bold overflow-hidden ring-2 ring-primary ring-offset-2 shadow-sm">
+            <div 
+              className="h-10 w-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary font-bold overflow-hidden ring-2 ring-primary ring-offset-2 shadow-sm cursor-pointer hover:ring-secondary transition-all"
+              onClick={() => navigate('/settings')}
+            >
               {user?.photo ? (
                 <img src={user.photo} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
