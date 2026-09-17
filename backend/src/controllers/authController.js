@@ -293,8 +293,38 @@ class AuthController {
   static async updateFcmToken(req, res, next) {
     try {
       const { fcm_token } = req.body;
-      await db.query('UPDATE users SET fcm_token = $1 WHERE id = $2', [fcm_token, req.user.id]);
-      return ApiResponse.success(res, null, 'FCM token updated successfully');
+      await db.query(
+        'UPDATE users SET fcm_token = $1 WHERE id = $2',
+        [fcm_token, req.user.id]
+      );
+      return ApiResponse.success(res, null, 'FCM token updated');
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async changePassword(req, res, next) {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      if (!currentPassword || !newPassword) {
+        return ApiResponse.error(res, 'Current password and new password are required', 400);
+      }
+
+      const userRes = await db.query('SELECT password_hash FROM users WHERE id = $1', [req.user.id]);
+      if (userRes.rows.length === 0) return ApiResponse.error(res, 'User not found', 404);
+      
+      const user = userRes.rows[0];
+      const isMatch = await bcrypt.compare(currentPassword, user.password_hash);
+      if (!isMatch) {
+        return ApiResponse.error(res, 'Incorrect current password', 401);
+      }
+
+      const salt = await bcrypt.genSalt(10);
+      const newPasswordHash = await bcrypt.hash(newPassword, salt);
+
+      await db.query('UPDATE users SET password_hash = $1 WHERE id = $2', [newPasswordHash, req.user.id]);
+
+      return ApiResponse.success(res, null, 'Password updated successfully');
     } catch (err) {
       next(err);
     }

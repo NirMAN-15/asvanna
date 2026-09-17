@@ -1,0 +1,785 @@
+2090844212
+Institute of Technology University of Moratuwa
+ASVANNA (අස්වැන්න)
+The Zero-Waste Marketplace: Guided by Real-Time Data from
+Seed to Harvest Distribution
+Project I Final Report
+W. N. A. Wedikkara
+23IT0544
+K. A. H. I. Lakshitha
+23IT0503
+G. W. T. Jayampathi
+23IT0487
+R. R. L. Geeganage
+23IT0476
+K. H. M. Dewanga
+23IT0467
+Division of Information Technology
+Insititute of Technology
+University of Moratuwa
+July 2026
+ASVANNA (අස්වැන්න)
+The Zero-Waste Marketplace: Guided by Real-Time Data from Seed to Harvest Distribution
+W. N. A. Wedikkara
+23IT0544
+K. A. H. I. Lakshitha
+23IT0503
+G. W. T. Jayampathi
+23IT0487
+R. R. L. Geeganage
+23IT0476
+K. H. M. Dewanga
+23IT0467
+Project I report submitted to the Division of Information Technology, Institute of
+Technology, University of Moratuwa, Sri Lanka for the partial fulfillment of the requirements of the National Diploma in Information Technology.
+July 2026
+Declaration
+We declare that this thesis is our own work and has not been submitted in any form for another degree or diploma at any university or other institution of tertiary education. Information derived from the published or unpublished work of others has been acknowledged in the text and a list of references is given.
+Name of Student(s)
+Signature of Student(s)
+W. N. A. Wedikkara
+____________________________
+K. A. H. I. Lakshitha
+____________________________
+G. W. T. Jayampathi
+____________________________
+R. R. L. Geeganage
+____________________________
+K. H. M. Dewanga
+____________________________
+Date:
+Supervised by:
+Mrs. Uthpala Athukorala
+____________________________
+Date:
+Dedication
+This project is dedicated to the smallholder farming communities of Sri Lanka’s upcountry region, whose resilience in the face of market uncertainty inspired every line of this system.
+Acknowledgements
+We would like to express our sincere gratitude to our project supervisor, Mrs. Uthpala Athukorala, for her invaluable guidance, constructive feedback, and continuous support throughout the development of this project. Her expertise in software engineering and her understanding of agricultural technology applications greatly shaped the direction of
+ASVANNA.
+We would also like to thank the Division of Information Technology at the Institute of Technology, University of Moratuwa, for providing the academic framework and resources necessary for the completion of this project.
+Our appreciation extends to the Divisional Secretariat of Bandarawela and the agricultural officers of the Department of Agrarian Development for their insights into the practical challenges faced by upcountry farmers.
+Finally, we thank our families and peers for their patience and encouragement throughout this journey.
+Abstract
+ASVANNA is a digital agricultural management platform developed to address market instability and post-harvest losses among vegetable farmers in the upcountry region of Sri Lanka. Farmers often make planting decisions based on current market prices, leading to the overproduction of the same crops, market oversupply, price reductions, and significant financial losses. The project aims to support informed agricultural planning through a collaborative system that connects farmers with Divisional Officers of the Department of Agrarian Development. Farmers can record their crop plans and land information, while officers can enter data on behalf of farmers who do not have access to smartphones, ensuring wider participation and data accuracy. The system incorporates a Predictive Risk Engine that analyzes planting data and market demand to identify potential over-planting situations and recommend alternative crops. In addition, ASVANNA provides weather updates and official government notifications related to agriculture. A future enhancement includes a geo-fenced marketplace that enables farmers to connect with nearby buyers and sell surplus produce quickly. The expected outcomes of the project are reduced post-harvest waste, improved market stability, better decision-making for farmers, and increased economic sustainability within the agricultural sector. ASVANNA demonstrates how technology can support data-driven farming practices and contribute to long-term food security and agricultural development in Sri Lanka.
+Table of Contents
+TOC \o "1-3" \h \z \u Seed to Harvest Distribution PAGEREF _Toc234445339 \h 1
+ASVANNA (අස්වැන්න) PAGEREF _Toc234445340 \h 2
+Declaration PAGEREF _Toc234445341 \h 3
+Dedication PAGEREF _Toc234445342 \h 4
+Acknowledgements PAGEREF _Toc234445343 \h 5
+Abstract PAGEREF _Toc234445344 \h 6
+Chapter 1 PAGEREF _Toc234445345 \h 9
+1.1       Introduction PAGEREF _Toc234445346 \h 9
+1.2Background and Motivation PAGEREF _Toc234445347 \h 10
+1.3Aim and Objectives PAGEREF _Toc234445348 \h 13
+1.4 Proposed solution PAGEREF _Toc234445349 \h 15
+1.4.1 Users PAGEREF _Toc234445350 \h 16
+1.4.2 Inputs PAGEREF _Toc234445351 \h 17
+1.4.3 Outputs PAGEREF _Toc234445352 \h 18
+1.5. Summary PAGEREF _Toc234445353 \h 20
+2.2 Introduction PAGEREF _Toc234445354 \h 22
+2.3 Available approaches PAGEREF _Toc234445355 \h 22
+2.3.1 CROPIX – Sri Lanka National Digital Agriculture Platform (2026) PAGEREF _Toc234445356 \h 22
+2.3.2 IFarmer – Bangladesh Agricultural Platform PAGEREF _Toc234445357 \h 23
+2.3.3 Plantix – AI Crop Health Application (PEAT GmbH) PAGEREF _Toc234445358 \h 23
+2.3.4 AgroStar – India Agricultural Advisory and Input Platform PAGEREF _Toc234445359 \h 24
+2.3.5 GovSmart – Sri Lanka e-Governance Portal PAGEREF _Toc234445360 \h 24
+2.3.6 Krushak Odisha – India Integrated Farmer Information System PAGEREF _Toc234445361 \h 25
+2.3.7 Farmerline – Ghana Agricultural Advisory Platform PAGEREF _Toc234445362 \h 25
+2.3.8 FAO Agricultural Market Information System (AMIS) PAGEREF _Toc234445363 \h 26
+2.4 Summery PAGEREF _Toc234445364 \h 26
+Chapter 3 PAGEREF _Toc234445365 \h 29
+3.1 Introduction PAGEREF _Toc234445366 \h 29
+3.2 Approach PAGEREF _Toc234445367 \h 30
+3.2.1 Overview of the Approach PAGEREF _Toc234445368 \h 30
+3.2.2 System Architecture Approach PAGEREF _Toc234445369 \h 30
+3.2.3 The Rule-Based Risk Engine PAGEREF _Toc234445370 \h 32
+3.2.4 Digital Inclusivity Strategy PAGEREF _Toc234445371 \h 33
+3.2.5 Phased Feature Delivery PAGEREF _Toc234445372 \h 33
+3.2.6 Data Collection and Requirement Gathering Methodology PAGEREF _Toc234445373 \h 34
+3.2.7 Pilot Deployment Strategy PAGEREF _Toc234445374 \h 35
+3.3 Chapter Summary PAGEREF _Toc234445375 \h 35
+Chapter 04 PAGEREF _Toc234445376 \h 37
+4.1 Introduction PAGEREF _Toc234445377 \h 37
+4.2 Technologies Adopted PAGEREF _Toc234445378 \h 37
+4.2.1 Programming Languages, Libraries, and Frameworks PAGEREF _Toc234445379 \h 38
+4.2.2 Integrated Development Environment (IDE) PAGEREF _Toc234445380 \h 38
+4.2.3 Databases and Data Storage Systems PAGEREF _Toc234445381 \h 38
+4.2.4 Cloud Computing and Hosting Infrastructure PAGEREF _Toc234445382 \h 39
+4.2.5 Third-Party Application Programming Interfaces (APIs) PAGEREF _Toc234445383 \h 39
+4.2.6 User Experience (UX) and Design Tools PAGEREF _Toc234445384 \h 40
+4.3 Chapter Summary PAGEREF _Toc234445385 \h 40
+5.1 Introduction PAGEREF _Toc234445386 \h 40
+5.2 Requirement Gathering and Analysis PAGEREF _Toc234445387 \h 41
+5.2.1Functional Requirements PAGEREF _Toc234445388 \h 42
+5.2.1.1  Regional Monitoring and Over-Planting Alerts PAGEREF _Toc234445389 \h 42
+5.2.1.2  Smart Crop Recommendation Engine PAGEREF _Toc234445390 \h 43
+5.2.1.5  Broadcast Warning and Notification System PAGEREF _Toc234445391 \h 47
+5.2.2 Non-Functional Requirements PAGEREF _Toc234445392 \h 49
+5.2.2.1  Performance PAGEREF _Toc234445393 \h 49
+5.2.2.4  Availability PAGEREF _Toc234445394 \h 50
+5.2.2.5  Usability PAGEREF _Toc234445395 \h 51
+Chapter 6 PAGEREF _Toc234445396 \h 53
+Design PAGEREF _Toc234445397 \h 53
+6.1 Introduction PAGEREF _Toc234445398 \h 53
+6.2 Design PAGEREF _Toc234445399 \h 53
+6.3 Summary PAGEREF _Toc234445400 \h 68
+Chapter PAGEREF _Toc234445401 \h 69
+7  Conclusion PAGEREF _Toc234445402 \h 69
+7.1. Project Summary PAGEREF _Toc234445403 \h 69
+7.2. Future Works PAGEREF _Toc234445404 \h 70
+References PAGEREF _Toc234445405 \h 72
+List of Tables
+TOC \h \z \c "Table" Table 1:User Classes & Characteristics PAGEREF _Toc234445120 \h 42
+Table 2:Regional Monitoring & OverPlanting Alerts PAGEREF _Toc234445121 \h 43
+Table 3:Smart Crop Recommendation Engine PAGEREF _Toc234445122 \h 44
+Table 4:Geo Fenced Zero Waste MarketPlace PAGEREF _Toc234445123 \h 45
+Table 5:Administrative & Proxy Data Management PAGEREF _Toc234445124 \h 46
+Table 6:Broadcast Warnings & Notification System PAGEREF _Toc234445125 \h 47
+Table 7:User Account & Authentication PAGEREF _Toc234445126 \h 48
+List of Figures
+TOC \h \z \c "Figure" Figure 1:UseCase_Diagram PAGEREF _Toc234445067 \h 54
+Figure 2:Farmer_Activity_Diagram PAGEREF _Toc234445068 \h 56
+Figure 3:Divisional Officer_Activity_Diagram PAGEREF _Toc234445069 \h 56
+Figure 4:Local Buyer_Activity_Diagram PAGEREF _Toc234445070 \h 57
+Figure 5:ER_Diagram PAGEREF _Toc234445071 \h 58
+Figure 6:Class_Diagram PAGEREF _Toc234445072 \h 59
+Figure 7:Add Divisional Officer_Sequence_Diagram PAGEREF _Toc234445073 \h 60
+Figure 8:Place Direct Order_Sequence_Diagram PAGEREF _Toc234445074 \h 61
+Figure 9:Log Planting Data_Sequence_Diagram PAGEREF _Toc234445075 \h 62
+Figure 10:Validate Data_Sequence_Diagram PAGEREF _Toc234445076 \h 63
+Figure 11:Add Divisional Officer_State_Chart_Diagram PAGEREF _Toc234445077 \h 64
+Figure 12:Log Planting Data_State_Chart_Diagram PAGEREF _Toc234445078 \h 65
+Figure 13:Place Direct Order_State_Chart_Diagram PAGEREF _Toc234445079 \h 66
+Figure 14:User Login_State_Chart_Digaram PAGEREF _Toc234445080 \h 67
+Chapter 1
+1.1       Introduction
+This chapter introduces ASVANNA, the digital agricultural platform that is the central subject of this report. It establishes the geographic and economic context of the problem the platform is designed to solve, explains the motivation for building a new dedicated solution, defines the aims and objectives of the project, and provides a detailed description of the proposed system including its users, the data it takes in, the outputs it produces, and the step-by-step process by which it converts raw planting data into market intelligence that protects farming livelihoods. ASVANNA is a Sinhala word meaning “harvest” The name captures the platform’s central purpose to protect the harvest both the physical harvest of crops and the financial harvest that farmers depend on to sustain their livelihoods. Sri Lanka’s upcountry farming communities produce the nation’s most important perishable vegetables, yet they suffer repeated
+financial crises caused not by crop failure, but by a simple information gap: no farmer knows what their neighbors are planting, so all farmers simultaneously plant the same crop, flood the market at harvest time, and watch prices collapse to nothing. ASVANNA closed this information gap.
+The platform operates in two sequential phases. Phase One, The primary focus of Project I is a monitoring, alert, and advisory system that warns farmers before they make irreversible planting decisions. Phase Two, planned for implementation in Project II, adds a geo-fenced zero-waste marketplace that helps Farmers rapidly sell surplus produce to local buyers within five kilometers, preventing physical food waste when a surplus does occur. Together, these two phases address both the cause and the consequence of the over-planting cycle that devastates upcountry Sri Lankan farming families year after year.
+Background and Motivation
+Background
+The upcountry region of Sri Lanka encompassing Nuwara Eliya, Badulla, Bandarawela, Haputale, Welimada, Ella, and the surrounding highland areas is the principal growing zone for the country’s most important perishable vegetable crops. These include leeks, carrots, cabbage, beetroot, beans, tomatoes, and potatoes. The cool highland climate, averaging 15– 20°C throughout the year, makes this region uniquely suitable for growing these vegetables, which cannot be cultivated economically in Sri Lanka’s warmer lowland areas. The entire country, from Colombo’s hotels and restaurants to village markets throughout the nine provinces, depends on the upcountry region as its primary source for these vegetables
+Most upcountry farmers are smallholders. They own or lease between one and five acres of land and work it themselves, typically with family members. These farmers rely entirely on the income from their seasonal harvests to meet their living expenses, educate their children, and repay agricultural loans taken at the start of each growing season to cover the cost of seeds, fertilizers, pesticides, and hired labor. A single poor selling season caused by market oversupply can erase the income from months of hard physical work and leave a farming family unable to repay their loans. When this happens repeatedly as it does, to different crops, in virtually every growing season the cumulative financial damage is severe. The root cause of this crisis is a straightforward information gap. Each farmer makes their planting decision independently, based on what the market price for a given crop is today. If leeks are selling for Rs. 150 per kilogram on the Dambulla Dedicated Economic Centre today, it makes perfectly logical sense for a farmer to plant leeks for the next harvest season. The problem is that every other farmer in the region is looking at the same Rs. 150 price and making the same perfectly logical decision. None of them can see that hundreds of their neighbors are also planting leeks. There is no platform, no dashboard, no notice board, and no official system that shows an individual farmer in Bandarawela what the aggregate planting picture for their region looks like. The result of this invisible coordination failure is entirely predictable. When harvest arrives six to fourteen weeks later (depending on the crop), the regional market is flooded with several times more leeks or carrots, or cabbage than it can absorb. Supply overwhelms demand almost overnight. The market price for leeks can fall from Rs. 150 to Rs. 50 per kilogram within days. At Rs. 50 per kilogram, the revenue from selling a truckload of leeks barely covers the fuel cost of driving it to Dambulla, let alone the original cost of growing the crop. Farmers are left with no viable option the crop is either abandoned in the field or sold at a catastrophic loss. Because leeks, carrots, and cabbage cannot be stored they begin to rot within days of harvest there is no option to wait for prices to recover. The loss is total and immediate. This pattern repeats every growing season with different crops.
+Sri Lanka loses approximately 30 to 40 percent of its total agricultural output to post-harvest waste annually, equivalent to about 500,000 metric tons of food and Rs. 180 billion in economic losses (National Audit Office, 2024; HARTI, 2024). This is not a natural disaster. It is not caused by drought, flooding, or crop disease. It is caused by the complete absence of a simple shared information system that would allow individual farmers to see the aggregate planting picture of their region before they make an irreversible commitment. ASVANNA is built to be that system.
+Motivation
+Six specific factors motivated the development of ASVANNA as a purpose-built solution to this problem, rather than an adaptation of any existing platform:
+Financial Vulnerability of Smallholder Farmers: Upcountry farming families operate on thin margins. They take agricultural loans at the beginning of each season to fund inputs, and they have no safety net when prices collapse. When the leek price crashes, a farmer who borrowed Rs. 150,000 to plant two acres of leeks may sell the entire harvest for Rs. 20,000a loss that can take years to recover from and that traps the family in a cycle of debt and poverty. ASVANNA is designed to prevent this scenario before it starts, not to provide relief after it happens.
+Complete Absence of a Regional Planting Data Tool: The Sri Lankan government launched the CROPIX national digital platform in January 2026 to unify national agricultural data. However, this is a government infrastructure tool designed for policymakers and planners, not for individual farmers making daily planting decisions. No platform currently exists in Sri Lanka that aggregates real-time planting intentions from individual smallholder farmers at the divisional level and presents that data back to farmers as an actionable risk indicator.
+ASVANNA fills this gap by sitting directly on top of the CROPIX data infrastructure and translating its national-level benchmarks into hyper-local, farmer-facing alerts.
+Digital Exclusion of Older and Lower-Income Farmers: Field surveys in the Bandarawela area confirmed that approximately 35 percent of up-country farmers do not own smartphones. Any purely app-based solution would exclude these farmers from the data collection and protection the platform provides, creating an incomplete and unreliable regional picture. ASVANNA’s proxy data entry system, managed by government Divisional Officers, ensures that every farmer in the region is represented in the system’s data, regardless of their digital device ownership or technical literacy.
+Slow, Fragmented Government Communications: When the government issues an agricultural advisory such as a crop ban, a fertilizer subsidy announcement, or an emergency weather warning, this information typically reaches upcountry farmers days or weeks later through local radio, newspapers, or physical notice boards at agrarian development offices. Many farmers, particularly those in remote areas, never receive this communication at all. ASVANNA gives Divisional Officers the ability to broadcast critical information directly to the mobile phones of all registered farmers in their region instantly, using push notifications with an automatic SMS fallback for those without smartphones.
+Wasted Local Market Opportunity During Surplus Periods: When a surplus harvest does occur, upcountry farmers currently have no efficient way to find buyers near them. Local caterers, hotels, event planners, and school canteens within a few kilometers of a farm regularly need fresh produce and would willingly pay fair prices for it, but they have no mechanism to find local farms with available stock. The result is that produce is shipped expensively to distant markets when willing buyers are sitting nearby. Phase Two of ASVANNA creates this direct local connection.
+National Food Security Implications: Reducing post-harvest waste at the farm level directly improves the efficiency of Sri Lanka’s national food supply chain, reduces inflationary pressure caused by recurring market gluts and crashes, and contributes to the government’s stated national food security agenda. A version of ASVANNA deployed across all 25 districts could prevent tens of thousands of tons of food from being wasted annually.
+Aim and Objectives
+1.3.1Aim
+Primary Aim: The primary aim of ASVANNA is to stabilize the agricultural economy of Sri Lanka’s upcountry region by creating a data-driven digital ecosystem that eliminates the asymmetrical information by driving the trend-planting cycle. The project aims to transform the way smallholder farmers make planting decisions from isolated, price-reactive guesswork into a collaborative, data-informed process in which every farmer benefits from knowing what the whole community is planting before they commit to sowing.
+Secondary Aim: A secondary aim is to ensure that the solution is genuinely accessible to the entire upcountry farming community, including those without smartphones, those with limited literacy, and those in areas with unreliable internet connectivity. The platform is designed to serve the most marginalized farmers, not just the most digitally connected ones, because it is only when the regional planting data picture is complete that the risk calculations become reliable.
+Also, the system is also built on a scalable technical foundation that can grow from the initial Bandarawela pilot to a national deployment covering all 25 districts of Sri Lanka.
+1.3.2 Objectives
+To achieve the stated aim, the ASVANNA project will deliver the following specific objectives:
+Real-Time Cultivation Mapping and Over-Planting Alerts: Build a digital platform where upcountry farmers log their planting decisions, including crop type and land area being cultivated to create a continuously updated, regional cultivation map. A Predictive Risk Engine will compare the aggregated regional planting volume for each crop against national market demand data from the CROPIX API. When the regional acreage for a crop reaches 85 percent of estimated market demand, the engine will automatically dispatch Over-Planting Alert notifications to all farmers in the region who have logged or are considering logging that crop.
+Data-Driven Crop Recommendations: Provide every farmer who receives an Over-Planting Alert with a ranked list of at least three safer alternative crops currently undersupplied in the market. Each recommendation will be scored using a composite algorithm that weighs market gap from CROPIX data (40%), three-month price trend (30%), regional soil suitability (20%), and weather compatibility from the OpenWeatherMap API (10%). This converts an alert from a simple warning into a concrete, actionable decision-support tool.
+Geo-Fenced Zero-Waste Marketplace (Phase Two): Integrate a local digital marketplace that activates when a surplus occurs. Farmers list surplus produce with quantity, price, and pickup availability. The system uses GPS geofencing to identify all verified buyers within a five-kilometre radius and notify them immediately. A direct messaging interface and 30-minute order-acceptance workflow facilitate rapid farm-to-buyer transactions that eliminate transport costs and prevent physical food waste.
+Digital Inclusivity Through Proxy Data Entry: Ensure that 100 percent of farmers in the target region are represented in the planting data, including approximately 35 percent without smartphones. Divisional Officers will be able to enter planting data on behalf of offline farmers through a web dashboard, with a complete audit trail recording the officer’s ID and entry timestamp for every proxy record.
+Scalable Pilot and National Framework: Deploy the system as a targeted pilot in the Bandarawela area of the Badulla District, selected because it is a high-density growing zone for the perishable crops most affected by the trend-planting cycle. Build all system components database, API, Risk Engine, and configuration management to support national-scale deployment across all 25 districts without architectural changes.
+1.4 Proposed solution
+ASVANNA is a multi-interface digital ecosystem built around a single core function: showing every farmer what the rest of their region is planting, warning them when a crop is becoming dangerously oversupplied, and helping them choose a safer alternative. The system achieves this through a mobile application for farmers, a web dashboard for Divisional Officers, a backend API powered by the Predictive Risk Engine, and a real- time synchronization layer that ensures every farmer sees the most current regional planting picture at all times
+1.4.1 Users
+ASVANNA is designed for four distinct user types, each with a specific role in the platform ecosystem:
+Farmer (Mobile Application): The primary user of the system. Farmers register by providing their name, phone number, NIC, GPS-pinned farm location, and total land size in acres. Through the app, they log planting decisions (crop type and acreage), view real- time risk status indicators for their crops, receive Over-Planting Alert notifications, access ranked alternative crop recommendations with price trend data, view localized weather forecasts, read official government notices on a Notice Board, and (in Phase Two) list surplus produce on the marketplace. The app supports Sinhala, Tamil, and English, works offline with SQLite caching, and auto-syncs when connectivity is restored.
+Divisional Officer (Web Dashboard): Government agricultural officers of the
+Department of Agrarian Development who serve as the regional data managers for their jurisdiction. They register farmers, enter proxy planting data on behalf of farmers without smartphones (with full audit trail), view real-time regional cultivation heat-maps and crop trend analytics, broadcast official government warnings and advisories to targeted
+farmer groups, and configure the risk threshold percentages for specific crops in their area. Officer accounts require manual approval by the System Administrator before activation.
+Local Buyer (Web and Mobile — Phase Two): Businesses and individuals who purchase agricultural produce, including caterers, event planners, hotel procurement managers, school canteens, and small retailers. They register with their business name, GPS-verified location, and purchase capacity. Through the buyer interface, they browse surplus listings within their proximity radius, place direct orders, and communicate with farmers via an in-app messaging interface. Buyers are only activated in Phase Two of the platform.
+System Administrator (Web Dashboard): An internal ASVANNA platform administrator responsible for creating and approving Divisional Officer accounts, managing geographic division configurations, and overseeing system-wide parameters. This is not a public-facing role; it is an internal technical operations role that controls elevated access privileges in the system
+1.4.2 Inputs
+The ASVANNA platform receives the following data inputs from its users and external systems:
+Farmer Planting Data: The crop type a farmer intends to grow and the land area in acres they will cultivate. This is the single most important input: it is what the Predictive Risk Engine aggregates to calculate regional supply totals and determine whether an Over- Planting Alert should be triggered.
+Farmer Registration Data: Each farmer’s name, phone number, NIC number, GPS- pinned farm location, and total registered land size. Entered once at registration and updated by the farmer or their assigned Divisional Officer when details change.
+Proxy Planting Data (from Divisional Officers): Planting records manually entered by Divisional Officers on behalf of farmers without smartphones. Stored in the same
+database table as farmer-submitted records, with an additional ‘proxy_by’ field recording the officer’s user ID and the entry timestamp
+National Market Demand Data (CROPIX API): National-level estimates of how much of each crop the Sri Lankan market is expected to absorb in the coming harvest period. Fetched from the government’s CROPIX platform every 24 hours and cached locally.
+This is the demand benchmark against which regional planting supply totals are compared.
+Localized Weather Data (OpenWeatherMap API): Real-time and 7-day forecast weather data for the upcountry region, including temperature ranges, rainfall predictions, frost
+risk, and growing-day conditions. Used both for the farmer weather panel and as one of the four inputs to the crop recommendation scoring model.
+Official Government Notices (Uploaded by Officers): Formal agricultural directives, crop bans, fertiliser subsidy windows, and emergency warnings uploaded by Divisional Officers from their web dashboard for broadcast to registered farmers.
+Surplus Produce Listings (Phase Two): Data entered by farmers about available surplus post-harvest, including crop type, quantity in kilograms, asking price per kilogram, and available pickup date range.
+1.4.3 Outputs
+ASVANNA generates the following output for its users:
+Risk Status Indicators: A prominently displayed three-state color indicator for each crop a farmer has logged or searched: o Safety (Green - below 70% of demand) o At Risk (yellow -70–84% of demand) o Over-Planted (Red -85%+ of demand) o Update Frequency: Refreshed in real time on every connected device within
+five seconds of any new planting data entry.
+Over-Planting Alert Notifications: Firebase Cloud Messaging (FCM) push notifications with automatic SMS fallback for unreachable users dispatched to all farmers who have logged an affected crop when the regional acreage for that crop reaches the Over-Planted threshold. Each alert includes the crop name, the current Supply Coverage Ratio, and a link to view alternative crop recommendations immediately.
+Smart Crop Recommendations: When a farmer searches for or receives an alert about an At-Risk or Over-Planted crop, the system returns to a ranked list of at least three safer alternatives. Each recommendation includes a market gap score, soil suitability rating, current market price, 3-month price history, and weather suitability for the current growing season.
+Regional Heat-Maps and Analytics (Officer Dashboard): An interactive, color-coded map showing crop cultivation density across all registered farms in the officer’s division. It features trend charts for the top planted crops, projected harvest supply volumes, and a table of crops currently in At-Risk or Over-Planted status. This interface is refreshed at a minimum of every 24 hours.
+Government Broadcasts: Official Warnings, subsidy announcements, and emergency advisories delivered via FCM push and SMS fallback to targeted farmer groups. These updates are archived in each farmer’s digital Notice Board for 90 days.
+Surplus Marketplace Listings (Phase Two): Geotagged listings of available surplus produce, visible to verified buyers within the configured proximity radius. Listings include the farm name, crop type, quantity, price, distance, and pickup availability.
+Order Confirmations and Messaging (Phase Two): Real-time push notifications and in-app messaging threads created when buyers place orders on surplus listings, facilitating direct farm-to-buyer coordination.
+1.4.4 Process
+The internal process of ASVANNA converts farmer planting data into market intelligence through the following sequence of steps:
+Data Collection: Farmers submit planting entries through the mobile app, or Divisional Officers submit proxy entries through the web dashboard. All entries are stored in the primary PostgreSQL database and simultaneously pushed to the Firebase Realtime Database so that all connected dashboards and applications reflect the latest regional data within seconds.
+Risk Engine Calculation: Every new planting entry triggers the Predictive Risk Engine. The engine retrieves the total regional acreage currently logged for the affected crop type across all farmers in that geographic division. It then fetches the national market demand benchmark for that crop from the locally cached CROPIX data and calculates the Supply Coverage Ratio using the following relation:
+2515235-96731
+This ratio𝑆𝑢𝑝𝑝𝑙𝑦 directly 𝐶𝑜𝑣𝑒𝑟𝑎𝑔𝑒 determines 𝑅𝑎𝑡𝑖𝑜 the current= ( 𝐸𝑠𝑡𝑖𝑚𝑎𝑡𝑒𝑑 risk𝑅𝑒𝑔𝑖𝑜𝑛𝑎𝑙 status 𝑁𝑎𝑡𝑖𝑜𝑛𝑎𝑙 𝑃𝑙𝑎𝑛𝑡𝑖𝑛𝑔 for 𝑀𝑎𝑟𝑘𝑒𝑡 the 𝑉𝑜𝑙𝑢𝑚𝑒 crop. 𝐷𝑒𝑚𝑎𝑛𝑑 )×100%
+Alert Dispatch: When the Supply Coverage Ratio crosses 85 percent, the system changes the risk status to Over-Planted and automatically dispatches FCM push notifications to all affected farmers. If push delivery fails for any farmer within five minutes, the system sends an SMS to their registered phone number. For farmers who are offline, the alert appears as a prominent in-app banner the next time they launch the application.
+Recommendation Generation: Simultaneously with alert dispatch, the recommendation sub-module calculates which alternative crops are currently safe and suitable. It ranks alternatives using a composite score weighted across four citical factors: market gap (40%), price trend (30%), soil suitability (20%), and weather compatibility (10%). The top three results are presented to the farmer by supporting metrics to facilitate an informed alternative planting decision.
+Marketplace Matching (Phase Two): When a farmer creates a surplus listing, the system uses the Google Maps Platform API to calculate the GPS-based distance between the farm and all registered buyer locations. All verified buyers within the configured proximity radius receive an instant push notification. Order requests are held open for a strict 30-minute window and are automatically cancelled if the farmer does not respond.
+Offline Synchronization: The mobile app caches planting entries in a local SQLite database when no internet connection is available. A background sync service automatically uploads cached data when connectivity is restored. A persistent offline banner displays the exact timestamp of the last successful synchronization to the farmer.
+1.5. Summary
+This chapter has established the complete foundation for the ASVANNA project. The background section described the upcountry agricultural context of Sri Lanka, the information gap driving the trend-planting crisis, the concrete mechanism by which that crisis unfolds each growing season, and the scale of the resulting economic damage. Six specific motivating factors explained why a new, locally tailored platform is necessary. The overarching aim and five distinct objectives defined clear, measurable outcomes for the project.
+The proposed solution described the two-phase system in detail, identifying four user types, seven input categories, seven output categories, and a six-step internal process.
+Chapter 2
+Literature Review
+2.2 Introduction
+This chapter reviews eight existing digital platforms and initiatives that attempt to address challenges related to those targeted by ASVANNA. The platforms were selected to represent a range of approaches across four distinct categories:
+National government agricultural data systems (CROPIX, GovSmart, Krushak
+Odisha)
+Farmer advisory mobile applications (IFarmer, Plantix, AgroStar, Farmerline)
+International food market monitoring systems (FAO AMIS)
+Each platform is evaluated for the problem it addresses, its key features, and its limitations relative to the specific needs of upcountry Sri Lankan farmers. The review applies nine evaluation criteria:
+real-time regional planting monitoring, over-planting risk alerts, smart crop recommendations, geo-fenced surplus marketplace, proxy data entry for farmers without smartphones, officer analytics dashboard, weather intelligence integration, multi-language local language support, and push notification with SMS fallback. These criteria were defined from the field research findings described in Chapter 5: they are not arbitrary they represent the specific capabilities that upcountry farmers and Divisional Officers confirmed are essential to solving the trend-planting problem in the Sri Lankan context.
+2.3 Available approaches
+2.3.1 CROPIX – Sri Lanka National Digital Agriculture Platform (2026)
+CROPIX is the single most directly relevant existing system to ASVANNA because it operates in the same country, addresses agricultural data management, and is directly integrated into ASVANNA’s architecture as the source of national market demand benchmarks. Launched in January 2026 by Sri Lanka’s Ministry of Digital Economy, CROPIX is a national-level data aggregation infrastructure that consolidates crop production data from across Sri Lanka and makes it available to government planning bodies and policymakers. It represents a significant investment in agricultural digitisation and is the most comprehensive repository of national crop market data currently available in Sri Lanka.
+However, CROPIX was never designed as a farmer-facing decision-support tool. It does not have a mobile application for individual farmers, does not generate real-time over-planting alerts at the divisional level, does not offer crop recommendations based on regional supply analysis, and does not include a surplus marketplace, proxy data entry, or a Divisional Officer analytics dashboard. CROPIX operates at the national level for policymakers; ASVANNA is designed to sit on top of the CROPIX data infrastructure and translate its national benchmarks into hyper-local, farm-level guidance that individual farmers can act on before they sow.
+2.3.2 IFarmer – Bangladesh Agricultural Platform
+IFarmer is a Bangladeshi platform connecting farmers to agricultural inputs, financing products, and output markets. Its model centers on aggregating smallholder farmers into a digital supply chain network and connecting them to institutional buyers and input suppliers. It includes a mobile application and a marketplace component that enables farmers to sell produce through the IFarmer network and has achieved meaningful scale in the Bangladeshi context.
+For the ASVANNA use case, IFarmer has significant structural limitations. It does not aggregate individual farmer planting intentions to calculate regional supply risk and issue pre-planting alerts. Its marketplace is a centralized, national-scale platform rather than a proximity-based geo-fenced tool it does not specifically connect nearby buyers to reduce transport costs during surplus periods. It does not include proxy data entry for offline farmers, Divisional Officer management dashboards, or weather intelligence integration. It is also designed for the Bangladeshi market and does not integrate with Sri Lanka’s CROPIX data infrastructure.
+2.3.3 Plantix – AI Crop Health Application (PEAT GmbH)
+Plantix, developed by the German company PEAT GmbH, is one of the most widely deployed agricultural mobile applications in the world, active in over 60 countries. It uses convolutional neural network image recognition to identify crop diseases, pest infestations, and nutrient deficiencies from photographs taken on a farmer’s smartphone. A farmer points their phone at a plant showing symptoms, and Plantix identifies the problem and recommends a treatment product. It is a technically sophisticated tool with a strong global user base.
+Plantix addresses a fundamentally different problem from ASVANNA. Plantix diagnoses individual plant health issues after planting has occurred; ASVANNA prevents market over-supply decisions before planting is committed to. Plantix has no mechanism for regional cultivation monitoring, does not compare supply against market demand, generates no pre-planting alerts, and includes no marketplace, proxy data entry, or officer administration features. The two platforms are complementary in purpose but serve entirely different use cases. A farmer using Plantix is asking “what is wrong with my crop?”, a farmer using ASVANNA is asking “what should I plant to make a profit?”.
+2.3.4 AgroStar – India Agricultural Advisory and Input Platform
+AgroStar is an Indian agricultural technology company providing farmers with expert advisory content, input procurement, and some market linkage features. The platform employs a team of certified agricultural scientists who answer farmer queries submitted via the mobile application and supports input delivery to rural areas through a logistics network. AgroStar has built one of the largest digital agricultural advisory networks in India.
+AgroStar provides some basic market price information and agricultural advisory content, which partially overlaps with ASVANNA’s crop recommendation feature. However, its advisory model is reactive rather than proactive: farmers ask questions and experts respond, rather than the system monitoring conditions and alerting farmers automatically. AgroStar does not aggregate regional cultivation data, does not calculate regional supply risk against market demand, does not issue pre-planting alerts, and does not include a geo-fenced marketplace or proxy data entry. It is also designed for the Indian market and does not integrate with Sri Lankan government data infrastructure.
+2.3.5 GovSmart – Sri Lanka e-Governance Portal
+GovSmart is Sri Lanka’s central e-governance web portal, which hosts citizen-facing government services across multiple sectors including agriculture. It provides links to agricultural subsidy information, Department of Agriculture resources, and some government-to-citizen communication features. It represents the existing government digital communication infrastructure.
+GovSmart is a general-purpose government portal, not an agricultural decision-support system. It provides no real-time regional planting data, no risk alerts, no crop recommendations, no officer analytics dashboards, no proxy data entry, and no marketplace functionality. Its government communication capability is conceptually relevant to ASVANNA’s broadcast warning feature, but GovSmart is not designed for real-time targeted notifications to specific farmer groups, does not use push notifications or SMS fallback, and is not farmer-centric in any of its interfaces.
+2.3.6 Krushak Odisha – India Integrated Farmer Information System
+Krushak Odisha is a comprehensive farmer database system built by the government of Odisha state in India. It links farmers’ land records, crop insurance registrations, agricultural scheme eligibility, and subsidy distribution into a unified database accessible by government officers. The system maintains a detailed digital directory of all enrolled farmers and has established processes for officers to manage farmer records, making it the most structurally relevant precedent for ASVANNA’s administrative and proxy data management features.
+Despite this, Krushak Odisha was not designed as a real-time market intelligence or decision-support tool. It does not monitor regional planting trends, generate over-planting alerts, provide crop recommendations, offer a surplus marketplace, or integrate weather intelligence. It is a government benefits administration database, not a farmer advisory platform. ASVANNA’s Divisional Officer management and proxy data entry concepts draw structural inspiration from the Krushak model, but ASVANNA extends these administrative features with the real-time market analytics and farmer-facing advisory functions that Krushak Odisha does not include.
+2.3.7 Farmerline – Ghana Agricultural Advisory Platform
+Farmerline is a Ghanaian agricultural technology company that delivers advisory services to smallholder farmers across West Africa through a combination of smartphone applications and voice or SMS messages for farmers without smartphones. Its multilingual, voice-based delivery system makes it one of the most digitally inclusive agricultural platforms in the world. Farmerline delivers weather alerts, market price information, and agricultural advisory content, and has built a supply chain linkage service that helps farmers connect with institutional buyers.
+Farmerline’s commitment to digital inclusivity and SMS-based fallback delivery are highly relevant to the ASVANNA context and influenced the design of ASVANNA’s multilingual support, SMS notification fallback, and proxy data system. However, Farmerline does not aggregate planting data from individual farmers to calculate regional supply risks. It delivers information to farmers but does not collect cultivation data from them in a way that enables collective market intelligence. Its market linkage service is a supply chain network rather than a proximity-based geo-fenced marketplace. It does not include an officer administration dashboard or regional cultivation monitoring.
+2.3.8 FAO Agricultural Market Information System (AMIS)
+The Food and Agriculture Organization’s AMIS are a global inter-agency platform that monitors the international market for four major commodities: wheat, maize, rice, and soybeans. It aggregates supply and demand data from member countries and provides assessments used by international policymakers to coordinate responses to global food price crises. AMIS is widely considered the gold standard for global agricultural market monitoring at the macro level.
+AMIS operates on a completely different scale and for a completely different audience from ASVANNA. It tracks four global commodities at the country level; ASVANNA tracks dozens of perishable vegetables at the village and district level. It is designed for international trade policymakers; ASVANNA is designed for individual smallholder farmers and local government officers. AMIS has no mobile interface, no regional cultivation monitoring, no individual farmer alerts, no crop recommendations, no marketplace, and no proxy data entry. Its inclusion in this review illustrates the gap between macro-level market intelligence systems and the hyper-local, farmer-centric tools that smallholder communities need day to day.
+2.4 Summery
+The table below compares all eight reviewed systems against ASVANNA using the nine evaluation criteria defined in Section 2.1.
+Feature
+CROP
+IX
+IFar mer
+Plant
+ix
+AgroS
+tar
+GovSm
+art
+Krush ak
+Farmerl
+ine
+FA
+O
+AM
+IS
+ASVAN
+NA
+Real-Time
+Regional
+Planting
+Monitoring
+✘
+✘
+✘
+✘
+✘
+✘
+✘
+✘
+✔
+Over-
+Planting Risk
+Alerts
+✘
+✘
+✘
+✘
+✘
+✘
+✘
+✘
+✔
+Smart Crop Recommend
+ation Engine
+✘
+✘
+✘
+✓
+✘
+✘
+✓
+✘
+✔
+Geo-Fenced
+Surplus
+Marketplace
+✘
+✓
+✘
+✓
+✘
+✘
+✘
+✘
+✔
+Proxy Data
+Entry for
+Offline
+Farmers
+✘
+✘
+✘
+✘
+✘
+✓
+✘
+✘
+✔
+Officer
+Analytics
+Dashboard
+✓
+✘
+✘
+✘
+✓
+✓
+✘
+✓
+✔
+Weather
+Intelligence
+Integration
+✘
+✘
+✓
+✓
+✘
+✘
+✓
+✘
+✔
+Multi- language
+(Sinhala/Ta mil)
+✘
+✘
+✘
+✘
+✓
+✘
+✘
+✘
+✔
+FCM + SMS
+Fallback
+Notifications
+✘
+✘
+✘
+✘
+✘
+✘
+✓
+✘
+✔
+The comparison confirms that no existing platform combines all nine features that ASVANNA delivers. The two most critical features real-time regional planting monitoring and over-planting risk alerts are absent from every reviewed system in their farmer-facing, locally-tailored form. The geo-fenced surplus marketplace and proxy data entry for offline farmers are also missing from most reviewed platforms.
+The uniqueness of ASVANNA lies not in any single capability but in the integration of all nine features into one locally adapted ecosystem. CROPIX provides the demand data foundation. Farmerline demonstrates the value of digital inclusivity and SMS fallback. Krushak Odisha shows what officer-managed proxy systems look like in practice. ASVANNA takes the most relevant design insights from each approach and combines them with the regional supply monitoring and pre-planting alert capabilities that none of the reviewed systems provide.
+Chapter 3
+Approach
+3.1 Introduction
+This chapter presents the overall approach used to design and develop the Asvanna platform. It explains the architectural design, development methodology, and key technologies used to build the system. The approach was developed after analyzing the agricultural challenges faced by farmers, understanding user requirements, and considering the technical and environmental conditions in which the system will operate.
+Asvanna is a smart agricultural platform designed to support farmers in making informed crop-planning decisions. One of the major problems it addresses is the trend planting phenomenon, where many farmers cultivate the same crop at the same time due to high market prices. This often leads to excessive supply, lower market prices, and significant financial losses. To overcome this issue, the platform utilizes data collection, communication technologies, and intelligent decision-making mechanisms to provide timely recommendations and risk assessments.
+The system is designed using a three-layer architecture consisting of the Sensing Layer, Communication Layer, and Application Layer. This architecture ensures efficient data collection, reliable data transmission, and effective delivery of services to end users:
+The Sensing Layer gathers agricultural and environmental data from various sources such as weather services, market databases, and farmer inputs.
+The Communication Layer is responsible for securely transmitting data between system components using network and API technologies.
+The Application Layer processes the collected data, performs risk analysis, generates recommendations, and provides user-friendly interfaces for farmers, buyers, and administrators.
+The approach adopted for Asvanna is based on three key principles: digital accessibility, data-driven decision making, and information transparency. These principles guided the design of the layered architecture, the development of the crop risk analysis mechanism, and the implementation of the platform's web and mobile applications. This chapter describes how these principles were applied throughout the project, including the system architecture, analytical processes, development strategy, and data management approach.
+3.2 Approach
+3.2.1 Overview of the Approach
+The development approach for Asvanna follows a structured methodology that combines data collection, communication technologies, and intelligent decision support to help farmers make informed agricultural decisions. The platform is designed to address the trend planting phenomenon by collecting agricultural data, transmitting it efficiently, and processing it to generate meaningful recommendations and risk alerts.
+The approach is based on a three-layer architecture consisting of the Sensing Layer, Communication Layer, and Application Layer. These layers work together to ensure seamless data collection, reliable information exchange, and effective service delivery. Through this architecture, Asvanna transforms agricultural decision-making from a reactive process into a proactive and data-driven process that benefits farmers, buyers, and agricultural officers.
+3.2.2 System Architecture Approach
+Asvanna adopts a Three-Layer Architecture comprising the Sensing Layer,
+Communication Layer, and Application Layer. This architecture provides a clear separation of responsibilities, improves scalability, and enables efficient management of agricultural data.
+Sensing Layer
+The Sensing Layer is responsible for collecting and generating data required by the platform. Unlike traditional IoT systems that rely entirely on physical sensors, Asvanna gathers information from multiple sources, including:
+Farmer planting submissions
+Divisional Officer data entries
+Weather information services
+Market price databases
+Agricultural reports and datasets
+This layer acts as the primary source of agricultural and environmental information. The accuracy and completeness of the collected data directly influence the effectiveness of the platform's decision-making capabilities.
+Communication Layer
+The Communication Layer facilitates the transfer of data between the data sources and the application services. It ensures secure and reliable communication throughout the platform.
+Key communication technologies include:
+RESTful APIs
+Internet and mobile network connectivity
+Cloud-based communication services
+Push notification services
+This layer enables farmers, Divisional Officers, and buyers to exchange information with the system in real time. It also supports integration with external services such as weather APIs and market information systems.
+Application Layer
+The Application Layer contains the core functionalities of the Asvanna platform. It processes incoming data, performs risk analysis, generates recommendations, and delivers services to end users. The Application Layer includes:
+Farmer Mobile Application
+Buyer Marketplace Interface
+Divisional Officer Dashboard
+Risk Analysis Engine
+Crop Recommendation Module
+Notification and Alert Management System
+Using the information received through the Communication Layer, this layer analyzes agricultural trends and provides actionable insights to users. It serves as the decision-making and service delivery component of the platform. The three-layer architecture supports future scalability and allows additional data sources, users, and services to be integrated without significant modifications to the overall system design.
+3.2.3 The Rule-Based Risk Engine
+The analytical core of Asvanna is the Risk Analysis Engine, which operates within the Application Layer. A rule-based approach was selected because it provides transparency, predictability, and ease of implementation while requiring minimal historical training data.
+The Risk Analysis Engine performs the following functions sequentially:
+Data Aggregation: The engine collects planting records submitted by farmers and Divisional Officers. Each record contains:
+Crop type o Cultivated land area o Expected harvest date
+Geographic location
+Demand and Supply Comparison: The aggregated cultivation data is compared against predefined market demand thresholds and regional agricultural statistics.
+Risk Classification: Based on the analysis, each crop is categorized as:
+Safe: Supply is within expected demand levels.
+At Risk: Supply is approaching the market demand limit.
+Over-Planted: Projected supply exceeds anticipated market demand.
+Alert Generation: When a crop enters the At Risk or Over-Planted category, the system automatically sends notifications to affected farmers through the Communication Layer.
+Crop Recommendations: The engine recommends alternative crops by considering:
+Regional cultivation patterns o Weather conditions o Market demand trends
+Crop suitability information
+This rule-based mechanism allows users to understand how recommendations are generated while enabling agricultural officers to adjust thresholds when necessary.
+3.2.4 Digital Inclusivity Strategy
+One of the primary challenges in Sri Lanka's agricultural sector is the unequal access to digital technologies. Many farmers may not own smartphones or have continuous internet connectivity. To address this challenge, Asvanna incorporates a Proxy Data Entry Mechanism. Divisional Officers can enter planting information on behalf of farmers who cannot directly access the platform.
+This approach ensures:
+Wider participation from farming communities
+More complete regional agricultural data
+Improved accuracy of risk assessments
+Greater inclusiveness across different levels of digital literacy
+By combining direct farmer participation with officer-assisted data entry, the platform creates a more comprehensive and representative agricultural database.
+3.2.5 Phased Feature Delivery
+The development strategy is divided into two major phases:
+Phase One – Planning and Prevention
+This phase focuses on preventing over-planting before cultivation begins. Key features include:
+Farmer registration
+Planting intention submissions
+Risk analysis and alerts
+Weather information integration
+Crop recommendation services
+Phase Two – Surplus Management Marketplace
+This phase focuses on managing surplus production that may occur despite preventive measures. Key features include:
+Local buyer marketplace
+Surplus crop listings
+Buyer-farmer matching
+Demand-based procurement support
+Geo-location-based market connectivity
+This phased approach allows the project team to validate the core planning and risk analysis features before introducing marketplace functionalities.
+3.2.6 Data Collection and Requirement Gathering Methodology
+The system requirements were gathered using a combination of qualitative and quantitative research methods:
+Stakeholder Interviews: Interviews were conducted with farmers, Divisional Officers, and agricultural sector stakeholders. These discussions helped identify practical challenges faced during crop planning and marketing activities.
+Field Surveys: Agricultural information such as crop varieties, cultivation patterns, and regional farming practices was collected through structured field surveys.
+UI/UX Prototyping: Multiple interface prototypes were developed and evaluated to ensure ease of use for individuals with varying levels of digital literacy.
+Secondary Data Sources: Crucial baseline metrics were obtained from the Department of Agriculture, HARTI, national agricultural reports, market price databases, and weather information services. These sources provided supporting data for defining risk thresholds and recommendation rules.
+3.2.7 Pilot Deployment Strategy
+The platform will initially be deployed as a pilot project within the Bandarawela region. This controlled deployment allows the development team to evaluate system performance, validate risk analysis results, and gather feedback from real users.
+The pilot deployment aims to:
+Test data collection processes
+Evaluate communication reliability
+Assess user acceptance
+Verify recommendation accuracy
+Improve system usability
+The feedback obtained during the pilot phase will be used to refine the platform before wider regional deployment. This approach minimizes implementation risks and ensures that the final system effectively addresses the needs of the agricultural community.
+3.3 Chapter Summary
+This chapter described the overall approach adopted for the design and development of the Asvanna platform. The approach is based on a Three-Layer Architecture consisting of the Sensing Layer, Communication Layer, and Application Layer, which together enable efficient data collection, reliable information exchange, and intelligent service delivery. This architectural design supports scalability, maintainability, and future expansion while ensuring that agricultural data can be processed and utilized effectively.
+At the core of the system is the Risk Analysis Engine, which collects planting data from farmers and Divisional Officers, analyzes cultivation trends against market demand information, classifies potential risks, and generates early warning notifications. By providing timely alerts and crop recommendations, the platform helps farmers make informed decisions and reduce the likelihood of over-planting and market saturation.
+The approach also addresses the challenge of digital inclusivity through a Proxy Data Entry Mechanism, allowing Divisional Officers to submit planting information on behalf of farmers who do not have access to smartphones or reliable internet connectivity. This ensures broader participation, more comprehensive data coverage, and improved accuracy of risk assessments across farming communities.
+A phased feature delivery strategy was adopted to ensure systematic development and validation of the platform. Phase One focuses on planning, prevention, and risk analysis features, while Phase Two introduces surplus management and marketplace functionalities that connect farmers with potential buyers. This phased implementation allows the core decision-support features to be evaluated before expanding the platform's capabilities.
+The approach is further supported by a structured requirement gathering and data collection methodology, which includes stakeholder interviews, field surveys, UI/UX prototyping, and analysis of secondary agricultural data sources. These activities ensured that the platform was designed according to the real needs and challenges of Sri Lankan farmers and agricultural officers.
+Finally, the planned pilot deployment in the Bandarawela region provides an opportunity to validate the system in a real-world environment, assess its effectiveness, and gather user feedback for further improvements. Together, these architectural, analytical, and methodological components form a practical and sustainable solution for supporting data-driven agricultural planning and improving decision-making within Sri Lanka's agricultural sector.
+Chapter 04
+Technology
+4.1 Introduction
+This chapter provides a comprehensive evaluation and technical justification of the technologies selected for the implementation of the ASVANNA digital agricultural platform. To satisfy the demands of a high-throughput, data-driven system, a robust multi-tier architecture has been designed.
+The selected technology stack is distributed across client-side applications, server runtime environments, decoupled cloud infrastructure, and distributed database engines. Each component has been mathematically and operationally vetted to satisfy specific functional capabilities and strict non-functional constraints, including sub-five-second real-time synchronization, micro-second transactional databases, secure fault-tolerant APIs, and dynamic multi-lingual local rendering.
+4.2 Technologies Adopted
+The ASVANNA ecosystem utilizes a hybrid, service-oriented technological layout to split operational responsibilities cleanly between user engagement, analytical execution, and external telemetry streaming.
++-----------------------------------------------------------------------+
+|                           APPLICATION LAYER                           |
+|   [Mobile App: Flutter/Dart]        [Web Dashboard: React.js/HTML5]   |
++------------------------------------+----------------------------------+
+|  REST APIs / JSON / HTTPS                                      v
++-----------------------------------------------------------------------+
+|                          COMMUNICATION LAYER                          |
+|         [Runtime Server: Node.js]   <--->   [API Framework: Express.js]  |
++------------------------------------+----------------------------------+
+|  SQL Queries / NoSQL Sync                                      v
++-----------------------------------------------------------------------+
+|                             DATA LAYER                                |
+| [Relational: PostgreSQL] <---> [NoSQL Cache: Firebase Realtime DB]   |
++-----------------------------------------------------------------------+
+4.2.1 Programming Languages, Libraries, and Frameworks
+Frontend Mobile Architecture (Flutter / Dart): The mobile applications facing both Farmers and Local Buyers are engineered using the Flutter SDK. Flutter compiles directly to native ARM machine code via the Dart language compiler, bypassing the performance bottlenecks associated with typical JavaScript-to-Native runtime bridges. This cross-platform framework guarantees identical UI rendering profiles across Android and iOS deployments from a single, unified codebase. It natively supports low-level hardware abstractions, allowing efficient local SQLite catching during network drops.
+Frontend Web Architecture (React.js): The administrative portal utilized by
+Divisional Officers is built using React.js. Reacts virtual Document Object Model (DOM) optimization ensures that massive geographical datasets, real-time data visual analytics, and complex crop heatmaps refresh smoothly without full-page re-renders. Component-driven styling libraries are incorporated to handle dynamic grid elements.
+Backend Application Server (Node.js with Express.js): The application backend server runs on Node.js using the Express.js micro-framework. Node.js features an asynchronous, event-driven, non-blocking $I/O$ paradigm managed by the libuv thread pool. This allows the core server to handle thousands of concurrent API handshakes and spatial database connections from mobile clients simultaneously without thread starvation. Express.js provides lightweight, highly modular routing architectures to isolate the platform's microservices cleanly.
+4.2.2 Integrated Development Environment (IDE)
+● Visual Studio Code (VS Code): The software engineering lifecycle is standardized around VS Code. Its lightweight signature, combined with advanced debugging protocols for Dart, asynchronous JavaScript, and structural SQL syntax validation, enables a unified workflow. Continuous Integration and Continuous Deployment (CI/CD) hooks and version control are managed natively within the IDE to streamline development across teams.
+4.2.3 Databases and Data Storage Systems
+Primary Relational Engine (PostgreSQL): PostgreSQL acts as the single source of truth for all structured, transactional, and relational data structures. This includes complex data schemas such as encrypted user directories, role-based access configurations, spatial government land charts, and immutable historical cultivation ledgers. PostgreSQL’s native adherence to Atomicity, Consistency, Isolation, and Durability (ACID) compliance ensures total data integrity during multi-row operations.
+Live Synchronisation Engine (Firebase Realtime Database): Operating concurrently alongside the relational database, Firebase Realtime Database handles high-frequency, transient data points. It stores active localized marketplace listings and dynamic crop status indicators. Firebase caches state configurations locally on client devices and uses standard WebSockets to synchronize updates across all connected devices within milliseconds of an underlying database change.
+4.2.4 Cloud Computing and Hosting Infrastructure
+● Enterprise Cloud Infrastructure (Amazon Web Services / Microsoft Azure): The entire system is deployed on top of secure, multi-availability-zone cloud environments. The application runtime is hosted on virtual container nodes inside managed clusters. The backend relies on elastic load balancers to distribute traffic dynamically, guaranteeing high uptime. Relational instances run on highly managed cloud databases featuring automated write-ahead logging, daily multi-region snapshotting, and elastic storage scaling to easily accommodate national deployment workloads.
+4.2.5 Third-Party Application Programming Interfaces (APIs)
+CROPIX National Platform API: Integrated at the core layer of the Predictive Risk Engine. This secure endpoint is called every 24 hours to ingest state-vetted, national-level agricultural market demand forecasts, consumption targets, and baseline target acreages.
+Google Maps Platform SDK & Geofencing API: Leveraged to compute complex geospatial boundaries. The API parses explicit GPS coordinate pairs sent from mobile devices to execute proximity matching within a strict 5-kilometer radius. It also layers coordinate density matrices onto the React frontend to generate live, interactive regional heatmaps.
+OpenWeatherMap Telemetry API: Queries real-time, local weather stations to ingest metrics like relative humidity, rainfall volume, and temperature indices. This raw data is piped into the recommendation sub-module to weigh alternative crop viability.
+Firebase Cloud Messaging (FCM): Manages asynchronous notification routing. FCM handles low-latency push notifications across mobile operating systems. The backend monitors delivery statuses; if a device fails to acknowledge a push payload within a strict 5-minute timeout window, a backup routine switches down to transmit the alert via a standard SMS text network.
+4.2.6 User Experience (UX) and Design Tools
+● Figma & Adobe Illustrator: Figma is utilized to map complex user journeys and test interaction mechanics through rapid prototyping cycles. It was instrumental in conducting high-contrast color experiments to optimize readability for outdoor farming environments. The platform's complete trilingual asset catalog (English, Sinhala, and Tamil) was wireframed here to ensure a completely accessible user experience regardless of a user's digital literacy level.
+4.3 Chapter Summary
+Chapter 4 detailed the robust technical architecture and carefully balanced software stack designed to support the ASVANNA ecosystem. By combining high-performance client frameworks (Flutter/React.js) with a non-blocking backend processing core (Node.js/Express) and a dual-database layout (PostgreSQL for ACID consistency; Firebase for real-time tracking), the platform is fundamentally structured to scale smoothly from local pilots to national deployment.
+The native integration of critical external assets—such as CROPIX demand indices, Google Maps spatial queries, and real-time weather alerts—transforms ASVANNA from a basic communication channel into an advanced, data-driven system built to stabilize agricultural economies and eliminate food waste in Sri Lanka.
+Chapter 5
+Analysis
+5.1 Introduction
+This chapter presents a comprehensive analysis of the ASVANNA agricultural platform, covering both the requirement gathering process and the complete set of functional and non-functional requirements derived from that process. Requirement analysis is a critical phase in the software development lifecycle: it establishes a verified and agreed-upon baseline of what the system must do, who it must serve, and under what quality constraints it must operate.
+The requirements for ASVANNA were not defined in isolation. They emerged directly from real-world engagement with the system's primary stakeholders—the upcountry smallholder farmers and Divisional Officers of the Department of Agrarian Development in the Bandarawela and Badulla districts of Sri Lanka. This structural grounding in field research ensures that the requirements documented in this chapter reflect genuine operational pain points, rather than assumed needs.
+5.2 Requirement Gathering and Analysis
+Requirements for ASVANNA were gathered through three complementary methods: stakeholder interviews, field surveys, and prototyping with live user testing. Utilizing multiple methods allowed for the cross-validation of findings, ensuring that both explicit requirements (stated needs) and latent requirements (unstated but operationally essential needs) were successfully captured.
+Table  SEQ Table \* ARABIC 1:User Classes & Characteristics
+TOC \h \z \c "Table" No table of figures entries found.
+Interface
+Technical Profile
+Primary Interactions
+Farmer
+Mobile App
+(Flutter)
+Varying digital literacy; Sinhala/Tamil preferred; may have low-end Android devices with limited connectivity.
+Log planting data, view risk status, receive alerts, browse marketplace, view weather and notices.
+Divisional
+Officer
+Web Dashboard
+(React.js)
+Government employee; moderate computer literacy; uses desktop browsers in divisional office environment.
+Enter proxy data,
+manage farmer directory, broadcast warnings, view regional analytics and heat-maps.
+Local Buyer
+Web and Mobile
+Business owner or caterer; moderate digital literacy; primarily interested in local produce sourcing.
+Search surplus produce, place orders, negotiate via messaging, track order history.
+System
+Administrator
+Web Admin Panel
+IT-literate; responsible for system configuration and officer account management.
+Create/manage
+Divisional Officer accounts, configure system-wide parameters, enforce RBAC.
+5.2.1Functional Requirements
+5.2.1.1  Regional Monitoring and Over-Planting Alerts
+This group covers the core data aggregation and risk analysis functions of the Predictive Risk Engine — the most critical functional capability of ASVANNA.
+Table  SEQ Table \* ARABIC 2:Regional Monitoring & OverPlanting Alerts
+Req. ID
+Requirement Description
+REQ-MON-1
+The system shall aggregate all planting entries in real time to calculate regional supply density per crop type per district.
+REQ-MON-2
+The system shall trigger an Over-Planting Alert push notification and update the in-app risk status to Over-Planted when a crop's regional cultivation volume exceeds the configurable market demand threshold (default: 85% of estimated market demand capacity for At Risk; 100% for Over-Planted).
+REQ-MON-3
+The Risk Engine shall retrieve and cache national market demand data from the CROPIX API at a minimum frequency of once every 24 hours.
+REQ-MON-4
+Risk status for each crop shall be represented as one of three states: Safe (green indicator), At Risk (amber indicator), or Over-Planted (red indicator). The status shall be prominently displayed on the Farmer Dashboard and Smart Search results.
+REQ-MON-5
+Divisional Officers shall be able to configure alert thresholds per crop type for their own geographic jurisdiction via the web dashboard, overriding the system default where local conditions warrant.
+5.2.1.2  Smart Crop Recommendation Engine
+These requirements govern the system's ability to suggest profitable alternative crops when a queried crop is at risk of over-planting.
+Table  SEQ Table \* ARABIC 3:Smart Crop Recommendation Engine
+Req. ID
+Requirement Description
+REQ-REC-1
+The recommendation engine shall suggest a minimum of three alternative crops when the queried crop's risk status is At Risk or Over-Planted.
+REQ-REC-2
+Recommendations shall be ranked using a composite score that considers: (a) current market gap from CROPIX data; (b) regional soil suitability; (c) historical price trend performance from the local database; and (d) current weather forecast compatibility.
+REQ-REC-3
+The system shall display the current market price and a three-month historical price trend graph for each recommended crop alongside the recommendation card.
+REQ-REC-4
+Weather intelligence shall integrate with the OpenWeatherMap API to provide localized upcountry short-range forecasts (minimum 7-day) displayed alongside crop recommendations.
+5.2.1. PAGE   \* MERGEFORMAT 3  Geo-Fenced Zero-Waste Marketplace
+These requirements define the Phase Two surplus marketplace feature, enabling direct
+farm-to-buyer transactions for perishable produce within a configurable geographic radius.
+Table  SEQ Table \* ARABIC 4:Geo Fenced Zero Waste MarketPlace
+Req. ID
+Requirement Description
+REQ-MKT-1
+The system shall use the GPS coordinates from the buyer's registered business location to filter surplus listings within a configurable proximity radius (default: 5 km; adjustable by buyer up to a maximum of 20 km).
+REQ-MKT-2
+Farmers shall be able to create surplus listings specifying: crop type, available quantity (in kg), asking price per kg, available pickup date(s), and pickup location GPS coordinates.
+REQ-MKT-3
+The system shall provide a direct in-app messaging thread between buyer and farmer linked to each order, enabling price negotiation and pickup coordination.
+REQ-MKT-4
+Farmers must be able to accept, decline, or submit a counter-offer on a buyer order within a 30-minute acceptance window. Expired requests shall be automatically cancelled and surplus stock quantity restored to the listing.
+REQ-MKT-5
+Each completed marketplace transaction shall be logged with timestamp, buyer ID, farmer ID, crop type, quantity, and agreed price for analytics tracking and farmer sales history records.
+5.2.1. PAGE   \* MERGEFORMAT 4  Administrative and Proxy Data Management
+These requirements cover the Divisional Officer web dashboard functionality, including
+digital inclusivity features for managing offline farmers.
+Table  SEQ Table \* ARABIC 5:Administrative & Proxy Data Management
+Req. ID
+Requirement Description
+REQ-ADMIN-
+1
+Divisional Officers shall be able to register, edit, and deactivate farmer profiles within their assigned district. All actions shall be logged with the officer ID and a timestamp for audit trail purposes.
+REQ-ADMIN-
+2
+The proxy data entry form shall allow an officer to submit planting records — including crop type, cultivated acreage, and planting date — on behalf of any farmer registered in their directory.
+REQ-ADMIN-
+3
+Officers shall be able to configure over-planting alert thresholds per crop type for their assigned district, with changes taking effect on the next Risk Engine calculation cycle.
+REQ-ADMIN-
+4
+The Regional Analytics dashboard shall render heat-maps showing crop cultivation density by geographic sub-region and trend charts for the top planted crops, refreshed at a minimum frequency of every 24 hours.
+REQ-ADMIN-
+5
+Officers shall be able to export regional cultivation reports in PDF or CSV format, filterable by date range, crop type, and sub-region.
+5.2.1.5  Broadcast Warning and Notification System
+These requirements govern the dissemination of system-generated over-planting alerts and
+officer-initiated broadcast warnings to farmers.
+Table  SEQ Table \* ARABIC 6:Broadcast Warnings & Notification System
+Req. ID
+Requirement Description
+REQ-NOTIF-1
+Officers shall be able to broadcast notices to: (a) all farmers in their district; (b) a selected sub-region within the district; or (c) farmers with active planting records for a specific crop.
+REQ-NOTIF-2
+All broadcast notices and system-generated over-planting alerts shall be delivered via FCM push notification. If FCM delivery fails for a specific farmer, the system shall automatically trigger an SMS to the farmer's registered phone number.
+REQ-NOTIF-3
+Broadcast notices shall be archived in the Farmer Notice Board within the mobile application for a minimum of 90 days. Previously received notices shall be accessible offline if cached.
+REQ-NOTIF-4
+The system shall track and display delivery status per farmer per broadcast (Sent, Delivered, or Failed) in the officer's dashboard broadcast history panel.
+5.2.1. PAGE   \* MERGEFORMAT 6 User Account and Authentication
+These requirements define registration, authentication, session management, and
+role-based access control across all user types.
+Table  SEQ Table \* ARABIC 7:User Account & Authentication
+Req. ID
+Requirement Description
+REQ-AUTH-1
+Users shall register using a unique phone number and select one of three roles: Farmer, Divisional Officer, or Local Buyer. The role selection determines the interface and access level provisioned upon account activation.
+REQ-AUTH-2
+Divisional Officer accounts shall require explicit approval by a System Administrator before activation; a pending approval status shall be communicated to the officer at registration.
+REQ-AUTH-3
+The system shall enforce role-based access control (RBAC) across all backend API endpoints, preventing any user from accessing resources or operations outside their assigned role.
+REQ-AUTH-4
+All user passwords shall be hashed using the bcrypt algorithm with a minimum of 10 salt rounds before storage. Plaintext passwords shall never be stored or logged.
+REQ-AUTH-5
+The system shall support password reset via a one-time password (OTP) delivered to the user's registered phone number. OTPs shall expire within 10 minutes of generation.
+5.2.2 Non-Functional Requirements
+Non-functional requirements define the quality attributes and operational constraints of the system. They govern how well the system performs its functions, rather than what functions it performs. The following non-functional requirements were derived from both stakeholder research and the technical deployment context of upcountry Sri Lanka.
+5.2.2.1  Performance
+Planting data submitted by a farmer shall synchronize to the cloud within 5 seconds under normal network conditions (4G connectivity).
+The Risk Engine shall complete its threshold calculation and return an updated risk status within 3 seconds of receiving a new planting data submission.
+The marketplace proximity search shall return filtered results within 2 seconds for a dataset of up to 10,000 active surplus listings.
+The Divisional Officer web dashboard heat-map shall render within 5 seconds of page load under standard office broadband connectivity.
+5.2.2.2  Security
+All data transmission between clients and the backend API shall be secured using HTTPS with TLS 1.2 or higher.
+Authentication shall use JSON Web Tokens (JWT) with a 24-hour expiration for Farmer and Buyer sessions and an 8-hour expiration for Divisional Officer sessions.
+Farmer personal data, including National Identity Card (NIC) numbers, phone numbers, and land GPS coordinates, shall be encrypted at rest in the database.
+The API shall validate all incoming data and reject malformed requests with an appropriate HTTP error code to prevent injection attacks.
+5.2.2.3  Scalability
+The database schema and infrastructure shall be designed to support records for a minimum of 500,000 registered farmers at national scale, in alignment with ASVANNA's national rollout objective.
+The backend API shall support horizontal scaling via cloud load balancers (AWS or Azure) to accommodate the peak traffic generated during critical planting season periods.
+The geo-fenced marketplace module shall remain performant as buyer and listing counts scale without requiring architectural redesign.
+5.2.2.4  Availability
+The system should maintain 99.5% uptime availability, excluding scheduled maintenance windows which shall be communicated to users in advance.
+Offline planting data entries shall be queued and stored locally on the mobile device using SQLite and shall synchronize with no data loss upon reconnection, with conflict resolution defaulting to the most recent timestamp.
+5.2.2.5  Usability
+The mobile application shall fully support Sinhala, Tamil, and English across all core user actions, including planting entry, risk status display, crop recommendations, and notifications.
+All critical alert indicators shall use a high-contrast color scheme (green, amber, red) with accompanying text labels, ensuring legibility without requiring color discrimination ability.
+The farmer registration flow shall be completable in three mandatory fields or fewer to minimize abandonment rates among users with limited digital experience.
+The application shall be operable on low-end Android devices with a minimum of 2 GB RAM and Android 8.0 (API Level 26).
+5.2.2.6  Compatibility
+Mobile application: Android 8.0 (API Level 26) and above; iOS 13.0 and above.
+Web dashboards: Latest stable versions of Google Chrome, Mozilla Firefox, and Microsoft Edge.
+The system shall function on mobile data connections as slow as 3G (minimum 1 Mbps download) for core planting entry and alert reception functions.
+5.3 Summary
+This chapter presented the complete requirement analysis for the ASVANNA agricultural platform. The requirement gathering process employed three complementary methods: structured stakeholder interviews with farmers and Divisional Officers in the Bandarawela area, field surveys capturing empirical data on connectivity, smartphone access, and crop patterns, and iterative low-fidelity prototyping sessions that validated interface design decisions with real end users.
+The functional requirements are organized across six capability areas: Regional Monitoring and Over-Planting Alerts (REQ-MON), Smart Crop Recommendation Engine (REQ-REC), Geo-Fenced Zero-Waste Marketplace (REQ-MKT), Administrative and Proxy Data Management (REQ-ADMIN), Broadcast Warning and Notification System (REQ-NOTIF), and User Account and Authentication (REQ-AUTH). Each requirement is directly traceable to a finding from the stakeholder engagement process, ensuring the specification is grounded in real operational needs rather than assumed requirements.
+The non-functional requirements establish the quality baseline for performance, security, scalability, availability, usability, and compatibility. The specific targets — such as the 3-second Risk Engine response time, 99.5% availability, 500,000-farmer database scalability, and support for 2 GB RAM Android devices — reflect the practical deployment constraints of upcountry Sri Lanka. Together, the functional and non-functional requirements defined in this chapter form the verified specification baseline against which the design presented in Chapter 6 was developed
+Chapter 6
+Design
+6.1 Introduction
+This chapter outlines the architectural, structural, and behavioral design of the ASVANNA agricultural platform. It translates the gathered system requirements into technical blueprints, detailing the database schema, class structures, and workflow logic. Through the use of Entity-Relationship (ER) diagrams, Class diagrams, Activity diagrams, and Sequence diagrams, this chapter visualizes how the different user roles Farmers, Divisional Officers, Local Buyers, and Administrators interact with the core platform engine, external APIs, and the central data repository.
+6.2 Design
+Use case Diagram
+Figure  SEQ Figure \* ARABIC 1:UseCase_Diagram
+Activity Diagram
+Farmer Activity Diagram
+Figure  SEQ Figure \* ARABIC 2:Farmer_Activity_Diagram
+Divisional Officer Activity Diagram
+Figure  SEQ Figure \* ARABIC 3:Divisional Officer_Activity_Diagram
+Local Buyer Activity Diagram
+Figure  SEQ Figure \* ARABIC 4:Local Buyer_Activity_Diagram
+ER Diagram
+Figure  SEQ Figure \* ARABIC 5:ER_Diagram
+Class Diagram
+Figure  SEQ Figure \* ARABIC 6:Class_Diagram
+Sequence Diagram
+Add Divisional Officers
+Figure  SEQ Figure \* ARABIC 7:Add Divisional Officer_Sequence_Diagram
+Place Direct Order
+Figure  SEQ Figure \* ARABIC 8:Place Direct Order_Sequence_Diagram
+Log Planting Data
+Figure  SEQ Figure \* ARABIC 9:Log Planting Data_Sequence_Diagram
+Validate Data
+Figure  SEQ Figure \* ARABIC 10:Validate Data_Sequence_Diagram
+State Chart Diagrams
+Add Divisional Officer
+4495800
+Figure  SEQ Figure \* ARABIC 11:Add Divisional Officer_State_Chart_Diagram
+Log Planting Data
+Figure  SEQ Figure \* ARABIC 12:Log Planting Data_State_Chart_Diagram
+Place Direct Order
+Figure  SEQ Figure \* ARABIC 13:Place Direct Order_State_Chart_Diagram
+User Login
+Figure  SEQ Figure \* ARABIC 14:User Login_State_Chart_Digaram
+6.3 Summary
+This chapter presented the comprehensive design blueprints for the ASVANNA platform. By mapping out the ER and Class diagrams, a robust, object-oriented data structure was established, divided into logical packages like Cultivation Management and the Core Platform Engine. Integrating these static structures with dynamic Activity and Sequence models provided clear, logical workflows for predictive risk calculations, administrative data governance, and geo-fenced marketplace operations. Ultimately, this detailed structural and behavioral design phase provides an unambiguous foundation that will directly guide the system implement.
+Chapter
+7  Conclusion
+7.1. Project Summary
+The ASVANNA (අස්වැන්න(project was conceptualized to address one of the most
+devastating and recurring economic crises in Sri Lanka’s upcountry agricultural sector: the "trend planting" cycle. Driven by a severe information gap, farmers collectively plant high-priced crops simultaneously, leading to market saturation, price crashes, and an estimated 30% to 40% post-harvest waste.
+This report detailed the systematic development of ASVANNA, a comprehensive digital ecosystem designed to replace isolated guesswork with collaborative, data-driven decision-making.
+Analysis & Literature (Chapters 1-2): Through extensive field research and literature review, the project identified that while national-level platforms like
+CROPIX exist, there is a critical void in hyper-local, pre-planting advisory tools.
+ASVANNA fills this gap by delivering real-time regional cultivation monitoring and automated over-planting alerts.
+Approach & Methodology (Chapter 3): The system was architected across three layers (Sensing, Communication, and Application), driven by a Rule-Based Predictive Risk Engine. Crucially, the platform guarantees digital inclusivity through a Proxy Data Entry mechanism managed by Divisional Officers, ensuring farmers without smartphones are not excluded from the data pool.
+Technology & Analysis (Chapters 4-5): The system is built on a highly scalable, multi-tier technology stack utilizing Flutter for mobile interfaces, React.js for web dashboards, and a Node.js/Express.js backend. The dual-database structure (PostgreSQL for transactional integrity and Firebase for real-time synchronization) ensures compliance with strict performance constraints, such as sub-5-second data syncing and offline caching capabilities.
+System Design (Chapter 6): The structural and behavioral blueprints—mapped via ER, Class, Activity, and Sequence diagrams—established a clear, secure workflow for user authentication, agricultural data aggregation, officer-led data validation, and automated risk alert generation.
+Ultimately, Phase One of ASVANNA successfully establishes a robust foundation for proactive agricultural planning, directly protecting farmers' livelihoods by warning them of market saturation before irreversible sowing decisions are made.
+7.2. Future Works
+While Project I successfully establishes the core monitoring and alert infrastructure, the ASVANNA ecosystem is designed for continuous expansion. The following further works are planned to enhance the platform’s impact:
+National Scale Deployment: Following the validation of the Bandarawela and Badulla district pilot programs, the cloud infrastructure and administrative hierarchy will be scaled to accommodate a nationwide rollout, covering all 25 districts and integrating localized crop parameters for lowland agricultural zones.
+Comprehensive Multilingual Localization: To ensure absolute digital inclusivity, particularly for the large demographic of Tamil-speaking farming communities in the upcountry region, future works will focus on full native-level localization. This involves translating all UI components across web and mobile platforms, integrating culturally and linguistically contextualized Push/SMS notification templates, and optimizing the database with UTF-8 encoding for seamless multi-language data processing.
+Transition to Machine Learning Analytics: Currently, the Predictive Risk Engine utilizes a strict rule-based algorithm. As historical planting and pricing data accumulate over several harvest seasons, the engine will be upgraded to utilize Machine Learning (ML) models. This will allow the system to predict market price fluctuations and yield variations with higher statistical accuracy.
+Integration of a Digital Payment Gateway: To fully support the Phase Two marketplace, future iterations will integrate secure, cashless transaction gateways (e.g., LankaPay or mobile money wallets), allowing buyers to complete payments directly within the application.
+References
+Department of Agriculture, Sri Lanka. (2026). CROPIX – National Digital
+Agriculture Platformhttps://digital.doa.gov.lk/
+EconomyNext. (2026, January). Sri Lanka launches tools, digital platform for data-driven
+agriculture.https://economynext.com/sri-lanka-launches-tools-digital-platform-fordata-driven-agriculture-258673/
+Food and Agriculture Organization of the United Nations (FAO). Building a Digital Future for Sri Lanka's Farmers.
+https://www.fao.org/family-farming/detail/en/c/1754464/
+Food and Agriculture Organization of the United Nations (FAO). Agricultural
+Market Information System (AMIS).http://www.amis-outlook.org/
+Hector Kobbekaduwa Agrarian Research and Training Institute (HARTI).
+(2021). Present Status of Postharvest Practices and Losses in Sri Lanka. Colombo,
+Sri Lanka. http://www.harti.gov.lk/
+Hector Kobbekaduwa Agrarian Research and Training Institute (HARTI).
+(2024). Value Chain of High Value Highly Perishable Vegetables.
+https://www.harti.gov.lk/images/download/reasearch_report/new1/181.pdf
+Ministry of Agriculture, Sri Lanka. (2026). Sri Lanka Government Agriculture Enterprise Architecture (SL-GAEA v1.3).
+https://agrimin.gov.lk/wp-content/uploads/2026/01/SL-GAEA_V1.3.pdf
+Ministry of Digital Economy, Sri Lanka. (2026). CROPIX National Digital
+Platform Deployment. https://mode.gov.lk/blog/cropix
+National Audit Office of Sri Lanka. (2024). Agricultural Output and Waste Analysis Report. Colombo, Sri Lanka. https://www.auditorgeneral.gov.lk/

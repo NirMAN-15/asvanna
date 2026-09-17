@@ -1,6 +1,7 @@
 import React, { useContext, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { LanguageContext } from '../context/LanguageContext';
+import API from '../services/api';
 
 export default function Settings() {
   const { user, role } = useContext(AuthContext);
@@ -11,6 +12,13 @@ export default function Settings() {
   const [fullName, setFullName] = useState(user?.full_name || 'User Name');
   const [phone] = useState(user?.phone || '0771112233');
   const [nic] = useState(user?.nic || '851234567V');
+
+  // Password Change State
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [pwdLoading, setPwdLoading] = useState(false);
+  const [pwdMsg, setPwdMsg] = useState({ text: '', type: '' });
 
   // FARMER State
   const [gnd, setGnd] = useState(user?.gnd_division || 'Kinigama North');
@@ -46,6 +54,35 @@ export default function Settings() {
     e.preventDefault();
     setSavedToast(true);
     setTimeout(() => setSavedToast(false), 3500);
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setPwdMsg({ text: '', type: '' });
+    
+    if (newPassword !== confirmPassword) {
+      setPwdMsg({ text: 'New passwords do not match.', type: 'error' });
+      return;
+    }
+    
+    setPwdLoading(true);
+    try {
+      await API.put('/auth/change-password', {
+        currentPassword,
+        newPassword
+      });
+      setPwdMsg({ text: 'Password updated successfully!', type: 'success' });
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err) {
+      setPwdMsg({ 
+        text: err.response?.data?.message || 'Failed to update password.', 
+        type: 'error' 
+      });
+    } finally {
+      setPwdLoading(false);
+    }
   };
 
   const userRole = (role || user?.role || 'FARMER').toUpperCase();
@@ -526,13 +563,76 @@ export default function Settings() {
         {userRole === 'ADMIN' && renderAdminSettings()}
 
         {/* Submit */}
-        <div className="flex justify-end gap-3 pt-2 pb-8">
+        <div className="flex justify-end gap-3 pt-2">
           <button
             type="submit"
             className="px-6 py-3 bg-primary hover:bg-primary-container text-white font-bold rounded-xl text-xs shadow-md hover:scale-105 transition flex items-center gap-2"
           >
             <span className="material-symbols-outlined text-base">save</span>
             <span>{t('btn_save_settings') || 'Save Profile Settings'}</span>
+          </button>
+        </div>
+      </form>
+
+      {/* Security Form */}
+      <form onSubmit={handleChangePassword} className="bg-surface-container-lowest rounded-2xl p-6 border border-outline-variant/30 shadow-card space-y-4 mb-8">
+        <h2 className="font-headline font-bold text-base text-primary flex items-center gap-2">
+          <span className="material-symbols-outlined text-error">lock</span>
+          <span>Security & Password</span>
+        </h2>
+        
+        {pwdMsg.text && (
+          <div className={`p-3 rounded-xl text-xs font-bold flex items-center gap-2 ${pwdMsg.type === 'error' ? 'bg-error-container text-on-error-container border border-error/20' : 'bg-emerald-50 text-emerald-800 border border-emerald-300'}`}>
+            <span className="material-symbols-outlined text-base">
+              {pwdMsg.type === 'error' ? 'error' : 'check_circle'}
+            </span>
+            <span>{pwdMsg.text}</span>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+          <div>
+            <label className="block font-bold text-on-surface mb-1">Current Password</label>
+            <input 
+              type="password" 
+              required
+              value={currentPassword} 
+              onChange={(e) => setCurrentPassword(e.target.value)} 
+              className="w-full p-2.5 rounded-xl border border-outline-variant bg-white font-semibold text-on-surface focus:border-primary outline-none" 
+            />
+          </div>
+          <div>
+            <label className="block font-bold text-on-surface mb-1">New Password</label>
+            <input 
+              type="password" 
+              required
+              minLength={6}
+              value={newPassword} 
+              onChange={(e) => setNewPassword(e.target.value)} 
+              className="w-full p-2.5 rounded-xl border border-outline-variant bg-white font-semibold text-on-surface focus:border-primary outline-none" 
+            />
+          </div>
+          <div>
+            <label className="block font-bold text-on-surface mb-1">Confirm New Password</label>
+            <input 
+              type="password" 
+              required
+              minLength={6}
+              value={confirmPassword} 
+              onChange={(e) => setConfirmPassword(e.target.value)} 
+              className="w-full p-2.5 rounded-xl border border-outline-variant bg-white font-semibold text-on-surface focus:border-primary outline-none" 
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-3 pt-2">
+          <button
+            type="submit"
+            disabled={pwdLoading}
+            className="px-6 py-3 bg-error hover:bg-error-container text-white disabled:opacity-50 font-bold rounded-xl text-xs shadow-md transition flex items-center gap-2"
+          >
+            <span className="material-symbols-outlined text-base">key</span>
+            <span>{pwdLoading ? 'Updating...' : 'Change Password'}</span>
           </button>
         </div>
       </form>

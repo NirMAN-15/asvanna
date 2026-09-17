@@ -5,10 +5,39 @@ import FarmerPlantingModal from '../components/FarmerPlantingModal';
 
 export default function RiskAnalytics() {
   const { t, lang } = useContext(LanguageContext);
-  const [searchCrop, setSearchCrop] = useState('Leeks');
+  const [searchCrop, setSearchCrop] = useState('');
+  const [searchResult, setSearchResult] = useState(null);
+  const [isSearching, setIsSearching] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedModalCropId, setSelectedModalCropId] = useState(4);
   const [toastMessage, setToastMessage] = useState(null);
+
+  // Debounced search effect
+  useEffect(() => {
+    if (!searchCrop || searchCrop.trim().length < 2) {
+      setSearchResult(null);
+      return;
+    }
+    
+    const delayFn = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const res = await API.post('/risk/smart-search', { query: searchCrop });
+        if (res.data?.data?.matches?.length > 0) {
+          setSearchResult(res.data.data.matches[0]);
+        } else {
+          setSearchResult(null);
+        }
+      } catch (err) {
+        console.error("Search failed:", err);
+        setSearchResult(null);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(delayFn);
+  }, [searchCrop]);
 
   const [recommendations, setRecommendations] = useState([
     {
@@ -79,11 +108,11 @@ export default function RiskAnalytics() {
         const mapped = res.data.data.map(item => ({
           crop: item.crop,
           scores: {
-            compositeScore: item.compositeScore,
-            marketGapScore: item.breakdown?.marketGapScore || 85,
-            seasonScore: item.breakdown?.seasonScore || 80,
-            weatherScore: item.breakdown?.weatherScore || 85,
-            priceScore: item.breakdown?.priceScore || 80
+            compositeScore: item.scores?.compositeScore || 90,
+            marketGapScore: item.scores?.marketGapScore || 85,
+            seasonScore: item.scores?.seasonScore || 80,
+            weatherScore: item.scores?.weatherScore || 85,
+            priceScore: item.scores?.priceScore || 80
           },
           rationale: item.rationale,
           priceTrend: '+10.5%',
@@ -91,7 +120,12 @@ export default function RiskAnalytics() {
                  item.crop.id === 9 ? '/crops/radish.jpg' :
                  item.crop.id === 11 ? '/crops/spring_onion.jpg' :
                  item.crop.id === 6 ? '/crops/bush_beans.jpg' :
-                 item.crop.id === 3 ? '/crops/carrot.jpg' : '/crops/leek.jpg'
+                 item.crop.id === 3 ? '/crops/carrot.jpg' : 
+                 item.crop.id === 10 ? '/crops/knol_khol.jpg' : 
+                 item.crop.id === 22 ? '/crops/gotukola.jpg' : 
+                 item.crop.id === 23 ? '/crops/kangkung.jpg' : 
+                 item.crop.id === 24 ? '/crops/mukunuwenna.jpg' : 
+                 item.crop.id === 25 ? '/crops/spinach.jpg' : '/crops/leek.jpg'
         }));
         setRecommendations(mapped);
       }
@@ -131,32 +165,65 @@ export default function RiskAnalytics() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 bg-surface-container border border-outline-variant/50 px-4 py-2.5 rounded-xl shadow-xs focus-within:ring-2 focus-within:ring-primary/20">
+        <div className="flex items-center gap-2 bg-surface-container border border-outline-variant/50 px-4 py-2.5 rounded-xl shadow-xs focus-within:ring-2 focus-within:ring-primary/20 w-full sm:w-auto">
           <span className="material-symbols-outlined text-slate-500 text-lg">search</span>
           <input
             type="text"
             value={searchCrop}
             onChange={(e) => setSearchCrop(e.target.value)}
             placeholder={t('search_crop_placeholder')}
-            className="text-xs bg-transparent text-slate-900 placeholder-slate-500 focus:outline-none font-bold"
+            className="text-xs bg-transparent text-slate-900 placeholder-slate-500 focus:outline-none font-bold w-full sm:w-64 md:w-80"
           />
         </div>
       </div>
 
-      {/* Saturation Warning Banner */}
-      <div className="bg-red-50/90 border border-red-200 border-l-4 border-l-red-600 rounded-2xl p-5 shadow-card flex items-start gap-4">
-        <div className="w-10 h-10 rounded-2xl bg-red-100 text-red-700 flex items-center justify-center flex-shrink-0 mt-0.5 border border-red-200">
-          <span className="material-symbols-outlined text-2xl animate-pulse">warning</span>
+      {/* Saturation Warning / Safe Banner */}
+      {isSearching ? (
+        <div className="bg-surface-container-low rounded-2xl p-5 shadow-sm animate-pulse flex items-center justify-center">
+          <span className="text-on-surface-variant font-medium text-sm">Evaluating risk parameters...</span>
         </div>
-        <div>
-          <h4 className="text-base font-black text-red-950 tracking-tight font-headline">
-            {t('risk_directive_title')}
-          </h4>
-          <p className="text-sm text-slate-800 font-medium mt-1 leading-relaxed">
-            {t('risk_directive_body', { crop: searchCrop })}
-          </p>
+      ) : searchResult ? (
+        searchResult.riskLevel === 'OVER_PLANTED' ? (
+          <div className="bg-red-50/90 border border-red-200 border-l-4 border-l-red-600 rounded-2xl p-5 shadow-card flex items-start gap-4">
+            <div className="w-10 h-10 rounded-2xl bg-red-100 text-red-700 flex items-center justify-center flex-shrink-0 mt-0.5 border border-red-200">
+              <span className="material-symbols-outlined text-2xl animate-pulse">warning</span>
+            </div>
+            <div>
+              <h4 className="text-base font-black text-red-950 tracking-tight font-headline">
+                {lang === 'si' ? 'අධි-වගා අවදානම් නිවේදනය' : 'Over-Planting Risk Threshold Directive'}
+              </h4>
+              <p className="text-sm text-slate-800 font-medium mt-1 leading-relaxed">
+                {lang === 'si' 
+                  ? `${searchResult.crop.name_si} වගාව මේ වනවිට කලාපීය ඉල්ලුම ඉක්මවා ගොස් ඇත (අවදානම: ${searchResult.riskPercentage}%). කරුණාකර පහත දක්වා ඇති ලාභදායී විකල්ප භෝග කෙරෙහි අවධානය යොමු කරන්න.`
+                  : `When queried crop ${searchResult.crop.name_en} exceeds regional quota (Risk: ${searchResult.riskPercentage}%), the Risk Engine activates smart alternatives to prevent market saturation and secure farmer profit margins.`}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-emerald-50/90 border border-emerald-200 border-l-4 border-l-emerald-600 rounded-2xl p-5 shadow-card flex items-start gap-4">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0 mt-0.5 border border-emerald-200">
+              <span className="material-symbols-outlined text-2xl">verified_user</span>
+            </div>
+            <div>
+              <h4 className="text-base font-black text-emerald-950 tracking-tight font-headline">
+                {lang === 'si' ? 'වගා කිරීම ආරක්ෂිතයි' : 'Safe to Plant'}
+              </h4>
+              <p className="text-sm text-slate-800 font-medium mt-1 leading-relaxed">
+                {lang === 'si'
+                  ? `${searchResult.crop.name_si} වගාව සඳහා මේ වනවිට හොඳ ඉල්ලුමක් පවතී (අවදානම: ${searchResult.riskPercentage}%). ඔබට මෙම භෝගය සාර්ථකව වගා කළ හැක.`
+                  : `The queried crop ${searchResult.crop.name_en} is currently in demand (Risk: ${searchResult.riskPercentage}%). It is safe to proceed with planting.`}
+              </p>
+              <button onClick={() => handlePlantNow(searchResult.crop.id)} className="mt-3 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition">
+                {lang === 'si' ? 'දැන්ම ලියාපදිංචි කරන්න' : 'Register Crop Now'}
+              </button>
+            </div>
+          </div>
+        )
+      ) : searchCrop.trim().length >= 2 ? (
+        <div className="bg-surface-container-low rounded-2xl p-5 shadow-sm text-center">
+          <span className="text-on-surface-variant font-medium text-sm">No crops found matching '{searchCrop}'</span>
         </div>
-      </div>
+      ) : null}
 
       {/* Recommendations Grid */}
       <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 shadow-card">
