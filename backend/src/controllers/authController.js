@@ -3,13 +3,16 @@ const jwt = require('jsonwebtoken');
 const db = require('../config/database');
 const config = require('../config/config');
 const ApiResponse = require('../utils/apiResponse');
+const { splitFullName, formatFullName, splitAddress, formatAddress } = require('../utils/nameAddressUtils');
 
 class AuthController {
   static async register(req, res, next) {
     try {
       const {
-        full_name, phone, nic, password, role,
-        district, division, gnd_division, address,
+        first_name, middle_name, last_name, full_name,
+        phone, nic, password, role,
+        district, division, gnd_division,
+        address_line1, address_line2, city, postal_code, address,
         latitude, longitude, total_land_size,
         business_name, business_type
       } = req.body;
@@ -27,6 +30,43 @@ class AuthController {
         return ApiResponse.error(res, 'A user with this phone number or NIC already exists.', 400);
       }
 
+      // 1. Resolve discrete name parts & full_name
+      let resolvedFirst = first_name || null;
+      let resolvedMiddle = middle_name !== undefined ? middle_name : null;
+      let resolvedLast = last_name || null;
+      let resolvedFull = full_name || null;
+
+      if ((!resolvedFirst || !resolvedLast) && resolvedFull) {
+        const nameParts = splitFullName(resolvedFull);
+        resolvedFirst = resolvedFirst || nameParts.first_name;
+        resolvedMiddle = resolvedMiddle !== null ? resolvedMiddle : nameParts.middle_name;
+        resolvedLast = resolvedLast || nameParts.last_name;
+      }
+      if (!resolvedFull && resolvedFirst) {
+        resolvedFull = formatFullName(resolvedFirst, resolvedMiddle, resolvedLast);
+      }
+      if (!resolvedFull) {
+        resolvedFull = 'User';
+      }
+
+      // 2. Resolve discrete address parts & address
+      let resolvedCity = city || division || 'Bandarawela';
+      let resolvedPostal = postal_code || '90100';
+      let resolvedAddr1 = address_line1 || null;
+      let resolvedAddr2 = address_line2 !== undefined ? address_line2 : null;
+      let resolvedAddr = address || null;
+
+      if (!resolvedAddr1 && resolvedAddr) {
+        const addrParts = splitAddress(resolvedAddr, resolvedCity, resolvedPostal);
+        resolvedAddr1 = addrParts.address_line1;
+        resolvedAddr2 = addrParts.address_line2;
+        resolvedCity = addrParts.city;
+        resolvedPostal = addrParts.postal_code;
+      }
+      if (!resolvedAddr && resolvedAddr1) {
+        resolvedAddr = formatAddress(resolvedAddr1, resolvedAddr2, resolvedCity, resolvedPostal);
+      }
+
       const salt = await bcrypt.genSalt(10);
       const password_hash = await bcrypt.hash(password, salt);
 
@@ -37,16 +77,24 @@ class AuthController {
 
       const result = await db.query(
         `INSERT INTO users (
-          full_name, phone, nic, password_hash, role,
-          district, division, gnd_division, address,
+          first_name, middle_name, last_name, full_name,
+          phone, nic, password_hash, role,
+          district, division, gnd_division,
+          address_line1, address_line2, city, postal_code, address,
           latitude, longitude, total_land_size,
           business_name, business_type,
           verification_status, is_verified
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
-        RETURNING id, full_name, phone, nic, role, district, division, gnd_division, address, latitude, longitude, total_land_size, business_name, business_type, verification_status, is_verified, created_at`,
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+        RETURNING id, first_name, middle_name, last_name, full_name, phone, nic, role,
+                  district, division, gnd_division,
+                  address_line1, address_line2, city, postal_code, address,
+                  latitude, longitude, total_land_size,
+                  business_name, business_type, verification_status, is_verified, created_at`,
         [
-          full_name, phone, nic, password_hash, role,
-          district || 'Badulla', division || 'Bandarawela', gnd_division || null, address || null,
+          resolvedFirst, resolvedMiddle, resolvedLast, resolvedFull,
+          phone, nic, password_hash, role,
+          district || 'Badulla', division || 'Bandarawela', gnd_division || null,
+          resolvedAddr1, resolvedAddr2, resolvedCity, resolvedPostal, resolvedAddr,
           latitude || 6.8304, longitude || 80.9878, landSize,
           business_name || null, business_type || null,
           verification_status, is_verified
@@ -145,10 +193,10 @@ class AuthController {
     try {
       const result = await db.query(
         `SELECT
-           id, full_name, phone, nic, email, role, language_preference,
-           district, division, gnd_division, address, latitude, longitude,
-           total_land_size, preferred_search_radius, business_name, business_type,
-           profile_photo_url, verification_status, is_verified, created_at
+           id, first_name, middle_name, last_name, full_name, phone, nic, email, role, language_preference,
+           district, division, gnd_division, address_line1, address_line2, city, postal_code, address,
+           latitude, longitude, total_land_size, preferred_search_radius,
+           business_name, business_type, profile_photo_url, verification_status, is_verified, created_at
          FROM users WHERE id = $1`,
         [req.user.id]
       );
@@ -162,27 +210,76 @@ class AuthController {
   static async updateProfile(req, res, next) {
     try {
       const {
-        full_name, email, language_preference,
-        address, preferred_search_radius, business_name, business_type,
+        first_name, middle_name, last_name, full_name,
+        email, language_preference,
+        address_line1, address_line2, city, postal_code, address,
+        preferred_search_radius, business_name, business_type,
         profile_photo_url
       } = req.body;
 
+      // Current user to sync
+      const currentRes = await db.query('SELECT * FROM users WHERE id = $1', [req.user.id]);
+      const current = currentRes.rows[0] || {};
+
+      let resolvedFirst = first_name !== undefined ? first_name : current.first_name;
+      let resolvedMiddle = middle_name !== undefined ? middle_name : current.middle_name;
+      let resolvedLast = last_name !== undefined ? last_name : current.last_name;
+      let resolvedFull = full_name !== undefined ? full_name : current.full_name;
+
+      if ((first_name !== undefined || last_name !== undefined) && full_name === undefined) {
+        resolvedFull = formatFullName(resolvedFirst, resolvedMiddle, resolvedLast);
+      } else if (full_name !== undefined && first_name === undefined && last_name === undefined) {
+        const parts = splitFullName(full_name);
+        resolvedFirst = parts.first_name;
+        resolvedMiddle = parts.middle_name;
+        resolvedLast = parts.last_name;
+      }
+
+      let resolvedAddr1 = address_line1 !== undefined ? address_line1 : current.address_line1;
+      let resolvedAddr2 = address_line2 !== undefined ? address_line2 : current.address_line2;
+      let resolvedCity = city !== undefined ? city : current.city || current.division || 'Bandarawela';
+      let resolvedPostal = postal_code !== undefined ? postal_code : current.postal_code || '90100';
+      let resolvedAddr = address !== undefined ? address : current.address;
+
+      if ((address_line1 !== undefined || city !== undefined) && address === undefined) {
+        resolvedAddr = formatAddress(resolvedAddr1, resolvedAddr2, resolvedCity, resolvedPostal);
+      } else if (address !== undefined && address_line1 === undefined) {
+        const addrParts = splitAddress(address, resolvedCity, resolvedPostal);
+        resolvedAddr1 = addrParts.address_line1;
+        resolvedAddr2 = addrParts.address_line2;
+        resolvedCity = addrParts.city;
+        resolvedPostal = addrParts.postal_code;
+      }
+
       const result = await db.query(
         `UPDATE users
-         SET full_name = COALESCE($1, full_name),
-             email = COALESCE($2, email),
-             language_preference = COALESCE($3, language_preference),
-             address = COALESCE($4, address),
-             preferred_search_radius = COALESCE($5, preferred_search_radius),
-             business_name = COALESCE($6, business_name),
-             business_type = COALESCE($7, business_type),
-             profile_photo_url = COALESCE($8, profile_photo_url),
+         SET first_name = $1,
+             middle_name = $2,
+             last_name = $3,
+             full_name = $4,
+             email = COALESCE($5, email),
+             language_preference = COALESCE($6, language_preference),
+             address_line1 = $7,
+             address_line2 = $8,
+             city = $9,
+             postal_code = $10,
+             address = $11,
+             preferred_search_radius = COALESCE($12, preferred_search_radius),
+             business_name = COALESCE($13, business_name),
+             business_type = COALESCE($14, business_type),
+             profile_photo_url = COALESCE($15, profile_photo_url),
              updated_at = CURRENT_TIMESTAMP
-         WHERE id = $9
-         RETURNING id, full_name, phone, nic, email, role, language_preference, district, division, gnd_division, address, latitude, longitude, total_land_size, preferred_search_radius, business_name, business_type, profile_photo_url, verification_status, is_verified`,
+         WHERE id = $16
+         RETURNING id, first_name, middle_name, last_name, full_name, phone, nic, email, role,
+                   language_preference, district, division, gnd_division,
+                   address_line1, address_line2, city, postal_code, address,
+                   latitude, longitude, total_land_size, preferred_search_radius,
+                   business_name, business_type, profile_photo_url, verification_status, is_verified`,
         [
-          full_name, email, language_preference,
-          address, preferred_search_radius, business_name, business_type,
+          resolvedFirst, resolvedMiddle, resolvedLast, resolvedFull,
+          email, language_preference,
+          resolvedAddr1, resolvedAddr2, resolvedCity, resolvedPostal, resolvedAddr,
+          preferred_search_radius, business_name, business_type,
           profile_photo_url, req.user.id
         ]
       );
