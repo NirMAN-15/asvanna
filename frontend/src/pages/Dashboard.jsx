@@ -60,6 +60,30 @@ export default function Dashboard() {
   }, [role]);
 
   // ---- BUYER: fetch real dashboard data ----
+  const FALLBACK_CROPS = [
+    {
+      id: 'f1', crop_id: 1, crop_code: 'LEEKS', crop_name: 'Leeks (ලීක්ස්)',
+      crop_name_en: 'Leeks', crop_name_si: 'ලීක්ස්', crop_name_ta: 'லீக்ஸ்',
+      image_url: '/crops/leeks.jpg', price_per_kg: 180, quantity_kg: 500,
+      standard_price_per_kg: 280, distanceKm: 0.8,
+      pickup_address: 'Main St, Bandarawela', farmer_name: 'Sunil Shantha', status: 'AVAILABLE'
+    },
+    {
+      id: 'f2', crop_id: 3, crop_code: 'CARROT', crop_name: 'Carrot (කැරට්)',
+      crop_name_en: 'Carrot', crop_name_si: 'කැරට්', crop_name_ta: 'கேரட்',
+      image_url: '/crops/carrot.jpg', price_per_kg: 280, quantity_kg: 450,
+      standard_price_per_kg: 340, distanceKm: 1.2,
+      pickup_address: 'Kinigama Valley, Bandarawela North', farmer_name: 'P. Jayampathi', status: 'AVAILABLE'
+    },
+    {
+      id: 'f3', crop_id: 11, crop_code: 'SPRING_ONION', crop_name: 'Spring Onion (ළූණු කොළ)',
+      crop_name_en: 'Spring Onion', crop_name_si: 'ළූණු කොළ', crop_name_ta: 'வெங்காய இலை',
+      image_url: '/crops/spring_onion.jpg', price_per_kg: 230, quantity_kg: 450,
+      standard_price_per_kg: 280, distanceKm: 1.5,
+      pickup_address: 'Kinigama Valley, Bandarawela North', farmer_name: 'K. G. Dharmasiri', status: 'AVAILABLE'
+    }
+  ];
+
   const fetchBuyerDashboardData = async () => {
     setBuyerLoading(true);
     try {
@@ -73,13 +97,13 @@ export default function Dashboard() {
           radiusKm: data.radiusKm ?? 5,
         });
         setBuyerHistorySummary(data.buyerHistorySummary || null);
-        setSurplusCrops(data.surplusCrops || []);
+        const crops = (data.surplusCrops || []).slice(0, 3);
+        setSurplusCrops(crops.length > 0 ? crops : FALLBACK_CROPS);
       }
     } catch (err) {
-      // Fallback static data if API unavailable
       setBuyerMetrics({ surplus5kmKg: 1200, activeVerifiedFarmsCount: 9, avgWholesalePrice: 248, radiusKm: 5 });
       setBuyerHistorySummary({ totalOrders: 6, totalSpentLKR: 482550, totalProcuredKg: 2055, completedCount: 6, recentOrders: [] });
-      setSurplusCrops([]);
+      setSurplusCrops(FALLBACK_CROPS);
     } finally {
       setBuyerLoading(false);
     }
@@ -611,9 +635,9 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* ── 3. Fresh Surplus Crops Grid ── */}
+        {/* ── 3. Fresh Surplus Crops — 3 Nearest Categories ── */}
         <section>
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-2">
             <h2 className="font-headline text-headline-sm font-bold text-primary flex items-center gap-2">
               <span className="material-symbols-outlined text-secondary">grass</span>
               {t('fresh_surplus_available')}
@@ -625,71 +649,97 @@ export default function Dashboard() {
           </div>
           <p className="text-xs text-on-surface-variant mb-5">{t('fresh_surplus_desc')}</p>
 
-          {buyerLoading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-              {[1,2,3,4].map(i => (
-                <div key={i} className="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 animate-pulse h-56" />
-              ))}
-            </div>
-          ) : surplusCrops.length === 0 ? (
-            <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 p-10 text-center">
-              <span className="material-symbols-outlined text-4xl text-on-surface-variant mb-3">inbox</span>
-              <p className="text-on-surface-variant font-medium">{t('no_orders_yet')}</p>
-              <Link to="/marketplace" className="mt-4 inline-flex items-center gap-1 text-sm text-primary font-bold hover:underline">
-                {t('open_surplus_marketplace')} <span className="material-symbols-outlined text-sm">arrow_forward</span>
-              </Link>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-              {surplusCrops.map(crop => {
-                const cropName = lang === 'si' ? (crop.crop_name_si || crop.crop_name_en || crop.crop_name)
-                  : lang === 'ta' ? (crop.crop_name_ta || crop.crop_name_en || crop.crop_name)
-                  : (crop.crop_name_en || crop.crop_name || 'Produce');
-                const isBelowBench = crop.price_per_kg < (crop.standard_price_per_kg * 0.9);
+          {/* Always show 3 crop cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            {(buyerLoading ? [null, null, null] : (surplusCrops.length > 0 ? surplusCrops : FALLBACK_CROPS)).map((crop, idx) => {
+              if (!crop) {
+                // Skeleton loading state
                 return (
-                  <div key={crop.id} className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 shadow-card overflow-hidden flex flex-col group hover:shadow-lg transition-shadow">
-                    <div className="h-36 overflow-hidden bg-primary-container/20 relative flex-shrink-0">
-                      <img
-                        src={crop.image_url || `/crops/${(crop.crop_code || 'leeks').toLowerCase()}.jpg`}
-                        alt={cropName}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        onError={e => { e.target.src = '/crops/leeks.jpg'; }}
-                      />
-                      {isBelowBench && (
-                        <span className="absolute top-2 left-2 bg-primary text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
-                          {t('below_benchmark_badge')}
-                        </span>
-                      )}
-                      {crop.distanceKm != null && (
-                        <span className="absolute top-2 right-2 bg-black/50 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
-                          {crop.distanceKm} km
-                        </span>
-                      )}
-                    </div>
-                    <div className="p-3 flex flex-col flex-1">
-                      <h3 className="font-bold text-sm text-on-surface truncate">{cropName}</h3>
-                      <p className="text-[10px] text-on-surface-variant truncate mb-1">{crop.pickup_address || crop.farmer_name}</p>
-                      <div className="flex items-baseline gap-1 mt-auto">
-                        <span className="font-extrabold text-primary text-base">Rs. {crop.price_per_kg}</span>
-                        <span className="text-[10px] text-on-surface-variant">/kg</span>
-                      </div>
-                      <p className="text-[10px] text-on-surface-variant mt-0.5">
-                        {t('remaining_weight')}: <span className="font-bold text-secondary">{(crop.quantity_kg || 0).toLocaleString()} kg</span>
-                      </p>
-                      <button
-                        onClick={() => { setProcureModalItem(crop); setProcureQty(Math.min(50, crop.quantity_kg || 50)); }}
-                        className="mt-2.5 w-full bg-primary text-white text-xs font-bold py-2 rounded-lg hover:bg-primary/90 transition flex items-center justify-center gap-1 press-effect"
-                      >
-                        <span className="material-symbols-outlined text-sm">add_shopping_cart</span>
-                        {t('quick_procure')}
-                      </button>
+                  <div key={idx} className="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 animate-pulse overflow-hidden">
+                    <div className="h-48 bg-surface-variant/50" />
+                    <div className="p-4 space-y-2">
+                      <div className="h-4 bg-surface-variant/60 rounded w-3/4" />
+                      <div className="h-3 bg-surface-variant/40 rounded w-1/2" />
+                      <div className="h-8 bg-surface-variant/30 rounded mt-3" />
                     </div>
                   </div>
                 );
-              })}
-            </div>
-          )}
+              }
+              const cropName = lang === 'si'
+                ? (crop.crop_name_si || crop.crop_name_en || crop.crop_name)
+                : lang === 'ta'
+                  ? (crop.crop_name_ta || crop.crop_name_en || crop.crop_name)
+                  : (crop.crop_name_en || crop.crop_name || 'Produce');
+              const isBelowBench = crop.price_per_kg < (crop.standard_price_per_kg * 0.9);
+              const imgSrc = crop.image_url
+                || `/crops/${(crop.crop_code || 'leeks').toLowerCase().replace('_', '_')}.jpg`;
+              return (
+                <div key={crop.id} className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 shadow-card overflow-hidden flex flex-col group hover:shadow-xl transition-all duration-300">
+                  {/* Crop Image — taller for better visual */}
+                  <div className="h-48 overflow-hidden bg-primary-container/20 relative flex-shrink-0">
+                    <img
+                      src={imgSrc}
+                      alt={cropName}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      onError={e => {
+                        if (!e.target.dataset.fallback) {
+                          e.target.dataset.fallback = '1';
+                          e.target.src = '/crops/leeks.jpg';
+                        }
+                      }}
+                    />
+                    {/* Distance badge */}
+                    {crop.distanceKm != null && (
+                      <span className="absolute top-2.5 right-2.5 bg-black/60 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5">
+                        <span className="material-symbols-outlined text-[11px]">near_me</span>
+                        {crop.distanceKm} km
+                      </span>
+                    )}
+                    {/* Below benchmark badge */}
+                    {isBelowBench && (
+                      <span className="absolute top-2.5 left-2.5 bg-primary text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
+                        {t('below_benchmark_badge')}
+                      </span>
+                    )}
+                    {/* Gradient overlay at bottom */}
+                    <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/40 to-transparent" />
+                    {/* Crop name overlay on image */}
+                    <h3 className="absolute bottom-2.5 left-3 right-3 font-bold text-white text-sm drop-shadow-md truncate">{cropName}</h3>
+                  </div>
+
+                  {/* Card body */}
+                  <div className="p-4 flex flex-col flex-1">
+                    <p className="text-[10px] text-on-surface-variant truncate mb-3 flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[12px] text-outline">location_on</span>
+                      {crop.pickup_address || crop.farmer_name}
+                    </p>
+
+                    {/* Price + weight */}
+                    <div className="flex items-end justify-between mb-3">
+                      <div>
+                        <p className="text-[10px] text-on-surface-variant font-medium uppercase tracking-wider">Price/kg</p>
+                        <p className="font-extrabold text-primary text-xl leading-none">Rs. {crop.price_per_kg}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] text-on-surface-variant font-medium uppercase tracking-wider">{t('remaining_weight')}</p>
+                        <p className="font-bold text-secondary text-lg leading-none">{(crop.quantity_kg || 0).toLocaleString()} kg</p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => { setProcureModalItem(crop); setProcureQty(Math.min(50, crop.quantity_kg || 50)); }}
+                      className="mt-auto w-full bg-primary text-white text-xs font-bold py-2.5 rounded-xl hover:bg-primary/90 active:scale-95 transition-all flex items-center justify-center gap-1.5 shadow-sm"
+                    >
+                      <span className="material-symbols-outlined text-sm">add_shopping_cart</span>
+                      {t('quick_procure')}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </section>
+
 
         {/* ── Quick Procure Modal ── */}
         {procureModalItem && (
