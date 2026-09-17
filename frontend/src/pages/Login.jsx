@@ -2,6 +2,7 @@ import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { LanguageContext } from '../context/LanguageContext';
+import { validateLoginIdentifier } from '../utils/validation';
 import farmerBg from '../assets/login-farmer-bg.jpg';
 import buyerBg from '../assets/login-buyer-bg.jpg';
 import officerBg from '../assets/login-officer-bg.jpg';
@@ -47,6 +48,7 @@ export default function Login() {
 
   const [role, setRole] = useState('FARMER'); // 'FARMER', 'BUYER', 'OFFICER'
   const [identifier, setIdentifier] = useState('0712345678');
+  const [identifierError, setIdentifierError] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberSession, setRememberSession] = useState(true);
@@ -59,12 +61,20 @@ export default function Login() {
   const handleRoleSelect = (newRole) => {
     setRole(newRole);
     setError('');
+    setIdentifierError('');
     if (newRole === 'OFFICER') {
       setIdentifier('0771234567');
     } else if (newRole === 'FARMER') {
       setIdentifier('0712345678');
     } else if (newRole === 'BUYER') {
       setIdentifier('0572222222');
+    }
+  };
+
+  const handleIdentifierBlur = () => {
+    if (identifier) {
+      const res = validateLoginIdentifier(identifier);
+      setIdentifierError(res.isValid ? '' : res.message);
     }
   };
 
@@ -76,10 +86,17 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e?.preventDefault();
-    setLoading(true);
     setError('');
 
-    const res = await login(identifier, password, role);
+    const identRes = validateLoginIdentifier(identifier);
+    if (!identRes.isValid) {
+      setIdentifierError(identRes.message);
+      setError(identRes.message);
+      return;
+    }
+
+    setLoading(true);
+    const res = await login(identRes.clean || identifier, password, role);
     setLoading(false);
 
     if (res.success) {
@@ -303,9 +320,12 @@ export default function Login() {
             <form onSubmit={handleSubmit} className="flex flex-col gap-5">
               {/* Identification Field */}
               <div className="flex flex-col gap-1.5">
-                <label className="font-label-md text-sm sm:text-base text-primary font-semibold ml-1" htmlFor="identifier">
-                  Phone Number or NIC
-                </label>
+                <div className="flex items-center justify-between px-1">
+                  <label className="font-label-md text-sm sm:text-base text-primary font-semibold" htmlFor="identifier">
+                    Phone Number or NIC
+                  </label>
+                  <span className="text-xs text-on-surface-variant">Phone (07XXXXXXXX) or NIC</span>
+                </div>
                 <div className="relative group">
                   <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-xl sm:text-2xl">
                     smartphone
@@ -315,11 +335,20 @@ export default function Login() {
                     type="text"
                     required
                     value={identifier}
-                    onChange={(e) => setIdentifier(e.target.value)}
+                    onChange={(e) => {
+                      setIdentifier(e.target.value);
+                      if (identifierError) setIdentifierError('');
+                    }}
+                    onBlur={handleIdentifierBlur}
                     placeholder="e.g. 0712345678 or 199012345678"
-                    className="w-full h-[54px] sm:h-[58px] pl-12 pr-4 bg-surface-bright/50 border border-outline-variant/60 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none font-body-md text-base text-on-surface"
+                    className={`w-full h-[54px] sm:h-[58px] pl-12 pr-4 bg-surface-bright/50 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none font-body-md text-base text-on-surface ${
+                      identifierError ? 'border-error ring-1 ring-error' : 'border-outline-variant/60'
+                    }`}
                   />
                 </div>
+                {identifierError && (
+                  <span className="text-xs text-error font-medium px-1">{identifierError}</span>
+                )}
               </div>
 
               {/* Password Field */}
