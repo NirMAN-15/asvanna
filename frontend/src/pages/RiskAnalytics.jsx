@@ -165,14 +165,14 @@ export default function RiskAnalytics() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 bg-surface-container border border-outline-variant/50 px-4 py-2.5 rounded-xl shadow-xs focus-within:ring-2 focus-within:ring-primary/20">
+        <div className="flex items-center gap-2 bg-surface-container border border-outline-variant/50 px-4 py-2.5 rounded-xl shadow-xs focus-within:ring-2 focus-within:ring-primary/20 w-full sm:w-auto">
           <span className="material-symbols-outlined text-slate-500 text-lg">search</span>
           <input
             type="text"
             value={searchCrop}
             onChange={(e) => setSearchCrop(e.target.value)}
             placeholder={t('search_crop_placeholder')}
-            className="text-xs bg-transparent text-slate-900 placeholder-slate-500 focus:outline-none font-bold"
+            className="text-xs bg-transparent text-slate-900 placeholder-slate-500 focus:outline-none font-bold w-full sm:w-64 md:w-80"
           />
         </div>
       </div>
