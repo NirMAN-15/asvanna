@@ -1,6 +1,11 @@
 const fs = require('fs');
 const path = require('path');
-const { Pool } = require('pg');
+let Pool = null;
+try {
+  Pool = require('pg').Pool;
+} catch (e) {
+  // pg is not installed, running in local fileDb mode
+}
 const config = require('./config');
 const { splitFullName, formatFullName, splitAddress, formatAddress } = require('../utils/nameAddressUtils');
 
@@ -197,11 +202,13 @@ function saveDb(dbData) {
 const fileDb = loadDb();
 
 let pool = null;
-try {
-  pool = new Pool(config.db);
-  pool.on('connect', () => console.log('📦 Connected to PostgreSQL database:', config.db.database));
-} catch (e) {
-  // Silence error
+if (Pool) {
+  try {
+    pool = new Pool(config.db);
+    pool.on('connect', () => console.log('📦 Connected to PostgreSQL database:', config.db.database));
+  } catch (e) {
+    // Silence error
+  }
 }
 
 module.exports = {
@@ -367,8 +374,17 @@ module.exports = {
       let rows = (fileDb.marketplace_listings || []).map(l => {
         const crop = fileDb.crops.find(c => c.id === l.crop_id) || {};
         const farmer = fileDb.users.find(u => u.id === l.farmer_id) || {};
+        const cropCodeLower = (crop.crop_code || '').toLowerCase();
+        let defaultImg = '/crops/leek.jpg';
+        if (cropCodeLower.includes('carrot')) defaultImg = '/crops/carrot.jpg';
+        else if (cropCodeLower.includes('spring')) defaultImg = '/crops/spring_onion.jpg';
+        else if (cropCodeLower.includes('beet')) defaultImg = '/crops/beetroot.jpg';
+        else if (cropCodeLower.includes('bean')) defaultImg = '/crops/bush_beans.jpg';
+        else if (cropCodeLower.includes('radish')) defaultImg = '/crops/radish.jpg';
+
         return {
           ...l,
+          image_url: l.image_url || defaultImg,
           crop_code: crop.crop_code,
           crop_name_en: crop.name_en,
           crop_name_si: crop.name_si,
@@ -376,16 +392,22 @@ module.exports = {
           standard_price_per_kg: crop.standard_price_per_kg,
           price_range_min: crop.standard_price_per_kg * 0.75,
           price_range_max: crop.standard_price_per_kg * 1.35,
-          farmer_name: farmer.full_name,
-          farmer_phone: farmer.phone
+          farmer_name: farmer.full_name || l.farmer_name || 'Sunil Shantha',
+          farmer_phone: farmer.phone || l.farmer_phone || '0712345678'
         };
       });
       if (lower.includes('where id =')) {
         rows = rows.filter(r => r.id === Number(params[0]));
       } else if (lower.includes('where l.farmer_id =')) {
         rows = rows.filter(r => r.farmer_id === Number(params[0]));
-      } else if (lower.includes("status = 'available'")) {
-        rows = rows.filter(r => r.status === 'AVAILABLE');
+      } else {
+        if (lower.includes("status = 'available'")) {
+          rows = rows.filter(r => r.status === 'AVAILABLE');
+        }
+        if (lower.includes('crop_id =') && params.length > 0) {
+          const cId = Number(params[params.length - 1]);
+          if (!isNaN(cId)) rows = rows.filter(r => Number(r.crop_id) === cId);
+        }
       }
       return { rows };
     }

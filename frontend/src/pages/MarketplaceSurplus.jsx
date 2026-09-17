@@ -81,12 +81,12 @@ export default function MarketplaceSurplus() {
     ((selectedCropMeta.benchmark - Number(formData.pricePerKg)) / selectedCropMeta.benchmark) * 100
   );
 
-  // Load Data on Mount and on Role Change
+  // Load Data on Mount and on Role/Radius Change
   useEffect(() => {
     loadData();
     const interval = setInterval(() => setTimerTick(prev => prev + 1), 1000);
     return () => clearInterval(interval);
-  }, [activeRoleMode]);
+  }, [activeRoleMode, radiusKm]);
 
   const [timerTick, setTimerTick] = useState(0);
 
@@ -109,13 +109,31 @@ export default function MarketplaceSurplus() {
         const serverOrders = ordersRes.data?.data || [];
         setIncomingOrders(serverOrders.length > 0 ? serverOrders : getFallbackIncomingOrders());
       } else {
+        const buyerLat = user?.latitude || 6.8322;
+        const buyerLng = user?.longitude || 80.9980;
         const [searchRes, ordersRes] = await Promise.all([
-          API.get(`/marketplace/search?radius_km=${radiusKm}`).catch(() => ({ data: { data: [] } })),
+          API.get(`/marketplace/search?radius_km=${radiusKm}&lat=${buyerLat}&lng=${buyerLng}`).catch(() => ({ data: { data: [] } })),
           API.get('/marketplace/orders').catch(() => ({ data: { data: [] } }))
         ]);
 
-        const serverBrowse = searchRes.data?.data || [];
-        setBrowseListings(serverBrowse.length > 0 ? serverBrowse : getFallbackBrowseListings());
+        const serverListings = searchRes.data?.data || [];
+        if (serverListings.length > 0) {
+          const mapped = serverListings.map(item => ({
+            ...item,
+            farmName: item.farmer_name || item.farmName || 'Verified Farm',
+            cropKey: item.crop_name_en || item.cropKey || 'Produce',
+            badge: item.badge || 'Verified Farmgate',
+            location: item.pickup_address || item.location || 'Bandarawela',
+            distance: item.distanceKm != null ? item.distanceKm : (item.distance != null ? item.distance : 0.8),
+            availableKg: item.quantity_kg != null ? item.quantity_kg : (item.availableKg || 100),
+            pricePerKg: item.price_per_kg != null ? item.price_per_kg : (item.pricePerKg || 250),
+            benchmarkPrice: item.standard_price_per_kg != null ? item.standard_price_per_kg : (item.benchmarkPrice || 320),
+            image: item.image_url || item.image || '/crops/leek.jpg'
+          }));
+          setBrowseListings(mapped);
+        } else {
+          setBrowseListings(getFallbackBrowseListings());
+        }
 
         const serverBuyerOrders = ordersRes.data?.data || [];
         setMyBuyerOrders(serverBuyerOrders.length > 0 ? serverBuyerOrders : getFallbackBuyerOrders());
@@ -978,9 +996,15 @@ export default function MarketplaceSurplus() {
                           <div className="flex justify-between items-start">
                             <div className="flex items-center gap-3">
                               <img
-                                src={item.image || '/crops/carrot.jpg'}
+                                src={item.image || '/crops/leek.jpg'}
                                 alt={item.cropKey}
                                 className="w-12 h-12 rounded-xl object-cover border border-outline-variant/30 flex-shrink-0"
+                                onError={e => {
+                                  if (!e.target.dataset.fallback) {
+                                    e.target.dataset.fallback = '1';
+                                    e.target.src = '/crops/leek.jpg';
+                                  }
+                                }}
                               />
                               <div>
                                 <h3 className="font-headline font-bold text-base text-primary">

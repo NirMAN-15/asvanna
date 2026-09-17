@@ -1,4 +1,8 @@
-require('dotenv').config();
+try {
+  require('dotenv').config();
+} catch (e) {
+  // Fallback to process.env or defaults if dotenv module is not installed
+}
 
 module.exports = {
   port: process.env.PORT || 5000,
