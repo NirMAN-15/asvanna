@@ -40,10 +40,23 @@ export default function FarmerPlantingModal({ isOpen, onClose, onPlantingAdded, 
   const [division, setDivision] = useState(user?.division || 'Bandarawela Central');
   const [submitting, setSubmitting] = useState(false);
   const [feedback, setFeedback] = useState(null);
+  const [availableLand, setAvailableLand] = useState(null);
 
   useEffect(() => {
     if (initialCropId) setCropId(String(initialCropId));
   }, [initialCropId]);
+
+  useEffect(() => {
+    if (isOpen && user?.id) {
+      API.get(`/planting/farmer/${user.id}`)
+        .then(res => {
+          const totalLand = user?.total_land_size || 5;
+          const utilizedLand = res.data.data.reduce((sum, crop) => sum + (parseFloat(crop.land_size_acres) || 0), 0);
+          setAvailableLand(Math.max(0, totalLand - utilizedLand));
+        })
+        .catch(err => console.error("Failed to fetch farmer crops for validation", err));
+    }
+  }, [isOpen, user]);
 
   if (!isOpen) return null;
 
@@ -55,6 +68,12 @@ export default function FarmerPlantingModal({ isOpen, onClose, onPlantingAdded, 
     const acres = parseFloat(landSizeAcres);
     if (!acres || acres <= 0) {
       setFeedback({ type: 'error', message: 'Land size must be greater than 0 acres.' });
+      setSubmitting(false);
+      return;
+    }
+
+    if (availableLand !== null && acres > availableLand) {
+      setFeedback({ type: 'error', message: `Cannot allocate ${acres} acres. You only have ${availableLand.toFixed(2)} acres of free land available.` });
       setSubmitting(false);
       return;
     }

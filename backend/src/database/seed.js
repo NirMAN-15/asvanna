@@ -509,6 +509,9 @@ async function seedData() {
       const f1 = farmersRes.rows[0].id;
       const f2 = farmersRes.rows[1].id;
 
+      // CLEAR existing mock plantings to prevent duplication on re-seed
+      await db.query("DELETE FROM planting_records WHERE farmer_id IN ($1, $2)", [f1, f2]).catch(() => {});
+
       const plantings = [
         { farmer: f1, code: 'LEEKS', acres: 2.0, yield: 17000, pDate: '2026-08-01', hDate: '2026-11-01', lat: 6.8322, lng: 80.9980 },
         { farmer: f1, code: 'CARROT', acres: 0.5, yield: 3750, pDate: '2026-08-15', hDate: '2026-11-10', lat: 6.8320, lng: 81.0120 },
