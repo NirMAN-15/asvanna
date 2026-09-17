@@ -9,12 +9,40 @@ import { Link } from 'react-router-dom';
 
 export default function Dashboard() {
   const { role, user } = useContext(AuthContext);
-  const { t } = useContext(LanguageContext);
+  const { t, lang } = useContext(LanguageContext);
+  // ---- BUYER dashboard state ----
+  const [buyerMetrics, setBuyerMetrics] = useState(null);
+  const [buyerHistorySummary, setBuyerHistorySummary] = useState(null);
+  const [surplusCrops, setSurplusCrops] = useState([]);
+  const [buyerLoading, setBuyerLoading] = useState(false);
+  const [procureModalItem, setProcureModalItem] = useState(null);
+  const [procureQty, setProcureQty] = useState(50);
+  const [procureNotes, setProcureNotes] = useState('');
+  const [procureSubmitting, setProcureSubmitting] = useState(false);
 
   // Modals state
   const [isProxyModalOpen, setIsProxyModalOpen] = useState(false);
   const [isBroadcastModalOpen, setIsBroadcastModalOpen] = useState(false);
   const [isFarmerModalOpen, setIsFarmerModalOpen] = useState(false);
+
+  // Farmer crops state
+  const [farmerCrops, setFarmerCrops] = useState([]);
+
+  const fetchFarmerCrops = () => {
+    if (role === 'FARMER') {
+      API.get('/planting/farmer')
+        .then(res => {
+          if (res.data?.data) {
+            setFarmerCrops(res.data.data);
+          }
+        })
+        .catch(err => console.error('Failed to fetch farmer crops:', err));
+    }
+  };
+
+  useEffect(() => {
+    fetchFarmerCrops();
+  }, [role, user]);
 
   // Toast notification state
   const [toastMessage, setToastMessage] = useState('');
@@ -49,6 +77,73 @@ export default function Dashboard() {
     }
   }, [role]);
 
+  const handleDeleteCrop = async (cropId) => {
+    if (!window.confirm('Are you sure you want to remove this planting record?')) return;
+    try {
+      await API.delete(`/planting/${cropId}`);
+      triggerToast('Crop record removed successfully!');
+      fetchFarmerCrops();
+    } catch (err) {
+      console.error('Failed to delete crop:', err);
+      triggerToast('Failed to remove crop. Please try again.', 'error');
+    }
+  };
+
+  // ---- BUYER: fetch real dashboard data ----
+  const fetchBuyerDashboardData = async () => {
+    setBuyerLoading(true);
+    try {
+      const params = {};
+      if (user?.latitude) params.lat = user.latitude;
+      if (user?.longitude) params.lon = user.longitude;
+      const res = await API.get('/marketplace/buyer-summary', { params });
+      const data = res.data?.data || res.data;
+      if (data) {
+        setBuyerMetrics({
+          surplus5kmKg: data.surplus5kmKg ?? 0,
+          activeVerifiedFarmsCount: data.activeVerifiedFarmsCount ?? 0,
+          avgWholesalePrice: data.avgWholesalePrice ?? 0,
+          radiusKm: data.radiusKm ?? 5,
+        });
+        setBuyerHistorySummary(data.buyerHistorySummary || null);
+        setSurplusCrops(data.surplusCrops || []);
+      }
+    } catch (err) {
+      console.error('Buyer summary fetch error:', err);
+    } finally {
+      setBuyerLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (role === 'BUYER') fetchBuyerDashboardData();
+  }, [role]);
+
+  // ---- BUYER: quick procure submit ----
+  const handleQuickProcureSubmit = async (e) => {
+    e.preventDefault();
+    if (!procureModalItem) return;
+    setProcureSubmitting(true);
+    try {
+      await API.post('/marketplace/orders', {
+        listing_id: procureModalItem.id,
+        requested_quantity_kg: parseFloat(procureQty),
+        offered_price_per_kg: parseFloat(procureModalItem.price_per_kg),
+        notes: procureNotes || 'Direct procurement via ASVANNA dashboard'
+      });
+      triggerToast(t('order_success_msg'));
+      setProcureModalItem(null);
+      setProcureQty(50);
+      setProcureNotes('');
+      fetchBuyerDashboardData();
+    } catch (err) {
+      triggerToast(err.response?.data?.message || t('order_success_msg'));
+      setProcureModalItem(null);
+    } finally {
+      setProcureSubmitting(false);
+    }
+  };
+
   const handleQuickProxySubmit = async (e) => {
     e.preventDefault();
     setProxyLoading(true);
@@ -79,14 +174,19 @@ export default function Dashboard() {
   // 1. FARMER ROLE VIEW (Recreating Stitch 'Farmer Home')
   // ----------------------------------------------------
   if (role === 'FARMER') {
+    const totalLand = user?.total_land_size || 5;
+    const utilizedLand = farmerCrops.reduce((sum, crop) => sum + (parseFloat(crop.land_size_acres) || 0), 0);
+    const utilPercentage = Math.min(Math.round((utilizedLand / totalLand) * 100), 100);
+    const availableLand = Math.max(0, totalLand - utilizedLand);
+
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8 animate-fadeIn font-body-md text-on-surface">
         {/* Verification Status Warning Banner */}
         {user?.verification_status === 'PENDING' && (
-          <div className="bg-amber-50 border border-amber-300 p-4 rounded-2xl flex items-center gap-3.5 text-amber-900 text-xs shadow-sm">
-            <span className="material-symbols-outlined text-amber-600 text-2xl flex-shrink-0">pending_actions</span>
+          <div className="bg-warning-container text-on-warning-container px-5 py-4 rounded-xl flex items-start gap-4 shadow-sm border border-warning/20">
+            <span className="material-symbols-outlined text-warning flex-shrink-0 text-xl">hourglass_top</span>
             <div>
-              <strong className="block text-sm font-bold text-amber-950">Profile Awaiting Divisional Officer Verification</strong>
+              <p className="font-bold text-sm">Account pending physical verification</p>
               <span>Your registration details have been queued for physical validation by the Bandarawela Agrarian Development Division. You can view weather and market rates; crop planting logs and marketplace surplus listings will activate once approved.</span>
             </div>
           </div>
@@ -108,20 +208,28 @@ export default function Dashboard() {
               {t('farmer_hero_desc')}
             </p>
 
-            {/* Quick Metrics Badges */}
-            <div className="flex flex-wrap items-center gap-3 mt-4 pt-2">
-              <div className="flex items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded-xl border border-outline-variant/30">
-                <span className="material-symbols-outlined text-primary text-lg">landscape</span>
-                <span className="text-xs text-on-surface-variant font-medium">{t('active_plot')}: <strong className="text-primary font-bold">{t('acres_val', { val: '2.5' })}</strong></span>
+            {/* Land Utilization Progress */}
+            <div className="mt-5 max-w-md bg-surface-container-low border border-outline-variant/30 rounded-xl p-3.5 shadow-sm">
+              <div className="flex justify-between items-end mb-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-on-surface-variant flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-sm">pie_chart</span>
+                  {t('land_utilization') || 'Land Utilization'}
+                </span>
+                <span className="text-sm font-bold text-primary">
+                  {utilizedLand.toFixed(1)} / {totalLand.toFixed(1)} Acres ({utilPercentage}%)
+                </span>
               </div>
-              <div className="flex items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded-xl border border-outline-variant/30">
-                <span className="material-symbols-outlined text-secondary text-lg">schedule</span>
-                <span className="text-xs text-on-surface-variant font-medium">{t('harvest_window')}: <strong className="text-secondary font-bold">{t('days_val', { val: '24' })}</strong></span>
+              <div className="w-full h-2.5 bg-surface-variant rounded-full overflow-hidden">
+                <div 
+                  className={`h-full rounded-full transition-all duration-1000 ease-out ${utilPercentage > 90 ? 'bg-error' : 'bg-primary'}`} 
+                  style={{ width: `${utilPercentage}%` }}
+                />
               </div>
-              <div className="flex items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded-xl border border-outline-variant/30">
-                <span className="material-symbols-outlined text-primary text-lg">payments</span>
-                <span className="text-xs text-on-surface-variant font-medium">{t('est_yield_value')}: <strong className="text-primary font-bold">LKR 420,000</strong></span>
-              </div>
+              <p className="text-[10px] text-on-surface-variant mt-1.5">
+                {utilPercentage >= 100 
+                  ? 'Your land is fully utilized based on registered plots.' 
+                  : `You have ${availableLand.toFixed(1)} acres available for new cultivation.`}
+              </p>
             </div>
           </div>
 
@@ -142,6 +250,93 @@ export default function Dashboard() {
             </Link>
           </div>
         </header>
+
+        {/* Real-time Field Telemetry & Weather Section */}
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-5 shadow-card flex items-center gap-4">
+            <div className="w-12 h-12 bg-secondary-container/60 rounded-xl flex items-center justify-center text-primary flex-shrink-0">
+              <span className="material-symbols-outlined text-2xl">partly_cloudy_day</span>
+            </div>
+            <div>
+              <p className="text-xs text-on-surface-variant font-medium uppercase tracking-wider">{t('bandarawela_weather')}</p>
+              <h4 className="font-headline text-lg font-bold text-primary">{t('weather_temp_text')}</h4>
+              <p className="text-[11px] text-on-surface-variant">{t('weather_hum_text')}</p>
+            </div>
+          </div>
+
+          <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-5 shadow-card flex items-center gap-4">
+            <div className="w-12 h-12 bg-primary-fixed rounded-xl flex items-center justify-center text-primary flex-shrink-0">
+              <span className="material-symbols-outlined text-2xl">trending_up</span>
+            </div>
+            <div>
+              <p className="text-xs text-on-surface-variant font-medium uppercase tracking-wider">{t('nav_wholesale_rates') || 'Wholesale Rates'}</p>
+              <h4 className="font-headline text-lg font-bold text-primary">Rs. 280 - 390 / kg</h4>
+              <p className="text-[11px] text-on-surface-variant">Carrot Rs 340 • Leeks Rs 280 • Beans Rs 320</p>
+            </div>
+          </div>
+
+          <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-5 shadow-card flex items-center gap-4">
+            <div className="w-12 h-12 bg-secondary-container/60 rounded-xl flex items-center justify-center text-secondary flex-shrink-0">
+              <span className="material-symbols-outlined text-2xl">support_agent</span>
+            </div>
+            <div>
+              <p className="text-xs text-on-surface-variant font-medium uppercase tracking-wider">{t('officer_contact')}</p>
+              <h4 className="font-headline text-lg font-bold text-primary">{t('hotline_label')}</h4>
+              <p className="text-[11px] text-on-surface-variant">{t('do_office_contact')}</p>
+            </div>
+          </div>
+        </section>
+        {/* Farmer Crop Data */}
+        {farmerCrops.length > 0 && (
+          <section className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 shadow-card">
+            <h2 className="font-headline text-xl font-bold text-primary mb-4 flex items-center gap-2">
+              <span className="material-symbols-outlined text-secondary">inventory_2</span>
+              {t('nav_my_farm') || 'My Planted Crops'}
+            </h2>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead className="bg-surface-container-low text-on-surface-variant text-xs uppercase tracking-wider">
+                    <tr>
+                      <th className="px-4 py-3">Crop</th>
+                      <th className="px-4 py-3">Land Size (Acres)</th>
+                      <th className="px-4 py-3">Planting Date</th>
+                      <th className="px-4 py-3">Expected Harvest</th>
+                      <th className="px-4 py-3">Expected Yield</th>
+                      <th className="px-4 py-3">Status</th>
+                      <th className="px-4 py-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-surface-variant text-sm">
+                    {farmerCrops.map(crop => (
+                      <tr key={crop.id} className="hover:bg-surface-container-low/50 transition">
+                        <td className="px-4 py-3 font-semibold text-on-surface">
+                          {lang === 'si' ? crop.name_si : `${crop.name_en} (${crop.name_si})`}
+                        </td>
+                        <td className="px-4 py-3">{crop.land_size_acres}</td>
+                        <td className="px-4 py-3">{new Date(crop.planting_date).toLocaleDateString()}</td>
+                        <td className="px-4 py-3 text-secondary font-medium">{new Date(crop.expected_harvest_date).toLocaleDateString()}</td>
+                        <td className="px-4 py-3 font-medium">{crop.expected_yield_kg} kg</td>
+                        <td className="px-4 py-3">
+                          <span className="px-2 py-1 rounded bg-primary/10 text-primary text-xs font-bold">
+                            {crop.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <button
+                            onClick={() => handleDeleteCrop(crop.id)}
+                            className="text-error hover:bg-error/10 p-1.5 rounded transition"
+                            title="Remove Crop"
+                          >
+                            <span className="material-symbols-outlined text-lg">delete</span>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+              </table>
+            </div>
+          </section>
+        )}
 
         {/* Status Badge Card: Risk Indicator (From Stitch Design) */}
         <section>
@@ -188,7 +383,7 @@ export default function Dashboard() {
         </section>
 
         {/* Action Button Grid (From Stitch Design) */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6">
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-5 lg:gap-6">
           {/* Action 1: Register New Crop */}
           <button
             onClick={() => setIsFarmerModalOpen(true)}
@@ -218,22 +413,6 @@ export default function Dashboard() {
             <span className="font-headline text-lg font-bold text-on-secondary-fixed">{t('farmer_action_market_title')}</span>
             <span className="text-xs text-on-secondary-container/80 mt-1.5 leading-relaxed">
               {t('farmer_action_market_desc')}
-            </span>
-          </Link>
-
-          {/* Action 3: Government Advisories */}
-          <Link
-            to="/broadcasts"
-            className="bg-surface-container-high text-on-surface flex flex-col items-center justify-center p-7 sm:p-8 rounded-2xl shadow-card touch-active hover:bg-surface-variant transition border border-outline-variant/40 group text-center"
-          >
-            <div className="w-16 h-16 rounded-2xl bg-secondary/10 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-              <span className="material-symbols-outlined text-4xl text-secondary icon-fill">
-                campaign
-              </span>
-            </div>
-            <span className="font-headline text-lg font-bold text-primary">{t('farmer_action_advisories_title')}</span>
-            <span className="text-xs text-on-surface-variant mt-1.5 leading-relaxed">
-              {t('farmer_action_advisories_desc')}
             </span>
           </Link>
         </section>
@@ -355,110 +534,338 @@ export default function Dashboard() {
           </div>
         </section>
 
-        {/* Real-time Field Telemetry & Weather Section */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-5 shadow-card flex items-center gap-4">
-            <div className="w-12 h-12 bg-secondary-container/60 rounded-xl flex items-center justify-center text-primary flex-shrink-0">
-              <span className="material-symbols-outlined text-2xl">partly_cloudy_day</span>
-            </div>
-            <div>
-              <p className="text-xs text-on-surface-variant font-medium uppercase tracking-wider">{t('bandarawela_weather')}</p>
-              <h4 className="font-headline text-lg font-bold text-primary">{t('weather_temp_text')}</h4>
-              <p className="text-[11px] text-on-surface-variant">{t('weather_hum_text')}</p>
-            </div>
-          </div>
-
-          <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-5 shadow-card flex items-center gap-4">
-            <div className="w-12 h-12 bg-primary-fixed rounded-xl flex items-center justify-center text-primary flex-shrink-0">
-              <span className="material-symbols-outlined text-2xl">trending_up</span>
-            </div>
-            <div>
-              <p className="text-xs text-on-surface-variant font-medium uppercase tracking-wider">{t('nav_wholesale_rates') || 'Wholesale Rates'}</p>
-              <h4 className="font-headline text-lg font-bold text-primary">Rs. 280 - 390 / kg</h4>
-              <p className="text-[11px] text-on-surface-variant">Carrot Rs 340 • Leeks Rs 280 • Beans Rs 320</p>
-            </div>
-          </div>
-
-          <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-5 shadow-card flex items-center gap-4">
-            <div className="w-12 h-12 bg-secondary-container/60 rounded-xl flex items-center justify-center text-secondary flex-shrink-0">
-              <span className="material-symbols-outlined text-2xl">support_agent</span>
-            </div>
-            <div>
-              <p className="text-xs text-on-surface-variant font-medium uppercase tracking-wider">{t('officer_contact')}</p>
-              <h4 className="font-headline text-lg font-bold text-primary">{t('hotline_label')}</h4>
-              <p className="text-[11px] text-on-surface-variant">{t('do_office_contact')}</p>
-            </div>
-          </div>
-        </section>
 
         {/* Farmer Planting Modal */}
         <FarmerPlantingModal
           isOpen={isFarmerModalOpen}
           onClose={() => setIsFarmerModalOpen(false)}
-          onSuccess={() => triggerToast(t('toast_crop_logged'))}
+          onSuccess={() => {
+            triggerToast(t('toast_crop_logged'));
+            fetchFarmerCrops();
+          }}
         />
       </div>
     );
   }
 
   // ----------------------------------------------------
-  // 2. BUYER ROLE VIEW
+  // 2. BUYER ROLE VIEW — Data-driven Dashboard
   // ----------------------------------------------------
   if (role === 'BUYER') {
+    const m = buyerMetrics || {};
+    const hist = buyerHistorySummary || {};
+
     return (
       <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-6 space-y-8 animate-fadeIn font-body-md text-on-surface">
+
+        {/* Header */}
         <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="font-headline text-headline-lg font-bold text-primary">
               {t('buyer_title', { name: user?.business_name || user?.full_name || 'Commercial Partner' })}
             </h1>
-            <p className="text-on-surface-variant font-body-md">
-              {t('buyer_subtitle_desc')}
-            </p>
+            <p className="text-on-surface-variant font-body-md">{t('buyer_subtitle_desc')}</p>
           </div>
-          <Link
-            to="/marketplace"
-            className="bg-primary text-white px-6 py-3 rounded-xl font-label-md font-bold hover:bg-primary-container transition flex items-center gap-2 press-effect shadow-sm"
-          >
-            <span className="material-symbols-outlined">shopping_cart</span>
-            <span>{t('open_surplus_marketplace')}</span>
-          </Link>
+          {buyerLoading && (
+            <div className="flex items-center gap-2 text-xs text-on-surface-variant animate-pulse">
+              <span className="material-symbols-outlined text-base">sync</span>
+              <span>Loading real-time data...</span>
+            </div>
+          )}
         </header>
 
+        {/* ── 1. Real DB Metric Cards ── */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           <div className="bg-surface-container-lowest p-6 rounded-2xl border-t-4 border-primary shadow-card border border-outline-variant/30">
             <span className="text-xs text-on-surface-variant uppercase font-bold tracking-wider">{t('surplus_5km_title')}</span>
-            <p className="font-headline text-3xl font-extrabold text-primary mt-2">5,200 kg</p>
-            <p className="text-xs text-secondary mt-1">{t('surplus_5km_avail')}</p>
+            <p className="font-headline text-3xl font-extrabold text-primary mt-2">
+              {buyerLoading ? '—' : `${(m.surplus5kmKg || 0).toLocaleString()} kg`}
+            </p>
+            <p className="text-xs text-secondary mt-1">{t('surplus_5km_avail')} • {m.radiusKm ?? 5}km radius</p>
           </div>
           <div className="bg-surface-container-lowest p-6 rounded-2xl border-t-4 border-secondary shadow-card border border-outline-variant/30">
             <span className="text-xs text-on-surface-variant uppercase font-bold tracking-wider">{t('active_verified_farms')}</span>
-            <p className="font-headline text-3xl font-extrabold text-secondary mt-2">{t('farms_count_val', { count: 48 })}</p>
+            <p className="font-headline text-3xl font-extrabold text-secondary mt-2">
+              {buyerLoading ? '—' : t('farms_count_val', { count: m.activeVerifiedFarmsCount ?? 0 })}
+            </p>
             <p className="text-xs text-on-surface-variant mt-1">{t('farms_locations')}</p>
           </div>
           <div className="bg-surface-container-lowest p-6 rounded-2xl border-t-4 border-primary-container shadow-card border border-outline-variant/30">
             <span className="text-xs text-on-surface-variant uppercase font-bold tracking-wider">{t('avg_wholesale_price')}</span>
-            <p className="font-headline text-3xl font-extrabold text-primary-container mt-2">LKR 185/kg</p>
+            <p className="font-headline text-3xl font-extrabold text-primary mt-2">
+              {buyerLoading ? '—' : `LKR ${m.avgWholesalePrice ?? 0}/kg`}
+            </p>
             <p className="text-xs text-secondary mt-1">{t('below_terminal_market')}</p>
           </div>
         </div>
 
-        <div className="bg-surface-container-lowest p-8 rounded-2xl border border-outline-variant/30 shadow-card text-center">
-          <span className="material-symbols-outlined text-5xl text-primary mb-3">explore</span>
-          <h2 className="font-headline text-headline-md text-primary font-bold mb-2">
-            {t('zero_waste_ready_title')}
-          </h2>
-          <p className="text-on-surface-variant max-w-xl mx-auto mb-6">
-            {t('zero_waste_ready_desc')}
-          </p>
-          <Link
-            to="/marketplace"
-            className="inline-flex items-center gap-2 px-8 py-3.5 bg-primary text-white rounded-xl font-label-md font-bold hover:bg-primary-container transition shadow-sm"
-          >
-            <span>{t('explore_produce_map')}</span>
-            <span className="material-symbols-outlined">arrow_forward</span>
-          </Link>
+        {/* ── 2. Two-column: Transactions Summary + Open Surplus Marketplace Banner ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+          {/* Left — Past Transactions Summary */}
+          <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 shadow-card flex flex-col">
+            <div className="p-5 border-b border-outline-variant/20 flex justify-between items-center">
+              <h2 className="font-headline text-headline-sm font-bold text-primary flex items-center gap-2">
+                <span className="material-symbols-outlined text-secondary">receipt_long</span>
+                {t('buyer_transactions_summary')}
+              </h2>
+              <Link to="/history" className="text-xs text-secondary font-bold hover:underline flex items-center gap-0.5">
+                {t('view_all_history')}
+                <span className="material-symbols-outlined text-sm">chevron_right</span>
+              </Link>
+            </div>
+            {/* Stats row */}
+            <div className="grid grid-cols-3 divide-x divide-outline-variant/20 border-b border-outline-variant/20">
+              <div className="p-4 text-center">
+                <p className="text-2xl font-extrabold text-primary font-headline">{hist.totalOrders ?? 0}</p>
+                <p className="text-[10px] uppercase tracking-wider text-on-surface-variant font-bold mt-0.5">{t('total_orders')}</p>
+              </div>
+              <div className="p-4 text-center">
+                <p className="text-2xl font-extrabold text-secondary font-headline">{(hist.totalProcuredKg ?? 0).toLocaleString()} kg</p>
+                <p className="text-[10px] uppercase tracking-wider text-on-surface-variant font-bold mt-0.5">{t('total_procured_kg')}</p>
+              </div>
+              <div className="p-4 text-center">
+                <p className="text-2xl font-extrabold text-primary font-headline">Rs. {((hist.totalSpentLKR ?? 0) / 1000).toFixed(0)}k</p>
+                <p className="text-[10px] uppercase tracking-wider text-on-surface-variant font-bold mt-0.5">{t('total_spent')}</p>
+              </div>
+            </div>
+            {/* Recent orders */}
+            <div className="flex-1 overflow-y-auto p-3 space-y-2 max-h-60 custom-scrollbar">
+              <p className="text-xs text-on-surface-variant font-bold uppercase tracking-wider px-1 mb-1">{t('recent_transactions')}</p>
+              {(hist.recentOrders && hist.recentOrders.length > 0) ? hist.recentOrders.map(order => (
+                <div key={order.id} className="flex items-center gap-3 p-2.5 bg-surface-container-low rounded-xl border border-outline-variant/20">
+                  <div className="w-8 h-8 bg-primary-container/60 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <span className="material-symbols-outlined text-primary text-base">eco</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-on-surface truncate">{order.crop_name}</p>
+                    <p className="text-[10px] text-on-surface-variant">{order.farmer_name} • {order.quantity_kg} kg</p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-xs font-bold text-primary">Rs. {(order.total_price || 0).toLocaleString()}</p>
+                    <span className="text-[9px] px-1.5 py-0.5 bg-primary/10 text-primary rounded font-bold uppercase">{order.status}</span>
+                  </div>
+                </div>
+              )) : (
+                <p className="text-xs text-on-surface-variant text-center py-4">{t('no_orders_yet')}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Right — Open Surplus Marketplace Banner */}
+          <div className="rounded-2xl overflow-hidden shadow-card relative bg-gradient-to-br from-primary via-primary/90 to-secondary flex flex-col justify-between p-6 min-h-[260px]">
+            <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -mr-10 -mt-10 pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-black/10 rounded-full -ml-8 -mb-8 pointer-events-none" />
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                  <span className="material-symbols-outlined text-white text-xl">storefront</span>
+                </div>
+                <span className="text-xs font-bold text-white/80 uppercase tracking-widest">ASVANNA Marketplace</span>
+              </div>
+              <h2 className="font-headline text-2xl font-extrabold text-white leading-tight mb-2">
+                {t('open_marketplace_banner_title')}
+              </h2>
+              <p className="text-white/80 text-sm mb-5 max-w-xs">
+                {t('open_marketplace_banner_desc')}
+              </p>
+              <div className="flex flex-wrap gap-2 mb-5">
+                {[
+                  { icon: 'bolt', label: t('banner_fast_confirmation') },
+                  { icon: 'verified', label: t('banner_verified_farms') },
+                  { icon: 'local_shipping', label: t('banner_farmgate_pickup') },
+                ].map(({ icon, label }) => (
+                  <span key={icon} className="flex items-center gap-1 text-[11px] font-bold text-white bg-white/15 px-2.5 py-1 rounded-full">
+                    <span className="material-symbols-outlined text-sm">{icon}</span>
+                    {label}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <Link
+              to="/marketplace"
+              className="relative z-10 flex items-center justify-center gap-2 bg-white text-primary font-bold py-3.5 rounded-xl text-sm hover:bg-primary-fixed transition press-effect shadow-lg"
+            >
+              <span className="material-symbols-outlined">shopping_cart</span>
+              <span>{t('open_surplus_marketplace')}</span>
+              <span className="material-symbols-outlined text-base">arrow_forward</span>
+            </Link>
+          </div>
         </div>
+
+        {/* ── 3. Fresh Surplus Crops — 3 Nearest Categories ── */}
+        <section>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="font-headline text-headline-sm font-bold text-primary flex items-center gap-2">
+              <span className="material-symbols-outlined text-secondary">grass</span>
+              {t('fresh_surplus_available')}
+            </h2>
+            <Link to="/marketplace" className="text-xs text-secondary font-bold hover:underline flex items-center gap-0.5">
+              {t('open_surplus_marketplace')}
+              <span className="material-symbols-outlined text-sm">chevron_right</span>
+            </Link>
+          </div>
+          <p className="text-xs text-on-surface-variant mb-5">{t('fresh_surplus_desc')}</p>
+
+          {/* Nearest 3 surplus crop categories grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            {buyerLoading ? (
+              [null, null, null].map((_, idx) => (
+                <div key={idx} className="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 animate-pulse overflow-hidden">
+                  <div className="h-48 bg-surface-variant/50" />
+                  <div className="p-4 space-y-2">
+                    <div className="h-4 bg-surface-variant/60 rounded w-3/4" />
+                    <div className="h-3 bg-surface-variant/40 rounded w-1/2" />
+                    <div className="h-8 bg-surface-variant/30 rounded mt-3" />
+                  </div>
+                </div>
+              ))
+            ) : surplusCrops.length === 0 ? (
+              <div className="col-span-full bg-surface-container-lowest rounded-2xl border border-outline-variant/30 p-10 text-center">
+                <span className="material-symbols-outlined text-4xl text-on-surface-variant mb-2">storefront</span>
+                <p className="text-sm font-bold text-on-surface">No active surplus harvest found in your immediate area.</p>
+                <p className="text-xs text-on-surface-variant mt-1">Explore all regional produce in the marketplace.</p>
+              </div>
+            ) : (
+              surplusCrops.slice(0, 3).map((crop) => {
+                const cropName = lang === 'si'
+                  ? (crop.crop_name_si || crop.crop_name_en || crop.crop_name)
+                  : lang === 'ta'
+                    ? (crop.crop_name_ta || crop.crop_name_en || crop.crop_name)
+                    : (crop.crop_name_en || crop.crop_name || 'Produce');
+                const isBelowBench = crop.price_per_kg < (crop.standard_price_per_kg * 0.9);
+                const imgSrc = crop.image_url || '/crops/leek.jpg';
+                return (
+                  <div key={crop.id} className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 shadow-card overflow-hidden flex flex-col group hover:shadow-xl transition-all duration-300">
+                    {/* Crop Image — taller for better visual */}
+                    <div className="h-48 overflow-hidden bg-primary-container/20 relative flex-shrink-0">
+                      <img
+                        src={imgSrc}
+                        alt={cropName}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        onError={e => {
+                          if (!e.target.dataset.fallback) {
+                            e.target.dataset.fallback = '1';
+                            e.target.src = '/crops/leek.jpg';
+                          }
+                        }}
+                      />
+                    {/* Distance badge */}
+                    {crop.distanceKm != null && (
+                      <span className="absolute top-2.5 right-2.5 bg-black/60 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5">
+                        <span className="material-symbols-outlined text-[11px]">near_me</span>
+                        {crop.distanceKm} km
+                      </span>
+                    )}
+                    {/* Below benchmark badge */}
+                    {isBelowBench && (
+                      <span className="absolute top-2.5 left-2.5 bg-primary text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
+                        {t('below_benchmark_badge')}
+                      </span>
+                    )}
+                    {/* Gradient overlay at bottom */}
+                    <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/40 to-transparent" />
+                    {/* Crop name overlay on image */}
+                    <h3 className="absolute bottom-2.5 left-3 right-3 font-bold text-white text-sm drop-shadow-md truncate">{cropName}</h3>
+                  </div>
+
+                  {/* Card body */}
+                  <div className="p-4 flex flex-col flex-1">
+                    <p className="text-[10px] text-on-surface-variant truncate mb-3 flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[12px] text-outline">location_on</span>
+                      {crop.pickup_address || crop.farmer_name}
+                    </p>
+
+                    {/* Price + weight */}
+                    <div className="flex items-end justify-between mb-3">
+                      <div>
+                        <p className="text-[10px] text-on-surface-variant font-medium uppercase tracking-wider">Price/kg</p>
+                        <p className="font-extrabold text-primary text-xl leading-none">Rs. {crop.price_per_kg}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] text-on-surface-variant font-medium uppercase tracking-wider">{t('remaining_weight')}</p>
+                        <p className="font-bold text-secondary text-lg leading-none">{(crop.quantity_kg || 0).toLocaleString()} kg</p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => { setProcureModalItem(crop); setProcureQty(Math.min(50, crop.quantity_kg || 50)); }}
+                      className="mt-auto w-full bg-primary text-white text-xs font-bold py-2.5 rounded-xl hover:bg-primary/90 active:scale-95 transition-all flex items-center justify-center gap-1.5 shadow-sm"
+                    >
+                      <span className="material-symbols-outlined text-sm">add_shopping_cart</span>
+                      {t('quick_procure')}
+                    </button>
+                  </div>
+                </div>
+              );
+            }))}
+          </div>
+        </section>
+
+
+        {/* ── Quick Procure Modal ── */}
+        {procureModalItem && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div className="bg-surface-container-lowest rounded-2xl shadow-2xl border border-outline-variant/30 w-full max-w-md p-6 animate-fadeIn">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-headline text-headline-sm font-bold text-primary">{t('quick_procure_modal_title')}</h3>
+                <button onClick={() => setProcureModalItem(null)} className="text-on-surface-variant hover:text-on-surface">
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+              <div className="flex items-center gap-3 bg-surface-container p-3 rounded-xl mb-5">
+                <img
+                  src={procureModalItem.image_url || `/crops/${(procureModalItem.crop_code || 'leeks').toLowerCase()}.jpg`}
+                  alt=""
+                  className="w-14 h-14 rounded-lg object-cover"
+                  onError={e => { e.target.src = '/crops/leeks.jpg'; }}
+                />
+                <div>
+                  <p className="font-bold text-on-surface">{procureModalItem.crop_name_en || procureModalItem.crop_name}</p>
+                  <p className="text-xs text-on-surface-variant">{procureModalItem.pickup_address || procureModalItem.farmer_name}</p>
+                  <p className="text-primary font-extrabold">Rs. {procureModalItem.price_per_kg}/kg</p>
+                </div>
+              </div>
+              <form onSubmit={handleQuickProcureSubmit} className="space-y-4">
+                <div>
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider block mb-1">{t('quick_procure_qty_label')}</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max={procureModalItem.quantity_kg || 9999}
+                    value={procureQty}
+                    onChange={e => setProcureQty(e.target.value)}
+                    required
+                    className="w-full border border-outline-variant/80 rounded-lg p-2.5 text-sm bg-surface focus:border-primary outline-none"
+                  />
+                  <p className="text-[10px] text-on-surface-variant mt-1">
+                    Total: <strong className="text-primary">Rs. {(procureQty * procureModalItem.price_per_kg).toLocaleString()}</strong>
+                    {' '}• Max available: {(procureModalItem.quantity_kg || 0).toLocaleString()} kg
+                  </p>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider block mb-1">{t('quick_procure_notes_label')}</label>
+                  <textarea
+                    rows={2}
+                    value={procureNotes}
+                    onChange={e => setProcureNotes(e.target.value)}
+                    placeholder="e.g. Farmgate pickup, morning batch..."
+                    className="w-full border border-outline-variant/80 rounded-lg p-2.5 text-sm bg-surface focus:border-primary outline-none resize-none"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={procureSubmitting}
+                  className="w-full bg-primary text-white font-bold py-3.5 rounded-xl text-sm hover:bg-primary/90 transition press-effect shadow-sm disabled:opacity-70 flex items-center justify-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-base">check_circle</span>
+                  {procureSubmitting ? t('procuring') : t('quick_procure_submit')}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
       </div>
     );
   }

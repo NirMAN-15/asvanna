@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import { LanguageContext } from '../../context/LanguageContext';
+import { validatePhone, validateBuyerNicOrBr } from '../../utils/validation';
 
 export default function BuyerAuth() {
   const navigate = useNavigate();
@@ -10,6 +11,7 @@ export default function BuyerAuth() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const [formData, setFormData] = useState({
     business_name: '',
@@ -23,12 +25,42 @@ export default function BuyerAuth() {
   });
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    if (fieldErrors[name]) {
+      setFieldErrors({ ...fieldErrors, [name]: '' });
+    }
+  };
+
+  const handleBlur = (field) => {
+    if (field === 'phone' && formData.phone) {
+      const res = validatePhone(formData.phone, true);
+      setFieldErrors((prev) => ({ ...prev, phone: res.isValid ? '' : res.message }));
+    } else if (field === 'nic' && formData.nic) {
+      const res = validateBuyerNicOrBr(formData.nic);
+      setFieldErrors((prev) => ({ ...prev, nic: res.isValid ? '' : res.message }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    // Phone Validation
+    const phoneRes = validatePhone(formData.phone, true);
+    if (!phoneRes.isValid) {
+      setFieldErrors((prev) => ({ ...prev, phone: phoneRes.message }));
+      setError(phoneRes.message);
+      return;
+    }
+
+    // BR or NIC Validation
+    const nicRes = validateBuyerNicOrBr(formData.nic);
+    if (!nicRes.isValid) {
+      setFieldErrors((prev) => ({ ...prev, nic: nicRes.message }));
+      setError(nicRes.message);
+      return;
+    }
 
     if (formData.password !== formData.confirm_password) {
       setError('Passwords do not match.');
@@ -40,8 +72,8 @@ export default function BuyerAuth() {
       full_name: formData.full_name || formData.business_name,
       business_name: formData.business_name,
       business_type: formData.business_type,
-      phone: formData.phone,
-      nic: formData.nic,
+      phone: phoneRes.clean,
+      nic: nicRes.clean,
       district: formData.district,
       password: formData.password,
     };
@@ -107,12 +139,45 @@ export default function BuyerAuth() {
       {/* Right Side: Registration Form */}
       <main className="w-full md:w-1/2 lg:w-2/5 min-h-screen flex flex-col justify-center items-center p-6 md:p-12 bg-surface">
         <div className="w-full max-w-md mx-auto">
-          {/* Header */}
-          <header className="mb-6">
-            <Link to="/" className="inline-flex items-center text-primary font-label-md text-label-md hover:underline mb-4 transition group">
+          {/* Header & Language Switcher */}
+          <div className="flex items-center justify-between mb-4">
+            <Link to="/" className="inline-flex items-center text-primary font-label-md text-label-md hover:underline transition group">
               <span className="material-symbols-outlined mr-1 text-sm group-hover:-translate-x-1 transition-transform">arrow_back</span>
               Back to Role Selection
             </Link>
+
+            <div className="flex items-center bg-surface-container-low rounded-full px-2 py-1 border border-outline-variant/40 shadow-sm">
+              <button
+                type="button"
+                onClick={() => setLanguage('en')}
+                className={`px-2 py-0.5 rounded-full text-xs font-bold transition ${
+                  lang === 'en' ? 'bg-secondary text-white' : 'text-on-surface-variant'
+                }`}
+              >
+                EN
+              </button>
+              <button
+                type="button"
+                onClick={() => setLanguage('si')}
+                className={`px-2 py-0.5 rounded-full text-xs font-bold transition ${
+                  lang === 'si' ? 'bg-secondary text-white' : 'text-on-surface-variant'
+                }`}
+              >
+                සිං
+              </button>
+              <button
+                type="button"
+                onClick={() => setLanguage('ta')}
+                className={`px-2 py-0.5 rounded-full text-xs font-bold transition ${
+                  lang === 'ta' ? 'bg-secondary text-white' : 'text-on-surface-variant'
+                }`}
+              >
+                த
+              </button>
+            </div>
+          </div>
+
+          <header className="mb-6">
             <h2 className="font-headline text-headline-lg text-primary font-bold mb-1">Become a Local Buyer</h2>
             <p className="font-body-md text-body-md text-on-surface-variant">
               Fill in your business details to start direct farm sourcing.
@@ -184,9 +249,12 @@ export default function BuyerAuth() {
 
             {/* Mobile Phone Number */}
             <div className="flex flex-col gap-1">
-              <label className="font-label-md text-label-md text-on-surface-variant font-semibold" htmlFor="phone">
-                Mobile Phone Number
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="font-label-md text-label-md text-on-surface-variant font-semibold" htmlFor="phone">
+                  Mobile Phone Number
+                </label>
+                <span className="text-xs text-on-surface-variant">07XXXXXXXX or 05XXXXXXXX</span>
+              </div>
               <input
                 id="phone"
                 name="phone"
@@ -194,16 +262,25 @@ export default function BuyerAuth() {
                 required
                 value={formData.phone}
                 onChange={handleChange}
+                onBlur={() => handleBlur('phone')}
                 placeholder="e.g. 0572222222 or 0771234567"
-                className="w-full h-12 px-4 font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition outline-none"
+                className={`w-full h-12 px-4 font-body-md text-body-md bg-surface-container-lowest border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition outline-none ${
+                  fieldErrors.phone ? 'border-error ring-1 ring-error' : 'border-outline-variant'
+                }`}
               />
+              {fieldErrors.phone && (
+                <span className="text-xs text-error font-medium">{fieldErrors.phone}</span>
+              )}
             </div>
 
             {/* BR Number or NIC */}
             <div className="flex flex-col gap-1">
-              <label className="font-label-md text-label-md text-on-surface-variant font-semibold" htmlFor="nic">
-                Business Reg. (BR) or Owner NIC
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="font-label-md text-label-md text-on-surface-variant font-semibold" htmlFor="nic">
+                  Business Reg. (BR) or Owner NIC
+                </label>
+                <span className="text-xs text-on-surface-variant">12 digits, 9+V, or BR (PV-XXXX)</span>
+              </div>
               <input
                 id="nic"
                 name="nic"
@@ -211,9 +288,15 @@ export default function BuyerAuth() {
                 required
                 value={formData.nic}
                 onChange={handleChange}
+                onBlur={() => handleBlur('nic')}
                 placeholder="e.g. PV-88341 or 198012345678"
-                className="w-full h-12 px-4 font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition outline-none"
+                className={`w-full h-12 px-4 font-body-md text-body-md bg-surface-container-lowest border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition outline-none ${
+                  fieldErrors.nic ? 'border-error ring-1 ring-error' : 'border-outline-variant'
+                }`}
               />
+              {fieldErrors.nic && (
+                <span className="text-xs text-error font-medium">{fieldErrors.nic}</span>
+              )}
             </div>
 
             {/* Operating District */}

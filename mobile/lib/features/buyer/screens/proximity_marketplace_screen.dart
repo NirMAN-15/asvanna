@@ -7,7 +7,6 @@ import '../../../core/models/surplus_listing_model.dart';
 import '../../../core/localization/app_translations.dart';
 import 'surplus_detail_screen.dart';
 import '../../auth/login_screen.dart';
-import '../../farmer/widgets/presentation_demo_panel.dart';
 
 class ProximityMarketplaceScreen extends StatefulWidget {
   const ProximityMarketplaceScreen({super.key});
@@ -47,20 +46,6 @@ class _ProximityMarketplaceScreenState extends State<ProximityMarketplaceScreen>
           ],
         ),
         actions: [
-          IconButton(
-            tooltip: 'University Demo Showcase',
-            icon: const Icon(Icons.auto_awesome_rounded, color: AppColors.goldAccent),
-            onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                ),
-                builder: (_) => const PresentationDemoPanel(),
-              );
-            },
-          ),
           IconButton(
             tooltip: 'Switch Account / Log Out',
             icon: const Icon(Icons.logout_rounded, color: AppColors.accent),

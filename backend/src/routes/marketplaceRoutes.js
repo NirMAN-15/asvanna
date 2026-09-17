@@ -10,6 +10,7 @@ router.get('/listings', MarketplaceController.getAllListings);
 router.get('/listings/my', optionalAuth, MarketplaceController.getMyListings);
 router.put('/listings/:listingId', optionalAuth, MarketplaceController.updateListing);
 router.delete('/listings/:listingId', optionalAuth, MarketplaceController.deleteListing);
+router.get('/buyer-summary', optionalAuth, MarketplaceController.getBuyerSummary);
 router.get('/crops-benchmark', MarketplaceController.getCropsBenchmark);
 router.get('/search', MarketplaceController.searchNearby);
 router.get('/search-nearby', MarketplaceController.searchNearby); // Backward compatibility
