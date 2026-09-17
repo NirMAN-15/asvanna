@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { Pool } = require('pg');
 const config = require('./config');
+const { splitFullName, formatFullName, splitAddress, formatAddress } = require('../utils/nameAddressUtils');
 
 const dataDir = path.join(__dirname, '../../data');
 const dbFilePath = path.join(dataDir, 'asvanna_db.json');
@@ -41,10 +42,95 @@ const initialCrops = [
 
 const initialDbState = {
   users: [
-    { id: 1, full_name: 'W. M. Bandara (DO Officer)', phone: '0771234567', nic: '851234567V', password_hash: '$2a$10$wN1aP0/zB00vA5zLz.vV/uE221122334455', role: 'OFFICER', district: 'Badulla', division: 'Bandarawela', language_preference: 'si', verification_status: 'APPROVED', is_verified: true },
-    { id: 2, full_name: 'Kapila Bandara (Farmer)', phone: '0712345678', nic: '782345678V', password_hash: '$2a$10$wN1aP0/zB00vA5zLz.vV/uE221122334455', role: 'FARMER', district: 'Badulla', division: 'Bandarawela', total_land_size: 2.5, language_preference: 'si', verification_status: 'APPROVED', is_verified: true },
-    { id: 3, full_name: 'Bandarawela Traders', phone: '0572222222', nic: '903456789V', password_hash: '$2a$10$wN1aP0/zB00vA5zLz.vV/uE221122334455', role: 'BUYER', district: 'Badulla', division: 'Bandarawela', language_preference: 'en', verification_status: 'APPROVED', is_verified: true },
-    { id: 4, full_name: 'System Super Admin', phone: '0770000000', nic: '990000000V', password_hash: '$2a$10$wN1aP0/zB00vA5zLz.vV/uE221122334455', role: 'ADMIN', district: 'Badulla', division: 'Bandarawela', language_preference: 'en', verification_status: 'APPROVED', is_verified: true }
+    {
+      id: 1,
+      first_name: 'W.',
+      middle_name: 'M.',
+      last_name: 'Bandara',
+      full_name: 'W. M. Bandara (DO Officer)',
+      phone: '0771234567',
+      nic: '851234567V',
+      password_hash: '$2a$10$wN1aP0/zB00vA5zLz.vV/uE221122334455',
+      role: 'OFFICER',
+      district: 'Badulla',
+      division: 'Bandarawela',
+      gnd_division: 'Bandarawela Central',
+      address_line1: 'DoA Agrarian Services Complex',
+      address_line2: 'Badulla Road',
+      city: 'Bandarawela',
+      postal_code: '90100',
+      address: 'DoA Agrarian Services Complex, Badulla Road, Bandarawela, 90100',
+      language_preference: 'si',
+      verification_status: 'APPROVED',
+      is_verified: true
+    },
+    {
+      id: 2,
+      first_name: 'Kapila',
+      middle_name: null,
+      last_name: 'Bandara',
+      full_name: 'Kapila Bandara (Farmer)',
+      phone: '0712345678',
+      nic: '782345678V',
+      password_hash: '$2a$10$wN1aP0/zB00vA5zLz.vV/uE221122334455',
+      role: 'FARMER',
+      district: 'Badulla',
+      division: 'Bandarawela',
+      gnd_division: 'Bindunuwewa',
+      address_line1: 'No. 42',
+      address_line2: 'Bindunuwewa Valley, Dowa Temple Road',
+      city: 'Bandarawela',
+      postal_code: '90100',
+      address: 'No. 42, Bindunuwewa Valley, Dowa Temple Road, Bandarawela, 90100',
+      total_land_size: 2.5,
+      language_preference: 'si',
+      verification_status: 'APPROVED',
+      is_verified: true
+    },
+    {
+      id: 3,
+      first_name: 'Bandarawela',
+      middle_name: null,
+      last_name: 'Traders',
+      full_name: 'Bandarawela Traders',
+      phone: '0572222222',
+      nic: '903456789V',
+      password_hash: '$2a$10$wN1aP0/zB00vA5zLz.vV/uE221122334455',
+      role: 'BUYER',
+      district: 'Badulla',
+      division: 'Bandarawela',
+      gnd_division: 'Bandarawela Town',
+      address_line1: 'No. 8',
+      address_line2: 'Welimada Road, Town Centre',
+      city: 'Bandarawela',
+      postal_code: '90100',
+      address: 'No. 8, Welimada Road, Town Centre, Bandarawela, 90100',
+      language_preference: 'en',
+      verification_status: 'APPROVED',
+      is_verified: true
+    },
+    {
+      id: 4,
+      first_name: 'Nirman',
+      middle_name: 'Achintha',
+      last_name: 'Wedikkara',
+      full_name: 'Nirman Achintha Wedikkara (Super Admin)',
+      phone: '0770000000',
+      nic: '990000000V',
+      password_hash: '$2a$10$wN1aP0/zB00vA5zLz.vV/uE221122334455',
+      role: 'ADMIN',
+      district: 'Badulla',
+      division: 'Bandarawela',
+      gnd_division: 'Bandarawela Central',
+      address_line1: 'No. 15',
+      address_line2: 'Station Road, Central Hill',
+      city: 'Bandarawela',
+      postal_code: '90100',
+      address: 'No. 15, Station Road, Central Hill, Bandarawela, 90100',
+      language_preference: 'en',
+      verification_status: 'APPROVED',
+      is_verified: true
+    }
   ],
   crops: initialCrops,
   planting_records: [
@@ -356,26 +442,71 @@ module.exports = {
 
     // INSERT / UPDATE Fallbacks
     if (lower.includes('insert into users')) {
-      const newUser = {
+      let newUser = {
         id: Date.now(),
-        full_name: params[0],
-        phone: params[1],
-        nic: params[2],
-        password_hash: params[3],
-        role: params[4] || 'FARMER',
-        district: params[5] || 'Badulla',
-        division: params[6] || 'Bandarawela',
-        gnd_division: params[7] || null,
-        address: params[8] || null,
-        latitude: params[9] || 6.8304,
-        longitude: params[10] || 80.9878,
-        total_land_size: params[11] || null,
-        business_name: params[12] || null,
-        business_type: params[13] || null,
-        verification_status: params[14] || 'APPROVED',
-        is_verified: params[15] !== undefined ? params[15] : true,
         created_at: new Date().toISOString()
       };
+
+      const colMatch = text.match(/insert\s+into\s+users\s*\(([^)]+)\)/i);
+      if (colMatch) {
+        const cols = colMatch[1].split(',').map(c => c.trim().toLowerCase());
+        cols.forEach((col, idx) => {
+          if (idx < params.length) {
+            newUser[col] = params[idx];
+          }
+        });
+      } else {
+        newUser = {
+          ...newUser,
+          full_name: params[0],
+          phone: params[1],
+          nic: params[2],
+          password_hash: params[3],
+          role: params[4] || 'FARMER',
+          district: params[5] || 'Badulla',
+          division: params[6] || 'Bandarawela',
+          gnd_division: params[7] || null,
+          address: params[8] || null,
+          latitude: params[9] || 6.8304,
+          longitude: params[10] || 80.9878,
+          total_land_size: params[11] || null,
+          business_name: params[12] || null,
+          business_type: params[13] || null,
+          verification_status: params[14] || 'APPROVED',
+          is_verified: params[15] !== undefined ? params[15] : true
+        };
+      }
+
+      // Ensure split names & full_name are in sync
+      if (!newUser.first_name && newUser.full_name) {
+        const split = splitFullName(newUser.full_name);
+        newUser.first_name = split.first_name;
+        newUser.middle_name = split.middle_name;
+        newUser.last_name = split.last_name;
+      } else if (newUser.first_name && !newUser.full_name) {
+        newUser.full_name = formatFullName(newUser.first_name, newUser.middle_name, newUser.last_name);
+      }
+
+      // Ensure address components & address are in sync
+      if (!newUser.address_line1 && newUser.address) {
+        const addrSplit = splitAddress(newUser.address, newUser.division || 'Bandarawela');
+        newUser.address_line1 = addrSplit.address_line1;
+        newUser.address_line2 = addrSplit.address_line2;
+        newUser.city = addrSplit.city;
+        newUser.postal_code = addrSplit.postal_code;
+      } else if (newUser.address_line1 && !newUser.address) {
+        newUser.address = formatAddress(newUser.address_line1, newUser.address_line2, newUser.city, newUser.postal_code);
+      }
+
+      // Fallback defaults
+      if (!newUser.city) newUser.city = newUser.division || 'Bandarawela';
+      if (!newUser.postal_code) newUser.postal_code = '90100';
+      if (!newUser.district) newUser.district = 'Badulla';
+      if (!newUser.division) newUser.division = 'Bandarawela';
+      if (!newUser.role) newUser.role = 'FARMER';
+      if (!newUser.verification_status) newUser.verification_status = newUser.role === 'BUYER' ? 'APPROVED' : 'PENDING';
+      if (newUser.is_verified === undefined) newUser.is_verified = newUser.verification_status === 'APPROVED';
+
       fileDb.users.unshift(newUser);
       saveDb(fileDb);
       return { rows: [newUser] };
@@ -529,10 +660,44 @@ module.exports = {
 
     if (lower.includes('update users set verification_status')) {
       const fId = Number(params[2]);
-      const user = fileDb.users.find(u => u.id === fId);
+      const user = fileDb.users.find(u => Number(u.id) === fId);
       if (user) {
         user.verification_status = params[0];
         user.is_verified = params[1];
+        saveDb(fileDb);
+        return { rows: [user] };
+      }
+      return { rows: [] };
+    }
+
+    if (lower.startsWith('update users set') || lower.includes('update users\n         set') || lower.includes('update users set')) {
+      const lastParam = params[params.length - 1];
+      const user = fileDb.users.find(u => Number(u.id) === Number(lastParam));
+      if (user) {
+        const setMatch = text.match(/set\s+([\s\S]+?)\s+where/i);
+        if (setMatch) {
+          const assignments = setMatch[1].split(',').map(a => a.trim());
+          assignments.forEach(assign => {
+            const parts = assign.split('=');
+            if (parts.length >= 2) {
+              const col = parts[0].trim().toLowerCase();
+              const paramMatch = parts[1].match(/\$(\d+)/);
+              if (paramMatch) {
+                const paramIdx = parseInt(paramMatch[1], 10) - 1;
+                if (paramIdx < params.length && params[paramIdx] !== undefined && params[paramIdx] !== null) {
+                  user[col] = params[paramIdx];
+                }
+              }
+            }
+          });
+        }
+        // Sync full_name & address
+        if (user.first_name || user.last_name) {
+          user.full_name = formatFullName(user.first_name, user.middle_name, user.last_name);
+        }
+        if (user.address_line1 || user.city) {
+          user.address = formatAddress(user.address_line1, user.address_line2, user.city, user.postal_code);
+        }
         saveDb(fileDb);
         return { rows: [user] };
       }
