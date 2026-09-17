@@ -5,9 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/providers/app_state_provider.dart';
 import '../../../core/localization/app_translations.dart';
 import 'farm_land_map_screen.dart';
-import '../widgets/presentation_demo_panel.dart';
 import '../../auth/login_screen.dart';
-
 class FarmerProfileScreen extends StatelessWidget {
   const FarmerProfileScreen({super.key});
 
@@ -85,20 +83,6 @@ class FarmerProfileScreen extends StatelessWidget {
         elevation: 0,
         backgroundColor: Colors.transparent,
         actions: [
-          IconButton(
-            tooltip: 'University Demo Showcase',
-            icon: const Icon(Icons.auto_awesome_rounded, color: AppColors.goldAccent),
-            onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                ),
-                builder: (_) => const PresentationDemoPanel(),
-              );
-            },
-          ),
           IconButton(
             tooltip: tr('sign_out'),
             icon: const Icon(Icons.logout_rounded, color: AppColors.primary),
@@ -338,32 +322,6 @@ class FarmerProfileScreen extends StatelessWidget {
                       ],
                     ),
                     onTap: () => _showLanguageDialog(context, appState),
-                  ),
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFEF3C7),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(Icons.auto_awesome_rounded, color: Color(0xFFD97706), size: 20),
-                    ),
-                    title: Text(
-                      tr('presentation_demo'),
-                      style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14),
-                    ),
-                    trailing: const Icon(Icons.chevron_right_rounded, color: Colors.grey),
-                    onTap: () {
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                        ),
-                        builder: (_) => const PresentationDemoPanel(),
-                      );
-                    },
                   ),
                   const Divider(height: 1),
                   ListTile(

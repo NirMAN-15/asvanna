@@ -84,7 +84,6 @@ class AppTranslations {
       'farmland_holdings': 'Farmland Holdings',
       'view_map': 'View Map',
       'app_language': 'App Language',
-      'presentation_demo': 'Presentation Demo Panel',
       'sign_out': 'Sign Out',
 
       // Risk Engine
@@ -246,7 +245,6 @@ class AppTranslations {
       'farmland_holdings': 'ඉඩම් හිමිකම',
       'view_map': 'සිතියම බලන්න',
       'app_language': 'යෙදුම් භාෂාව',
-      'presentation_demo': 'ආදර්ශන පුවරුව (Demo Showcase)',
       'sign_out': 'ගිණුමෙන් ඉවත් වන්න',
 
       // Risk Engine
@@ -411,7 +409,6 @@ class AppTranslations {
       'farmland_holdings': 'நில விவரங்கள்',
       'view_map': 'வரைபடம் பார்க்க',
       'app_language': 'பயன்பாட்டு மொழி',
-      'presentation_demo': 'விளக்கக்காட்சி பலகை',
       'sign_out': 'வெளியேறு',
 
       // Risk Engine
