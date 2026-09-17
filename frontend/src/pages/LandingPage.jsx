@@ -243,7 +243,7 @@ export default function LandingPage() {
       {/* Global Footer */}
       <footer className="w-full border-t border-outline-variant/30 py-6 px-margin-desktop bg-white/80 backdrop-blur-xs">
         <div className="max-w-container-max mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-on-surface-variant">
-          <p>© 2026 ASVANNA (අස්වැන්න) Ecosystem • ITUM NDIT Final Year Research Initiative Group 15</p>
+          <p>© 2026 ASVANNA (අස්වැන්න) Ecosystem • ITUM NDIT Final Year Research Initiative</p>
           <div className="flex gap-4">
             <span className="text-outline">Bandarawela Pilot Division</span>
             <span>•</span>
