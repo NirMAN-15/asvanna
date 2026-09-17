@@ -460,9 +460,9 @@ class MarketplaceController {
    */
   static async getBuyerSummary(req, res, next) {
     try {
-      const buyerLat = parseFloat(req.query.lat) || 6.8322;
-      const buyerLon = parseFloat(req.query.lon) || 80.9980;
-      const radiusKm = 5;
+      const buyerLat = parseFloat(req.query.lat) || (req.user && req.user.latitude ? parseFloat(req.user.latitude) : 6.8322);
+      const buyerLon = parseFloat(req.query.lon) || (req.user && req.user.longitude ? parseFloat(req.user.longitude) : 80.9980);
+      const radiusKm = parseFloat(req.query.radius_km) || 5;
 
       // --- 1. Fetch all AVAILABLE listings ---
       const listingsRes = await db.query(`SELECT * FROM marketplace_listings WHERE status = 'AVAILABLE'`);
@@ -472,21 +472,40 @@ class MarketplaceController {
       const nearbyListings = GeofencingService.filterByProximity(buyerLat, buyerLon, allListings, radiusKm);
       const surplus5kmKg = nearbyListings.reduce((acc, l) => acc + (parseFloat(l.quantity_kg) || 0), 0);
 
-      // --- 3. All listings with distance for display ---
+      // --- 3. All listings sorted by distance from the buyer's area ---
       const allWithDist = GeofencingService.filterByProximity(buyerLat, buyerLon, allListings, 9999);
 
-      // --- 4. Active verified farms (unique farmer_ids in AVAILABLE listings) ---
+      // --- 4. Select the 3 nearest unique surplus crop categories in this area ---
+      const seenCropIds = new Set();
+      const nearestThreeCrops = [];
+      for (const item of allWithDist) {
+        if (!seenCropIds.has(item.crop_id)) {
+          seenCropIds.add(item.crop_id);
+          nearestThreeCrops.push(item);
+          if (nearestThreeCrops.length === 3) break;
+        }
+      }
+      if (nearestThreeCrops.length < 3) {
+        for (const item of allWithDist) {
+          if (!nearestThreeCrops.some(c => c.id === item.id)) {
+            nearestThreeCrops.push(item);
+            if (nearestThreeCrops.length === 3) break;
+          }
+        }
+      }
+
+      // --- 5. Active verified farms (unique farmer_ids in AVAILABLE listings) ---
       const farmerIds = [...new Set(allListings.map(l => l.farmer_id))];
       const activeVerifiedFarmsCount = farmerIds.length;
 
-      // --- 5. Average wholesale price from price_history ---
+      // --- 6. Average wholesale price from price_history ---
       const priceRes = await db.query('SELECT * FROM price_history');
       const priceRows = priceRes.rows || [];
       const avgWholesalePrice = priceRows.length > 0
         ? Math.round(priceRows.reduce((a, r) => a + parseFloat(r.price_per_kg || 0), 0) / priceRows.length)
         : 210;
 
-      // --- 6. Buyer order history ---
+      // --- 7. Buyer order history ---
       const userId = req.user ? req.user.id : null;
       let buyerOrders = [];
       if (userId) {
@@ -528,7 +547,8 @@ class MarketplaceController {
           completedCount,
           recentOrders
         },
-        surplusCrops: allWithDist.slice(0, 12)
+        surplusCrops: nearestThreeCrops,
+        allNearbySurplus: allWithDist.slice(0, 12)
       }, 'Buyer summary loaded');
     } catch (err) {
       next(err);

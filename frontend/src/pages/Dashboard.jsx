@@ -60,34 +60,13 @@ export default function Dashboard() {
   }, [role]);
 
   // ---- BUYER: fetch real dashboard data ----
-  const FALLBACK_CROPS = [
-    {
-      id: 'f1', crop_id: 1, crop_code: 'LEEKS', crop_name: 'Leeks (ලීක්ස්)',
-      crop_name_en: 'Leeks', crop_name_si: 'ලීක්ස්', crop_name_ta: 'லீக்ஸ்',
-      image_url: '/crops/leeks.jpg', price_per_kg: 180, quantity_kg: 500,
-      standard_price_per_kg: 280, distanceKm: 0.8,
-      pickup_address: 'Main St, Bandarawela', farmer_name: 'Sunil Shantha', status: 'AVAILABLE'
-    },
-    {
-      id: 'f2', crop_id: 3, crop_code: 'CARROT', crop_name: 'Carrot (කැරට්)',
-      crop_name_en: 'Carrot', crop_name_si: 'කැරට්', crop_name_ta: 'கேரட்',
-      image_url: '/crops/carrot.jpg', price_per_kg: 280, quantity_kg: 450,
-      standard_price_per_kg: 340, distanceKm: 1.2,
-      pickup_address: 'Kinigama Valley, Bandarawela North', farmer_name: 'P. Jayampathi', status: 'AVAILABLE'
-    },
-    {
-      id: 'f3', crop_id: 11, crop_code: 'SPRING_ONION', crop_name: 'Spring Onion (ළූණු කොළ)',
-      crop_name_en: 'Spring Onion', crop_name_si: 'ළූණු කොළ', crop_name_ta: 'வெங்காய இலை',
-      image_url: '/crops/spring_onion.jpg', price_per_kg: 230, quantity_kg: 450,
-      standard_price_per_kg: 280, distanceKm: 1.5,
-      pickup_address: 'Kinigama Valley, Bandarawela North', farmer_name: 'K. G. Dharmasiri', status: 'AVAILABLE'
-    }
-  ];
-
   const fetchBuyerDashboardData = async () => {
     setBuyerLoading(true);
     try {
-      const res = await API.get('/marketplace/buyer-summary');
+      const params = {};
+      if (user?.latitude) params.lat = user.latitude;
+      if (user?.longitude) params.lon = user.longitude;
+      const res = await API.get('/marketplace/buyer-summary', { params });
       const data = res.data?.data || res.data;
       if (data) {
         setBuyerMetrics({
@@ -97,13 +76,10 @@ export default function Dashboard() {
           radiusKm: data.radiusKm ?? 5,
         });
         setBuyerHistorySummary(data.buyerHistorySummary || null);
-        const crops = (data.surplusCrops || []).slice(0, 3);
-        setSurplusCrops(crops.length > 0 ? crops : FALLBACK_CROPS);
+        setSurplusCrops(data.surplusCrops || []);
       }
     } catch (err) {
-      setBuyerMetrics({ surplus5kmKg: 1200, activeVerifiedFarmsCount: 9, avgWholesalePrice: 248, radiusKm: 5 });
-      setBuyerHistorySummary({ totalOrders: 6, totalSpentLKR: 482550, totalProcuredKg: 2055, completedCount: 6, recentOrders: [] });
-      setSurplusCrops(FALLBACK_CROPS);
+      console.error('Buyer summary fetch error:', err);
     } finally {
       setBuyerLoading(false);
     }
@@ -649,45 +625,49 @@ export default function Dashboard() {
           </div>
           <p className="text-xs text-on-surface-variant mb-5">{t('fresh_surplus_desc')}</p>
 
-          {/* Always show 3 crop cards */}
+          {/* Nearest 3 surplus crop categories grid */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            {(buyerLoading ? [null, null, null] : (surplusCrops.length > 0 ? surplusCrops : FALLBACK_CROPS)).map((crop, idx) => {
-              if (!crop) {
-                // Skeleton loading state
-                return (
-                  <div key={idx} className="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 animate-pulse overflow-hidden">
-                    <div className="h-48 bg-surface-variant/50" />
-                    <div className="p-4 space-y-2">
-                      <div className="h-4 bg-surface-variant/60 rounded w-3/4" />
-                      <div className="h-3 bg-surface-variant/40 rounded w-1/2" />
-                      <div className="h-8 bg-surface-variant/30 rounded mt-3" />
-                    </div>
+            {buyerLoading ? (
+              [null, null, null].map((_, idx) => (
+                <div key={idx} className="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 animate-pulse overflow-hidden">
+                  <div className="h-48 bg-surface-variant/50" />
+                  <div className="p-4 space-y-2">
+                    <div className="h-4 bg-surface-variant/60 rounded w-3/4" />
+                    <div className="h-3 bg-surface-variant/40 rounded w-1/2" />
+                    <div className="h-8 bg-surface-variant/30 rounded mt-3" />
                   </div>
-                );
-              }
-              const cropName = lang === 'si'
-                ? (crop.crop_name_si || crop.crop_name_en || crop.crop_name)
-                : lang === 'ta'
-                  ? (crop.crop_name_ta || crop.crop_name_en || crop.crop_name)
-                  : (crop.crop_name_en || crop.crop_name || 'Produce');
-              const isBelowBench = crop.price_per_kg < (crop.standard_price_per_kg * 0.9);
-              const imgSrc = crop.image_url
-                || `/crops/${(crop.crop_code || 'leeks').toLowerCase().replace('_', '_')}.jpg`;
-              return (
-                <div key={crop.id} className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 shadow-card overflow-hidden flex flex-col group hover:shadow-xl transition-all duration-300">
-                  {/* Crop Image — taller for better visual */}
-                  <div className="h-48 overflow-hidden bg-primary-container/20 relative flex-shrink-0">
-                    <img
-                      src={imgSrc}
-                      alt={cropName}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      onError={e => {
-                        if (!e.target.dataset.fallback) {
-                          e.target.dataset.fallback = '1';
-                          e.target.src = '/crops/leeks.jpg';
-                        }
-                      }}
-                    />
+                </div>
+              ))
+            ) : surplusCrops.length === 0 ? (
+              <div className="col-span-full bg-surface-container-lowest rounded-2xl border border-outline-variant/30 p-10 text-center">
+                <span className="material-symbols-outlined text-4xl text-on-surface-variant mb-2">storefront</span>
+                <p className="text-sm font-bold text-on-surface">No active surplus harvest found in your immediate area.</p>
+                <p className="text-xs text-on-surface-variant mt-1">Explore all regional produce in the marketplace.</p>
+              </div>
+            ) : (
+              surplusCrops.slice(0, 3).map((crop) => {
+                const cropName = lang === 'si'
+                  ? (crop.crop_name_si || crop.crop_name_en || crop.crop_name)
+                  : lang === 'ta'
+                    ? (crop.crop_name_ta || crop.crop_name_en || crop.crop_name)
+                    : (crop.crop_name_en || crop.crop_name || 'Produce');
+                const isBelowBench = crop.price_per_kg < (crop.standard_price_per_kg * 0.9);
+                const imgSrc = crop.image_url || '/crops/leek.jpg';
+                return (
+                  <div key={crop.id} className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 shadow-card overflow-hidden flex flex-col group hover:shadow-xl transition-all duration-300">
+                    {/* Crop Image — taller for better visual */}
+                    <div className="h-48 overflow-hidden bg-primary-container/20 relative flex-shrink-0">
+                      <img
+                        src={imgSrc}
+                        alt={cropName}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        onError={e => {
+                          if (!e.target.dataset.fallback) {
+                            e.target.dataset.fallback = '1';
+                            e.target.src = '/crops/leek.jpg';
+                          }
+                        }}
+                      />
                     {/* Distance badge */}
                     {crop.distanceKm != null && (
                       <span className="absolute top-2.5 right-2.5 bg-black/60 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5">
