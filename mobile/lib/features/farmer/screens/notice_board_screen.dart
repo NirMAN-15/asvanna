@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/app_state_provider.dart';
 import '../../../core/models/notice_model.dart';
 import '../../../core/localization/app_translations.dart';
@@ -13,6 +14,7 @@ class NoticeBoardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppStateProvider>(context);
+    final isDark = context.isDarkMode;
     final lang = appState.currentLanguage;
     String tr(String key) => AppTranslations.tr(lang, key);
 
@@ -20,8 +22,15 @@ class NoticeBoardScreen extends StatelessWidget {
     final dateFormat = DateFormat('MMM dd, yyyy');
 
     return Scaffold(
+      backgroundColor: context.scaffoldBg,
       appBar: AppBar(
-        title: Text(tr('notice_board_title')),
+        title: Text(
+          tr('notice_board_title'),
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.bold,
+            color: context.titleText,
+          ),
+        ),
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
@@ -29,17 +38,17 @@ class NoticeBoardScreen extends StatelessWidget {
         itemBuilder: (context, i) {
           final n = notices[i];
 
-          Color priorityColor = AppColors.primary;
-          Color priorityBg = AppColors.primarySoft;
+          Color priorityColor = isDark ? const Color(0xFF4ADE80) : AppColors.primary;
+          Color priorityBg = isDark ? const Color(0xFF143E23) : AppColors.primarySoft;
           String priorityLabel = tr('general_priority');
 
           if (n.priority == NoticePriority.urgent) {
-            priorityColor = AppColors.riskCritical;
-            priorityBg = AppColors.riskCriticalBg;
+            priorityColor = isDark ? const Color(0xFFFCA5A5) : AppColors.riskCritical;
+            priorityBg = isDark ? const Color(0xFF450A0A) : AppColors.riskCriticalBg;
             priorityLabel = tr('urgent_directive');
           } else if (n.priority == NoticePriority.high) {
-            priorityColor = AppColors.riskModerate;
-            priorityBg = AppColors.riskModerateBg;
+            priorityColor = isDark ? const Color(0xFFFCD34D) : AppColors.riskModerate;
+            priorityBg = isDark ? const Color(0xFF451A03) : AppColors.riskModerateBg;
             priorityLabel = tr('high_priority');
           }
 
@@ -47,12 +56,12 @@ class NoticeBoardScreen extends StatelessWidget {
             margin: const EdgeInsets.only(bottom: 14),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.cardBg,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: priorityColor.withOpacity(0.3), width: 1.2),
+              border: Border.all(color: priorityColor.withValues(alpha: 0.3), width: 1.2),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
+                  color: isDark ? Colors.black.withValues(alpha: 0.2) : Colors.black.withValues(alpha: 0.03),
                   blurRadius: 8,
                   offset: const Offset(0, 3),
                 ),
@@ -81,11 +90,15 @@ class NoticeBoardScreen extends StatelessWidget {
                     ),
                     Row(
                       children: [
-                        const Icon(Icons.verified, size: 14, color: AppColors.primary),
+                        Icon(Icons.verified, size: 14, color: isDark ? const Color(0xFF4ADE80) : AppColors.primary),
                         const SizedBox(width: 4),
                         Text(
                           tr('official_badge'),
-                          style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.primary),
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? const Color(0xFF4ADE80) : AppColors.primary,
+                          ),
                         ),
                       ],
                     ),
@@ -98,7 +111,7 @@ class NoticeBoardScreen extends StatelessWidget {
                   style: GoogleFonts.poppins(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                    color: context.titleText,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -107,12 +120,12 @@ class NoticeBoardScreen extends StatelessWidget {
                   n.description,
                   style: GoogleFonts.inter(
                     fontSize: 13,
-                    color: AppColors.textSecondary,
+                    color: context.subText,
                     height: 1.4,
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Divider(color: Color(0xFFEFF4EF)),
+                Divider(color: context.dividerColor),
                 const SizedBox(height: 6),
 
                 Row(
@@ -124,7 +137,7 @@ class NoticeBoardScreen extends StatelessWidget {
                         style: GoogleFonts.inter(
                           fontSize: 11,
                           fontStyle: FontStyle.italic,
-                          color: AppColors.textMuted,
+                          color: context.mutedText,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -133,7 +146,7 @@ class NoticeBoardScreen extends StatelessWidget {
                       dateFormat.format(n.date),
                       style: GoogleFonts.inter(
                         fontSize: 11,
-                        color: AppColors.textMuted,
+                        color: context.mutedText,
                       ),
                     ),
                   ],
@@ -146,3 +159,4 @@ class NoticeBoardScreen extends StatelessWidget {
     );
   }
 }
+

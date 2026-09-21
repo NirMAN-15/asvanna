@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/models/surplus_listing_model.dart';
 import 'direct_chat_screen.dart';
 
@@ -30,6 +31,7 @@ class _SurplusDetailScreenState extends State<SurplusDetailScreen> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
+        backgroundColor: context.cardBg,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         contentPadding: const EdgeInsets.all(20),
         content: Column(
@@ -40,17 +42,17 @@ class _SurplusDetailScreenState extends State<SurplusDetailScreen> {
               child: Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: AppColors.primarySoft,
+                  color: context.softGreenBg,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.verified_rounded, color: AppColors.primary, size: 40),
+                child: Icon(Icons.verified_rounded, color: context.isDarkMode ? const Color(0xFF4ADE80) : AppColors.primary, size: 40),
               ),
             ),
             const SizedBox(height: 12),
             Center(
               child: Text(
                 'Digital Pickup Voucher',
-                style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
+                style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: context.titleText),
               ),
             ),
             Center(
@@ -60,33 +62,33 @@ class _SurplusDetailScreenState extends State<SurplusDetailScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            const Divider(),
+            Divider(color: context.cardBorder),
             const SizedBox(height: 8),
 
-            _buildReceiptRow('Crop Ordered:', '${widget.listing.cropEmoji} ${widget.listing.cropName} (${_selectedQuantity.toStringAsFixed(0)} Kg)'),
-            _buildReceiptRow('Unit Rate:', 'Rs. ${widget.listing.askingPricePerKgLkr.toStringAsFixed(0)} / Kg'),
-            _buildReceiptRow('Total Amount:', 'Rs. ${totalCost.toStringAsFixed(0)}', isBold: true),
-            _buildReceiptRow('Money Saved:', 'Rs. ${totalSavings.toStringAsFixed(0)} (vs Market)', isHighlight: true),
-            _buildReceiptRow('Pickup Farm:', widget.listing.farmLocation),
-            _buildReceiptRow('Farmer:', '${widget.listing.farmerName} (${widget.listing.farmerPhone})'),
-            _buildReceiptRow('Pickup Date:', dateFormat.format(DateTime.now())),
+            _buildReceiptRow(context, 'Crop Ordered:', '${widget.listing.cropEmoji} ${widget.listing.cropName} (${_selectedQuantity.toStringAsFixed(0)} Kg)'),
+            _buildReceiptRow(context, 'Unit Rate:', 'Rs. ${widget.listing.askingPricePerKgLkr.toStringAsFixed(0)} / Kg'),
+            _buildReceiptRow(context, 'Total Amount:', 'Rs. ${totalCost.toStringAsFixed(0)}', isBold: true),
+            _buildReceiptRow(context, 'Money Saved:', 'Rs. ${totalSavings.toStringAsFixed(0)} (vs Market)', isHighlight: true),
+            _buildReceiptRow(context, 'Pickup Farm:', widget.listing.farmLocation),
+            _buildReceiptRow(context, 'Farmer:', '${widget.listing.farmerName} (${widget.listing.farmerPhone})'),
+            _buildReceiptRow(context, 'Pickup Date:', dateFormat.format(DateTime.now())),
 
             const SizedBox(height: 14),
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: const Color(0xFFF4F8F4),
+                color: context.isDarkMode ? const Color(0xFF132B20) : const Color(0xFFF4F8F4),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFFD6E8D6)),
+                border: Border.all(color: context.isDarkMode ? const Color(0xFF059669) : const Color(0xFFD6E8D6)),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.qr_code_2_rounded, size: 36, color: AppColors.primaryDark),
+                  Icon(Icons.qr_code_2_rounded, size: 36, color: context.isDarkMode ? const Color(0xFF86EFAC) : AppColors.primaryDark),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       'Show this voucher to the farmer at the farmgate upon vehicle loading.',
-                      style: GoogleFonts.inter(fontSize: 11, color: AppColors.textSecondary),
+                      style: GoogleFonts.inter(fontSize: 11, color: context.subText),
                     ),
                   ),
                 ],
@@ -98,6 +100,10 @@ class _SurplusDetailScreenState extends State<SurplusDetailScreen> {
               children: [
                 Expanded(
                   child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: context.titleText,
+                      side: BorderSide(color: context.cardBorder),
+                    ),
                     onPressed: () => Navigator.pop(context),
                     child: const Text('Close'),
                   ),
@@ -131,13 +137,13 @@ class _SurplusDetailScreenState extends State<SurplusDetailScreen> {
     );
   }
 
-  Widget _buildReceiptRow(String label, String value, {bool isBold = false, bool isHighlight = false}) {
+  Widget _buildReceiptRow(BuildContext context, String label, String value, {bool isBold = false, bool isHighlight = false}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: GoogleFonts.inter(fontSize: 12, color: AppColors.textMuted)),
+          Text(label, style: GoogleFonts.inter(fontSize: 12, color: context.subText)),
           Flexible(
             child: Text(
               value,
@@ -145,7 +151,9 @@ class _SurplusDetailScreenState extends State<SurplusDetailScreen> {
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
-                color: isHighlight ? AppColors.primary : (isBold ? AppColors.textPrimary : AppColors.textSecondary),
+                color: isHighlight
+                    ? (context.isDarkMode ? const Color(0xFF4ADE80) : AppColors.primary)
+                    : (isBold ? context.titleText : context.subText),
               ),
             ),
           ),
@@ -175,16 +183,16 @@ class _SurplusDetailScreenState extends State<SurplusDetailScreen> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardBg,
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: const Color(0xFFE2ECE2)),
+                border: Border.all(color: context.cardBorder),
               ),
               child: Row(
                 children: [
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.primarySoft,
+                      color: context.softGreenBg,
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(item.cropEmoji, style: const TextStyle(fontSize: 44)),
@@ -198,7 +206,7 @@ class _SurplusDetailScreenState extends State<SurplusDetailScreen> {
                           children: [
                             Text(
                               item.cropName,
-                              style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold),
+                              style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold, color: context.titleText),
                             ),
                             const SizedBox(width: 8),
                             if (item.isUrgent)
@@ -218,11 +226,15 @@ class _SurplusDetailScreenState extends State<SurplusDetailScreen> {
                         const SizedBox(height: 4),
                         Text(
                           'Quality: ${item.qualityGrade}',
-                          style: GoogleFonts.inter(fontSize: 13, color: AppColors.primary, fontWeight: FontWeight.w600),
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            color: context.isDarkMode ? const Color(0xFF4ADE80) : AppColors.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         Text(
                           'Harvested: ${dateFormat.format(item.harvestedDate)}',
-                          style: GoogleFonts.inter(fontSize: 11, color: AppColors.textMuted),
+                          style: GoogleFonts.inter(fontSize: 11, color: context.subText),
                         ),
                       ],
                     ),
@@ -236,28 +248,28 @@ class _SurplusDetailScreenState extends State<SurplusDetailScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardBg,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFE2ECE2)),
+                border: Border.all(color: context.cardBorder),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Farmer & Pickup Details', style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold)),
+                  Text('Farmer & Pickup Details', style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold, color: context.titleText)),
                   const SizedBox(height: 10),
                   Row(
                     children: [
-                      const CircleAvatar(
-                        backgroundColor: AppColors.primarySoft,
-                        child: Icon(Icons.person, color: AppColors.primary),
+                      CircleAvatar(
+                        backgroundColor: context.softGreenBg,
+                        child: Icon(Icons.person, color: context.isDarkMode ? const Color(0xFF4ADE80) : AppColors.primary),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(item.farmerName, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold)),
-                            Text('${item.farmLocation} • ${item.distanceKm} km from your kitchen', style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary)),
+                            Text(item.farmerName, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: context.titleText)),
+                            Text('${item.farmLocation} • ${item.distanceKm} km from your kitchen', style: GoogleFonts.inter(fontSize: 12, color: context.subText)),
                           ],
                         ),
                       ),
@@ -267,17 +279,17 @@ class _SurplusDetailScreenState extends State<SurplusDetailScreen> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFAFBF9),
+                      color: context.isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFFAFBF9),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.info_outline, size: 16, color: AppColors.textMuted),
+                        Icon(Icons.info_outline, size: 16, color: context.subText),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             item.notes,
-                            style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary),
+                            style: GoogleFonts.inter(fontSize: 12, color: context.subText),
                           ),
                         ),
                       ],
@@ -292,7 +304,7 @@ class _SurplusDetailScreenState extends State<SurplusDetailScreen> {
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardBg,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: AppColors.accent.withOpacity(0.3)),
               ),
@@ -302,7 +314,7 @@ class _SurplusDetailScreenState extends State<SurplusDetailScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Purchase Quantity', style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold)),
+                      Text('Purchase Quantity', style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold, color: context.titleText)),
                       Text(
                         '${_selectedQuantity.toStringAsFixed(0)} Kg',
                         style: GoogleFonts.poppins(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.accent),
@@ -327,38 +339,42 @@ class _SurplusDetailScreenState extends State<SurplusDetailScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Min: 25 Kg', style: GoogleFonts.inter(fontSize: 11, color: AppColors.textMuted)),
-                      Text('Max Available: ${item.availableQuantityKg.toStringAsFixed(0)} Kg', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold)),
+                      Text('Min: 25 Kg', style: GoogleFonts.inter(fontSize: 11, color: context.subText)),
+                      Text('Max Available: ${item.availableQuantityKg.toStringAsFixed(0)} Kg', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: context.titleText)),
                     ],
                   ),
                   const SizedBox(height: 16),
-                  const Divider(),
+                  Divider(color: context.cardBorder),
                   const SizedBox(height: 10),
 
                   // Financial summary
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Unit Price:', style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary)),
-                      Text('Rs. ${item.askingPricePerKgLkr.toStringAsFixed(0)} / Kg', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600)),
+                      Text('Unit Price:', style: GoogleFonts.inter(fontSize: 13, color: context.subText)),
+                      Text('Rs. ${item.askingPricePerKgLkr.toStringAsFixed(0)} / Kg', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: context.titleText)),
                     ],
                   ),
                   const SizedBox(height: 6),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Wholesale Market Benchmark:', style: GoogleFonts.inter(fontSize: 13, color: AppColors.textMuted)),
-                      Text('Rs. ${item.regularMarketPricePerKgLkr.toStringAsFixed(0)} / Kg', style: GoogleFonts.inter(fontSize: 13, decoration: TextDecoration.lineThrough, color: AppColors.textMuted)),
+                      Text('Wholesale Market Benchmark:', style: GoogleFonts.inter(fontSize: 13, color: context.subText)),
+                      Text('Rs. ${item.regularMarketPricePerKgLkr.toStringAsFixed(0)} / Kg', style: GoogleFonts.inter(fontSize: 13, decoration: TextDecoration.lineThrough, color: context.subText)),
                     ],
                   ),
                   const SizedBox(height: 10),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Total Order Amount:', style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold)),
+                      Text('Total Order Amount:', style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold, color: context.titleText)),
                       Text(
                         'Rs. ${totalCost.toStringAsFixed(0)}',
-                        style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primaryDark),
+                        style: GoogleFonts.poppins(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: context.isDarkMode ? const Color(0xFF86EFAC) : AppColors.primaryDark,
+                        ),
                       ),
                     ],
                   ),
@@ -366,13 +382,17 @@ class _SurplusDetailScreenState extends State<SurplusDetailScreen> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: AppColors.primarySoft,
+                      color: context.softGreenBg,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Center(
                       child: Text(
                         '🎉 You save Rs. ${totalSavings.toStringAsFixed(0)} and prevent ~${_selectedQuantity.toStringAsFixed(0)} Kg of food waste!',
-                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryDark),
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: context.isDarkMode ? const Color(0xFF86EFAC) : AppColors.primaryDark,
+                        ),
                       ),
                     ),
                   ),
@@ -401,8 +421,8 @@ class _SurplusDetailScreenState extends State<SurplusDetailScreen> {
                     icon: const Icon(Icons.call),
                     label: const Text('Call Farmer'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.primary,
-                      side: const BorderSide(color: AppColors.primary, width: 1.5),
+                      foregroundColor: context.isDarkMode ? const Color(0xFF4ADE80) : AppColors.primary,
+                      side: BorderSide(color: context.isDarkMode ? const Color(0xFF4ADE80) : AppColors.primary, width: 1.5),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     onPressed: () {

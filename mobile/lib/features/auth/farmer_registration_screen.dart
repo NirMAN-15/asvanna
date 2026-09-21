@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/providers/app_state_provider.dart';
 import '../farmer/farmer_main_nav.dart';
 import 'login_screen.dart';
@@ -125,8 +126,10 @@ class _FarmerRegistrationScreenState extends State<FarmerRegistrationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.isDarkMode;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.scaffoldBg,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -158,10 +161,10 @@ class _FarmerRegistrationScreenState extends State<FarmerRegistrationScreen> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(
+                              Icon(
                                 Icons.arrow_back,
                                 size: 18,
-                                color: AppColors.asvannaDarkGreen,
+                                color: isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen,
                               ),
                               const SizedBox(width: 6),
                               Text(
@@ -169,7 +172,7 @@ class _FarmerRegistrationScreenState extends State<FarmerRegistrationScreen> {
                                 style: GoogleFonts.inter(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w700,
-                                  color: AppColors.asvannaDarkGreen,
+                                  color: isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen,
                                 ),
                               ),
                             ],
@@ -185,7 +188,7 @@ class _FarmerRegistrationScreenState extends State<FarmerRegistrationScreen> {
                       style: GoogleFonts.poppins(
                         fontSize: 24,
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFF132B1E),
+                        color: context.titleText,
                         letterSpacing: -0.2,
                       ),
                     ),
@@ -195,7 +198,7 @@ class _FarmerRegistrationScreenState extends State<FarmerRegistrationScreen> {
                       style: GoogleFonts.inter(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w400,
-                        color: const Color(0xFF556955),
+                        color: context.subText,
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -206,26 +209,26 @@ class _FarmerRegistrationScreenState extends State<FarmerRegistrationScreen> {
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1A3828),
+                        color: context.titleText,
                       ),
                     ),
                     const SizedBox(height: 6),
                     TextFormField(
                       controller: _fullNameController,
-                      style: GoogleFonts.inter(fontSize: 14, color: AppColors.asvannaTextDark),
+                      style: GoogleFonts.inter(fontSize: 14, color: context.titleText),
                       decoration: InputDecoration(
                         hintText: 'e.g. Imal Lakshitha',
-                        hintStyle: GoogleFonts.inter(fontSize: 13.5, color: const Color(0xFF90A395)),
+                        hintStyle: GoogleFonts.inter(fontSize: 13.5, color: isDark ? const Color(0xFF64748B) : const Color(0xFF90A395)),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: context.cardBg,
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(color: AppColors.asvannaBorder, width: 1.2),
+                          borderSide: BorderSide(color: context.cardBorder, width: 1.2),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(color: AppColors.asvannaDarkGreen, width: 1.8),
+                          borderSide: BorderSide(color: isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen, width: 1.8),
                         ),
                       ),
                       validator: (v) => v == null || v.trim().isEmpty ? 'Please enter your name' : null,
@@ -246,26 +249,26 @@ class _FarmerRegistrationScreenState extends State<FarmerRegistrationScreen> {
                                 style: GoogleFonts.inter(
                                   fontSize: 12.5,
                                   fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF1A3828),
+                                  color: context.titleText,
                                 ),
                               ),
                               const SizedBox(height: 6),
                               TextFormField(
                                 controller: _nicController,
-                                style: GoogleFonts.inter(fontSize: 14, color: AppColors.asvannaTextDark),
+                                style: GoogleFonts.inter(fontSize: 14, color: context.titleText),
                                 decoration: InputDecoration(
                                   hintText: 'V / JX / 12-digit',
-                                  hintStyle: GoogleFonts.inter(fontSize: 13.5, color: const Color(0xFF90A395)),
+                                  hintStyle: GoogleFonts.inter(fontSize: 13.5, color: isDark ? const Color(0xFF64748B) : const Color(0xFF90A395)),
                                   contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                                   filled: true,
-                                  fillColor: Colors.white,
+                                  fillColor: context.cardBg,
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(10),
-                                    borderSide: const BorderSide(color: AppColors.asvannaBorder, width: 1.2),
+                                    borderSide: BorderSide(color: context.cardBorder, width: 1.2),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(10),
-                                    borderSide: const BorderSide(color: AppColors.asvannaDarkGreen, width: 1.8),
+                                    borderSide: BorderSide(color: isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen, width: 1.8),
                                   ),
                                 ),
                                 validator: (v) => v == null || v.trim().isEmpty ? 'Enter NIC' : null,
@@ -284,27 +287,27 @@ class _FarmerRegistrationScreenState extends State<FarmerRegistrationScreen> {
                                 style: GoogleFonts.inter(
                                   fontSize: 12.5,
                                   fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF1A3828),
+                                  color: context.titleText,
                                 ),
                               ),
                               const SizedBox(height: 6),
                               TextFormField(
                                 controller: _acresController,
                                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                style: GoogleFonts.inter(fontSize: 14, color: AppColors.asvannaTextDark),
+                                style: GoogleFonts.inter(fontSize: 14, color: context.titleText),
                                 decoration: InputDecoration(
                                   hintText: 'e.g. 3.5',
-                                  hintStyle: GoogleFonts.inter(fontSize: 13.5, color: const Color(0xFF90A395)),
+                                  hintStyle: GoogleFonts.inter(fontSize: 13.5, color: isDark ? const Color(0xFF64748B) : const Color(0xFF90A395)),
                                   contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                                   filled: true,
-                                  fillColor: Colors.white,
+                                  fillColor: context.cardBg,
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(10),
-                                    borderSide: const BorderSide(color: AppColors.asvannaBorder, width: 1.2),
+                                    borderSide: BorderSide(color: context.cardBorder, width: 1.2),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(10),
-                                    borderSide: const BorderSide(color: AppColors.asvannaDarkGreen, width: 1.8),
+                                    borderSide: BorderSide(color: isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen, width: 1.8),
                                   ),
                                 ),
                                 validator: (v) => v == null || v.trim().isEmpty ? 'Enter acres' : null,
@@ -322,29 +325,29 @@ class _FarmerRegistrationScreenState extends State<FarmerRegistrationScreen> {
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1A3828),
+                        color: context.titleText,
                       ),
                     ),
                     const SizedBox(height: 6),
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: context.cardBg,
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: AppColors.asvannaBorder, width: 1.2),
+                        border: Border.all(color: context.cardBorder, width: 1.2),
                       ),
                       child: Row(
                         children: [
                           // +94 Prefix Box
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                            decoration: const BoxDecoration(
-                              color: AppColors.asvannaPrefixBg,
-                              borderRadius: BorderRadius.only(
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF0F172A) : AppColors.asvannaPrefixBg,
+                              borderRadius: const BorderRadius.only(
                                 topLeft: Radius.circular(9),
                                 bottomLeft: Radius.circular(9),
                               ),
                               border: Border(
-                                right: BorderSide(color: AppColors.asvannaBorder, width: 1.2),
+                                right: BorderSide(color: context.cardBorder, width: 1.2),
                               ),
                             ),
                             child: Text(
@@ -352,7 +355,7 @@ class _FarmerRegistrationScreenState extends State<FarmerRegistrationScreen> {
                               style: GoogleFonts.inter(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: const Color(0xFF2C3E32),
+                                color: context.titleText,
                               ),
                             ),
                           ),
@@ -361,10 +364,10 @@ class _FarmerRegistrationScreenState extends State<FarmerRegistrationScreen> {
                             child: TextFormField(
                               controller: _phoneController,
                               keyboardType: TextInputType.phone,
-                              style: GoogleFonts.inter(fontSize: 14, color: AppColors.asvannaTextDark),
+                              style: GoogleFonts.inter(fontSize: 14, color: context.titleText),
                               decoration: InputDecoration(
                                 hintText: '77 123 4567',
-                                hintStyle: GoogleFonts.inter(fontSize: 13.5, color: const Color(0xFF90A395)),
+                                hintStyle: GoogleFonts.inter(fontSize: 13.5, color: isDark ? const Color(0xFF64748B) : const Color(0xFF90A395)),
                                 border: InputBorder.none,
                                 enabledBorder: InputBorder.none,
                                 focusedBorder: InputBorder.none,
@@ -384,26 +387,27 @@ class _FarmerRegistrationScreenState extends State<FarmerRegistrationScreen> {
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1A3828),
+                        color: context.titleText,
                       ),
                     ),
                     const SizedBox(height: 6),
                     DropdownButtonFormField<String>(
                       value: _selectedDivision,
                       isExpanded: true,
-                      icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF556955)),
-                      style: GoogleFonts.inter(fontSize: 14, color: AppColors.asvannaTextDark),
+                      dropdownColor: context.cardBg,
+                      icon: Icon(Icons.keyboard_arrow_down_rounded, color: context.subText),
+                      style: GoogleFonts.inter(fontSize: 14, color: context.titleText),
                       decoration: InputDecoration(
                         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: context.cardBg,
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(color: AppColors.asvannaBorder, width: 1.2),
+                          borderSide: BorderSide(color: context.cardBorder, width: 1.2),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(color: AppColors.asvannaDarkGreen, width: 1.8),
+                          borderSide: BorderSide(color: isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen, width: 1.8),
                         ),
                       ),
                       items: _divisions.map((div) {
@@ -421,26 +425,27 @@ class _FarmerRegistrationScreenState extends State<FarmerRegistrationScreen> {
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1A3828),
+                        color: context.titleText,
                       ),
                     ),
                     const SizedBox(height: 6),
                     DropdownButtonFormField<String>(
                       value: _selectedGnd,
                       isExpanded: true,
-                      icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF556955)),
-                      style: GoogleFonts.inter(fontSize: 14, color: AppColors.asvannaTextDark),
+                      dropdownColor: context.cardBg,
+                      icon: Icon(Icons.keyboard_arrow_down_rounded, color: context.subText),
+                      style: GoogleFonts.inter(fontSize: 14, color: context.titleText),
                       decoration: InputDecoration(
                         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: context.cardBg,
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(color: AppColors.asvannaBorder, width: 1.2),
+                          borderSide: BorderSide(color: context.cardBorder, width: 1.2),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(color: AppColors.asvannaDarkGreen, width: 1.8),
+                          borderSide: BorderSide(color: isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen, width: 1.8),
                         ),
                       ),
                       items: _gndList.map((gnd) {
@@ -458,26 +463,26 @@ class _FarmerRegistrationScreenState extends State<FarmerRegistrationScreen> {
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1A3828),
+                        color: context.titleText,
                       ),
                     ),
                     const SizedBox(height: 6),
                     TextFormField(
                       controller: _locationController,
-                      style: GoogleFonts.inter(fontSize: 14, color: AppColors.asvannaTextDark),
+                      style: GoogleFonts.inter(fontSize: 14, color: context.titleText),
                       decoration: InputDecoration(
                         hintText: 'e.g. Heeloya Road, Bandarawela',
-                        hintStyle: GoogleFonts.inter(fontSize: 13.5, color: const Color(0xFF90A395)),
+                        hintStyle: GoogleFonts.inter(fontSize: 13.5, color: isDark ? const Color(0xFF64748B) : const Color(0xFF90A395)),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: context.cardBg,
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(color: AppColors.asvannaBorder, width: 1.2),
+                          borderSide: BorderSide(color: context.cardBorder, width: 1.2),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(color: AppColors.asvannaDarkGreen, width: 1.8),
+                          borderSide: BorderSide(color: isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen, width: 1.8),
                         ),
                       ),
                       validator: (v) => v == null || v.trim().isEmpty ? 'Please enter farm address' : null,
@@ -493,9 +498,9 @@ class _FarmerRegistrationScreenState extends State<FarmerRegistrationScreen> {
                           height: 24,
                           child: Checkbox(
                             value: _agreedToTerms,
-                            activeColor: AppColors.asvannaDarkGreen,
+                            activeColor: isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                            side: const BorderSide(color: Color(0xFFB5C4B5), width: 1.5),
+                            side: BorderSide(color: isDark ? const Color(0xFF475569) : const Color(0xFFB5C4B5), width: 1.5),
                             onChanged: (val) {
                               setState(() => _agreedToTerms = val ?? false);
                             },
@@ -506,7 +511,7 @@ class _FarmerRegistrationScreenState extends State<FarmerRegistrationScreen> {
                           child: RichText(
                             text: TextSpan(
                               text: 'I agree to the ',
-                              style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF4C6152), height: 1.35),
+                              style: GoogleFonts.inter(fontSize: 12, color: context.subText, height: 1.35),
                               children: [
                                 WidgetSpan(
                                   child: GestureDetector(
@@ -516,7 +521,7 @@ class _FarmerRegistrationScreenState extends State<FarmerRegistrationScreen> {
                                       style: GoogleFonts.inter(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w700,
-                                        color: AppColors.asvannaDarkGreen,
+                                        color: isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen,
                                         decoration: TextDecoration.underline,
                                       ),
                                     ),
@@ -531,7 +536,7 @@ class _FarmerRegistrationScreenState extends State<FarmerRegistrationScreen> {
                                       style: GoogleFonts.inter(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w700,
-                                        color: AppColors.asvannaDarkGreen,
+                                        color: isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen,
                                         decoration: TextDecoration.underline,
                                       ),
                                     ),
@@ -586,7 +591,7 @@ class _FarmerRegistrationScreenState extends State<FarmerRegistrationScreen> {
                     const SizedBox(height: 24),
 
                     // Divider
-                    const Divider(color: Color(0xFFE5ECE5), thickness: 1),
+                    Divider(color: context.cardBorder, thickness: 1),
                     const SizedBox(height: 16),
 
                     // Already have an account? Log in here
@@ -604,14 +609,14 @@ class _FarmerRegistrationScreenState extends State<FarmerRegistrationScreen> {
                             text: 'Already have an account? ',
                             style: GoogleFonts.inter(
                               fontSize: 13,
-                              color: const Color(0xFF556955),
+                              color: context.subText,
                             ),
                             children: [
                               TextSpan(
                                 text: 'Log in here',
                                 style: GoogleFonts.inter(
                                   fontWeight: FontWeight.w700,
-                                  color: AppColors.asvannaDarkGreen,
+                                  color: isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen,
                                 ),
                               ),
                             ],

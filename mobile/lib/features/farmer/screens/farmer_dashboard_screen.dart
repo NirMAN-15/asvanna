@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/app_state_provider.dart';
 import '../../../core/models/crop_model.dart';
 import '../../../core/models/notice_model.dart';
@@ -13,9 +14,19 @@ import 'pre_planting_risk_screen.dart';
 import 'weather_screen.dart';
 import 'notice_board_screen.dart';
 import 'farmer_profile_screen.dart';
+import 'planting_entry_screen.dart';
+import 'price_trends_screen.dart';
+import '../widgets/post_surplus_modal.dart';
 
-class FarmerDashboardScreen extends StatelessWidget {
+class FarmerDashboardScreen extends StatefulWidget {
   const FarmerDashboardScreen({super.key});
+
+  @override
+  State<FarmerDashboardScreen> createState() => _FarmerDashboardScreenState();
+}
+
+class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
+  String _cropFilter = 'all'; // 'all', 'at_risk', 'safe'
 
   @override
   Widget build(BuildContext context) {
@@ -24,31 +35,51 @@ class FarmerDashboardScreen extends StatelessWidget {
     final lang = appState.currentLanguage;
     String tr(String key) => AppTranslations.tr(lang, key);
 
-    // Calculate active metrics
-    final totalAcreagePlanted = farmer.usedAcres;
-    final activeCropsCount = farmer.activePlantings.length;
+    // Identify which of the farmer's planted crops have active risk
+    final List<Map<String, dynamic>> atRiskPlantings = [];
+    final List<Map<String, dynamic>> safePlantings = [];
 
-    // Calculate risk alert count
-    int riskAlertsCount = 0;
     for (final planting in farmer.activePlantings) {
       final risk = appState.getRiskForCrop(planting.cropId);
-      if (risk != null &&
-          (risk.riskLevel == CropRiskLevel.critical ||
-              risk.riskLevel == CropRiskLevel.moderate)) {
-        riskAlertsCount++;
+      final isCritical = risk != null && risk.riskLevel == CropRiskLevel.critical;
+      final isModerate = risk != null && risk.riskLevel == CropRiskLevel.moderate;
+
+      // Fallback heuristics for demo crops
+      final nameLower = planting.cropName.toLowerCase();
+      final hasGlutRisk = isCritical || (risk == null && nameLower.contains('leek'));
+      final hasModerateRisk = isModerate || (risk == null && nameLower.contains('carrot'));
+
+      if (hasGlutRisk || hasModerateRisk) {
+        atRiskPlantings.add({
+          'planting': planting,
+          'risk': risk,
+          'isCritical': hasGlutRisk,
+        });
+      } else {
+        safePlantings.add({
+          'planting': planting,
+          'risk': risk,
+          'isCritical': false,
+        });
       }
     }
-    if (riskAlertsCount == 0 && farmer.activePlantings.isNotEmpty) {
-      riskAlertsCount = 2; // Default baseline for demo
-    }
 
+    final int riskAlertsCount = atRiskPlantings.length;
     final bool hasRedAlert = riskAlertsCount > 0 ||
         appState.notices.any((n) => n.priority == NoticePriority.urgent || n.priority == NoticePriority.high);
 
     final String formattedDate = DateFormat('EEEE, d MMM yyyy').format(DateTime.now());
 
+    // Filter crops based on selected chip
+    List<PlantedCropEntry> displayedPlantings = farmer.activePlantings;
+    if (_cropFilter == 'at_risk') {
+      displayedPlantings = atRiskPlantings.map((e) => e['planting'] as PlantedCropEntry).toList();
+    } else if (_cropFilter == 'safe') {
+      displayedPlantings = safePlantings.map((e) => e['planting'] as PlantedCropEntry).toList();
+    }
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.scaffoldBg,
       body: SafeArea(
         child: RefreshIndicator(
           color: AppColors.asvannaButtonGreen,
@@ -58,39 +89,39 @@ class FarmerDashboardScreen extends StatelessWidget {
           },
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 14.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 1. Header: Profile picture on left, Greeting & Date in center, Alert Bell on right
-                _buildHeader(context, farmer.fullName, formattedDate, hasRedAlert, tr),
+                // 1. Clean Top Header (Profile Avatar & Greeting on left, Notification Bell on right)
+                _buildTopGreetingHeader(context, farmer.fullName, formattedDate, hasRedAlert, tr),
                 const SizedBox(height: 14),
 
-                // 2. Localized Agro-Weather Widget (Directly after Header)
-                _buildWeatherCard(context, tr),
+                // 2. Localized Agro-Weather Intelligence Card
+                _buildAgroWeatherCard(context, tr),
                 const SizedBox(height: 16),
 
-                // 3. Summary KPI Metric Cards (Acreage Planted, Active Crops, Risk Alerts)
-                _buildMetricCardsRow(
+                // 3. 2x2 High-Contrast Big Action Grid (Age 30-50 Farmer Friendly)
+                _buildBigActionGrid(context, tr),
+                const SizedBox(height: 22),
+
+                // 5. "My Planted Crops" Section Header with Filter Chips & Risk Status
+                _buildCurrentCropsHeader(
                   context: context,
-                  totalAcreagePlanted: totalAcreagePlanted,
-                  activeCropsCount: activeCropsCount,
-                  riskAlertsCount: riskAlertsCount,
+                  totalCount: farmer.activePlantings.length,
+                  atRiskCount: atRiskPlantings.length,
+                  safeCount: safePlantings.length,
                   tr: tr,
                 ),
-                const SizedBox(height: 24),
-
-                // 4. "My Current Crops" Section Header with "Manage" link
-                _buildCurrentCropsHeader(context, tr),
                 const SizedBox(height: 12),
 
-                // 5. Horizontal Scrollable List of Crop Cards
-                _buildCurrentCropsList(context, appState, farmer.activePlantings, tr),
+                // 6. Active Crops List / Grid Cards with detailed Risk Status
+                _buildCurrentCropsList(context, appState, displayedPlantings, tr),
                 const SizedBox(height: 20),
 
-                // 6. Farmland Acreage Utilization Card
+                // 7. Farmland Acreage Utilization Card
                 _buildLandUtilizationCard(context, farmer, tr),
-                const SizedBox(height: 30),
+                const SizedBox(height: 24),
               ],
             ),
           ),
@@ -99,8 +130,8 @@ class FarmerDashboardScreen extends StatelessWidget {
     );
   }
 
-  // 1. Header View: Profile Picture on left, Greeting & Date in center, Alert Bell on right
-  Widget _buildHeader(
+  // 1. Top Greeting Header: Farmer Avatar + Greeting on Left, Bell on Right
+  Widget _buildTopGreetingHeader(
     BuildContext context,
     String fullName,
     String dateText,
@@ -108,12 +139,13 @@ class FarmerDashboardScreen extends StatelessWidget {
     String Function(String) tr,
   ) {
     final firstName = fullName.trim().isEmpty ? 'Nirman' : fullName.split(' ').first;
+    final greetingText = '${tr('greeting')}, $firstName';
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // Left side: Profile Avatar + Greeting & Date
+        // Left side: Farmer Profile Avatar + Greeting & Date
         Expanded(
           child: Row(
             children: [
@@ -129,7 +161,7 @@ class FarmerDashboardScreen extends StatelessWidget {
                   height: 48,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.asvannaButtonGreen.withOpacity(0.3), width: 2),
+                    border: Border.all(color: AppColors.asvannaButtonGreen.withOpacity(0.35), width: 2),
                     image: const DecorationImage(
                       image: NetworkImage(
                         'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80',
@@ -150,13 +182,14 @@ class FarmerDashboardScreen extends StatelessWidget {
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      '${tr('greeting')}, $firstName',
+                      greetingText,
                       style: GoogleFonts.poppins(
                         fontSize: 18.5,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.dashHeaderTitle,
+                        color: context.titleText,
                         letterSpacing: -0.3,
                       ),
                       maxLines: 1,
@@ -166,9 +199,9 @@ class FarmerDashboardScreen extends StatelessWidget {
                     Text(
                       dateText,
                       style: GoogleFonts.inter(
-                        fontSize: 12.5,
+                        fontSize: 12,
                         fontWeight: FontWeight.w400,
-                        color: AppColors.dashHeaderDate,
+                        color: context.subText,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -179,9 +212,9 @@ class FarmerDashboardScreen extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 10),
 
-        // Right side: Bell icon for alerts with Red alert indicator
+        // Right side: Notification bell button with red alert indicator
         GestureDetector(
           onTap: () {
             Navigator.push(
@@ -193,10 +226,10 @@ class FarmerDashboardScreen extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: hasRedAlert ? const Color(0xFFFEE2E2) : Colors.white,
+              color: hasRedAlert ? const Color(0xFFFEE2E2) : context.cardBg,
               shape: BoxShape.circle,
               border: Border.all(
-                color: hasRedAlert ? const Color(0xFFFCA5A5) : const Color(0xFFEFF3EF),
+                color: hasRedAlert ? const Color(0xFFFCA5A5) : context.cardBorder,
                 width: 1.2,
               ),
               boxShadow: [
@@ -212,7 +245,7 @@ class FarmerDashboardScreen extends StatelessWidget {
               children: [
                 Icon(
                   hasRedAlert ? Icons.notifications_active_rounded : Icons.notifications_outlined,
-                  color: hasRedAlert ? AppColors.dashAlertRed : AppColors.dashHeaderTitle,
+                  color: hasRedAlert ? AppColors.dashAlertRed : context.titleText,
                   size: 22,
                 ),
                 if (hasRedAlert)
@@ -237,158 +270,138 @@ class FarmerDashboardScreen extends StatelessWidget {
     );
   }
 
-  // 2. Three Metric Cards Row
-  Widget _buildMetricCardsRow({
-    required BuildContext context,
-    required double totalAcreagePlanted,
-    required int activeCropsCount,
-    required int riskAlertsCount,
-    required String Function(String) tr,
-  }) {
-    return Row(
-      children: [
-        // Card 1: Acreage Planted
-        Expanded(
-          child: _buildSingleMetricCard(
-            context: context,
-            icon: Icons.map_outlined,
-            iconBg: AppColors.dashMetricMapBg,
-            iconColor: AppColors.asvannaButtonGreen,
-            value: '${totalAcreagePlanted.toStringAsFixed(1)} ${tr('acre_unit')}',
-            label: tr('acreage_planted'),
-            hasAlertDot: false,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const FarmLandMapScreen()),
-              );
-            },
-          ),
-        ),
-        const SizedBox(width: 10),
-
-        // Card 2: Active Crops
-        Expanded(
-          child: _buildSingleMetricCard(
-            context: context,
-            icon: Icons.eco_outlined,
-            iconBg: AppColors.dashMetricSproutBg,
-            iconColor: AppColors.asvannaButtonGreen,
-            value: '$activeCropsCount',
-            label: tr('active_crops'),
-            hasAlertDot: false,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const PrePlantingRiskScreen()),
-              );
-            },
-          ),
-        ),
-        const SizedBox(width: 10),
-
-        // Card 3: Risk Alerts
-        Expanded(
-          child: _buildSingleMetricCard(
-            context: context,
-            icon: Icons.warning_amber_rounded,
-            iconBg: AppColors.dashMetricAlertBg,
-            iconColor: AppColors.dashAlertRed,
-            value: '$riskAlertsCount',
-            label: tr('risk_alerts'),
-            hasAlertDot: true,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const PrePlantingRiskScreen()),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSingleMetricCard({
-    required BuildContext context,
-    required IconData icon,
-    required Color iconBg,
-    required Color iconColor,
-    required String value,
-    required String label,
-    required bool hasAlertDot,
-    required VoidCallback onTap,
-  }) {
+  // 2. Agro-Weather Intelligence Card
+  Widget _buildAgroWeatherCard(BuildContext context, String Function(String) tr) {
+    final isDark = context.isDarkMode;
     return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const WeatherScreen()),
+        );
+      },
+      borderRadius: BorderRadius.circular(20),
       child: Container(
-        height: 120,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFFEFF3EF), width: 1),
+          color: context.cardBg,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: context.cardBorder, width: 1.2),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
-              blurRadius: 8,
+              color: isDark ? Colors.black.withOpacity(0.2) : Colors.black.withOpacity(0.03),
+              blurRadius: 10,
               offset: const Offset(0, 2),
             ),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+            Text(
+              tr('agro_weather_title'),
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: context.subText,
+                letterSpacing: 0.3,
+              ),
+            ),
+            const SizedBox(height: 6),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          '21°C',
+                          style: GoogleFonts.poppins(
+                            fontSize: 26,
+                            fontWeight: FontWeight.w800,
+                            color: context.titleText,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Bandarawela',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF374151),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 3),
+                    Row(
+                      children: [
+                        const Text('🌧️', style: TextStyle(fontSize: 13)),
+                        const SizedBox(width: 5),
+                        Text(
+                          tr('rain_prob_label'),
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
                 Container(
-                  width: 34,
-                  height: 34,
+                  width: 52,
+                  height: 52,
                   decoration: BoxDecoration(
-                    color: iconBg,
+                    color: isDark ? const Color(0xFF1E3A2B) : const Color(0xFFF0FDF4),
                     shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isDark ? const Color(0xFF2E5E43) : const Color(0xFFDCFCE7),
+                      width: 1.5,
+                    ),
                   ),
-                  child: Center(
-                    child: Icon(icon, color: iconColor, size: 18),
+                  child: const Center(
+                    child: Text('⛅', style: TextStyle(fontSize: 26)),
                   ),
                 ),
-                if (hasAlertDot)
-                  Container(
-                    width: 7,
-                    height: 7,
-                    margin: const EdgeInsets.only(top: 2, right: 2),
-                    decoration: const BoxDecoration(
-                      color: AppColors.dashAlertRed,
-                      shape: BoxShape.circle,
-                    ),
-                  )
-                else
-                  const SizedBox(width: 7, height: 7),
               ],
             ),
-            const SizedBox(height: 4),
-            Text(
-              value,
-              style: GoogleFonts.poppins(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: AppColors.dashHeaderTitle,
+            const SizedBox(height: 10),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+              decoration: BoxDecoration(
+                color: context.softGreenBg,
+                borderRadius: BorderRadius.circular(10),
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            Text(
-              label,
-              style: GoogleFonts.inter(
-                fontSize: 11,
-                fontWeight: FontWeight.w400,
-                color: AppColors.dashHeaderDate,
+              child: Row(
+                children: [
+                  const Text('🌱', style: TextStyle(fontSize: 13)),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      tr('soil_advisory_text'),
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: isDark ? const Color(0xFF86EFAC) : AppColors.asvannaButtonGreen,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 16,
+                    color: isDark ? const Color(0xFF86EFAC) : AppColors.asvannaButtonGreen,
+                  ),
+                ],
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
@@ -396,43 +409,310 @@ class FarmerDashboardScreen extends StatelessWidget {
     );
   }
 
-  // 3. Section Header: My Current Crops & Manage
-  Widget _buildCurrentCropsHeader(BuildContext context, String Function(String) tr) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  // 3. 2x2 Big High-Contrast Action Grid (Age 30-50 Friendly)
+  Widget _buildBigActionGrid(BuildContext context, String Function(String) tr) {
+    return Column(
       children: [
-        Expanded(
-          child: Text(
-            tr('my_current_crops'),
-            style: GoogleFonts.poppins(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: AppColors.dashHeaderTitle,
+        Row(
+          children: [
+            // Card 1: Add Planting
+            Expanded(
+              child: _buildBigActionButton(
+                context: context,
+                icon: Icons.eco_rounded,
+                title: tr('add_planting_btn'),
+                subtitle: 'Add Planting',
+                bgGradient: const LinearGradient(
+                  colors: [Color(0xFF155437), Color(0xFF1B6B46)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                iconBg: Colors.white.withOpacity(0.18),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const PlantingEntryScreen()),
+                  );
+                },
+              ),
             ),
-            overflow: TextOverflow.ellipsis,
-          ),
+            const SizedBox(width: 12),
+
+            // Card 2: Safe Crops (Risk Engine)
+            Expanded(
+              child: _buildBigActionButton(
+                context: context,
+                icon: Icons.shield_rounded,
+                title: tr('safe_crops_btn'),
+                subtitle: 'Safe Crops',
+                bgGradient: const LinearGradient(
+                  colors: [Color(0xFF059669), Color(0xFF10B981)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                iconBg: Colors.white.withOpacity(0.18),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const PrePlantingRiskScreen()),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
-        GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const PrePlantingRiskScreen()),
-            );
-          },
-          child: Text(
-            tr('manage'),
-            style: GoogleFonts.inter(
-              fontSize: 13.5,
-              fontWeight: FontWeight.w600,
-              color: AppColors.asvannaButtonGreen,
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            // Card 3: Sell Surplus
+            Expanded(
+              child: _buildBigActionButton(
+                context: context,
+                icon: Icons.shopping_basket_rounded,
+                title: tr('sell_surplus_btn'),
+                subtitle: 'Sell Surplus',
+                bgGradient: const LinearGradient(
+                  colors: [Color(0xFFD97706), Color(0xFFF59E0B)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                iconBg: Colors.white.withOpacity(0.18),
+                onTap: () {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (_) => const PostSurplusModal(),
+                  );
+                },
+              ),
             ),
+            const SizedBox(width: 12),
+
+            // Card 4: Market Prices
+            Expanded(
+              child: _buildBigActionButton(
+                context: context,
+                icon: Icons.local_offer_rounded,
+                title: tr('market_prices_btn'),
+                subtitle: 'Market Prices',
+                bgGradient: const LinearGradient(
+                  colors: [Color(0xFF0D9488), Color(0xFF14B8A6)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                iconBg: Colors.white.withOpacity(0.18),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const PriceTrendsScreen()),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBigActionButton({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Gradient bgGradient,
+    required Color iconBg,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        height: 114,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          gradient: bgGradient,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: iconBg,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: Colors.white, size: 20),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: GoogleFonts.poppins(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    height: 1.1,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white.withOpacity(0.88),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 5. Section Header with Filter Chips: My Planted Crops
+  Widget _buildCurrentCropsHeader({
+    required BuildContext context,
+    required int totalCount,
+    required int atRiskCount,
+    required int safeCount,
+    required String Function(String) tr,
+  }) {
+    final isDark = context.isDarkMode;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
+                '${tr('my_current_crops')} ($totalCount)',
+                style: GoogleFonts.poppins(
+                  fontSize: 16.5,
+                  fontWeight: FontWeight.w700,
+                  color: context.titleText,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const PrePlantingRiskScreen()),
+                );
+              },
+              child: Text(
+                tr('manage'),
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? const Color(0xFF4ADE80) : AppColors.asvannaButtonGreen,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+
+        // Filter Chips Row (All | At Risk | Safe)
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              _buildFilterChip(
+                context: context,
+                label: '${tr('filter_all')} ($totalCount)',
+                value: 'all',
+                isSelected: _cropFilter == 'all',
+                activeBg: isDark ? const Color(0xFF334155) : AppColors.dashHeaderTitle,
+                activeText: Colors.white,
+              ),
+              const SizedBox(width: 8),
+              _buildFilterChip(
+                context: context,
+                label: '⚠️ ${tr('filter_at_risk')} ($atRiskCount)',
+                value: 'at_risk',
+                isSelected: _cropFilter == 'at_risk',
+                activeBg: const Color(0xFFDC2626),
+                activeText: Colors.white,
+                badgeDotColor: AppColors.dashAlertRed,
+              ),
+              const SizedBox(width: 8),
+              _buildFilterChip(
+                context: context,
+                label: '✅ ${tr('filter_safe')} ($safeCount)',
+                value: 'safe',
+                isSelected: _cropFilter == 'safe',
+                activeBg: AppColors.primary,
+                activeText: Colors.white,
+              ),
+            ],
           ),
         ),
       ],
     );
   }
 
-  // 4. Horizontal Scrollable List of Crop Cards
+  Widget _buildFilterChip({
+    required BuildContext context,
+    required String label,
+    required String value,
+    required bool isSelected,
+    required Color activeBg,
+    required Color activeText,
+    Color? badgeDotColor,
+  }) {
+    final isDark = context.isDarkMode;
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _cropFilter = value;
+        });
+      },
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? activeBg : context.cardBg,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? activeBg : context.cardBorder,
+            width: 1.2,
+          ),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 11.5,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            color: isSelected ? activeText : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF4B5563)),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 6. List of Planted Crop Cards with prominent Risk Indicators
   Widget _buildCurrentCropsList(
     BuildContext context,
     AppStateProvider appState,
@@ -441,17 +721,17 @@ class FarmerDashboardScreen extends StatelessWidget {
   ) {
     if (plantings.isEmpty) {
       return Container(
-        height: 140,
+        height: 110,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.cardBg,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFFEFF3EF)),
+          border: Border.all(color: context.cardBorder),
         ),
         child: Center(
           child: Text(
             tr('no_active_crops'),
-            style: GoogleFonts.inter(color: AppColors.dashHeaderDate),
+            style: GoogleFonts.inter(color: context.subText),
           ),
         ),
       );
@@ -479,37 +759,53 @@ class FarmerDashboardScreen extends StatelessWidget {
     dynamic risk,
     String Function(String) tr,
   ) {
-    // Determine status badge details
-    Color dotColor = AppColors.dashSafeGreen;
-    Color pillBg = AppColors.dashPillGreenBg;
-    Color pillTextColor = AppColors.dashSafeText;
+    final isDark = context.isDarkMode;
+    Color pillBg = isDark ? const Color(0xFF143E23) : AppColors.dashPillGreenBg;
+    Color pillTextColor = isDark ? const Color(0xFF86EFAC) : AppColors.dashSafeText;
+    Color borderColor = context.cardBorder;
     String badgeText = tr('safe_badge');
+    String riskSubNote = 'Market Demand Healthy';
+    String emoji = planting.cropEmoji.isNotEmpty ? planting.cropEmoji : '🌱';
+
+    final nameLower = planting.cropName.toLowerCase();
+    if (emoji == '🌱') {
+      if (nameLower.contains('carrot')) emoji = '🥕';
+      else if (nameLower.contains('leek')) emoji = '🥬';
+      else if (nameLower.contains('beet')) emoji = '🟣';
+      else if (nameLower.contains('cabbage')) emoji = '🥗';
+      else if (nameLower.contains('potato')) emoji = '🥔';
+      else if (nameLower.contains('tomato')) emoji = '🍅';
+      else if (nameLower.contains('capsicum') || nameLower.contains('pepper')) emoji = '🫑';
+      else if (nameLower.contains('bean')) emoji = '🫘';
+    }
 
     if (risk != null) {
       if (risk.riskLevel == CropRiskLevel.critical) {
-        dotColor = AppColors.dashAlertRed;
-        pillBg = AppColors.dashPillRedBg;
-        pillTextColor = AppColors.dashAlertRed;
+        pillBg = isDark ? const Color(0xFF450A0A) : AppColors.dashPillRedBg;
+        pillTextColor = isDark ? const Color(0xFFFCA5A5) : AppColors.dashAlertRed;
+        borderColor = const Color(0xFFFCA5A5);
         badgeText = tr('overplanted_badge');
+        riskSubNote = '⚠️ ${risk.priceDropRiskPercentage.toStringAsFixed(0)}% Price Drop Risk';
       } else if (risk.riskLevel == CropRiskLevel.moderate) {
-        dotColor = AppColors.dashCautionAmber;
-        pillBg = AppColors.dashPillAmberBg;
-        pillTextColor = AppColors.dashCautionText;
+        pillBg = isDark ? const Color(0xFF451A03) : AppColors.dashPillAmberBg;
+        pillTextColor = isDark ? const Color(0xFFFCD34D) : AppColors.dashCautionText;
+        borderColor = const Color(0xFFFCD34D);
         badgeText = tr('caution_badge');
+        riskSubNote = '⚡ ${risk.saturationPercentage.toStringAsFixed(0)}% Quota Saturated';
       }
     } else {
-      // Fallback based on crop name matching screenshot
-      final nameLower = planting.cropName.toLowerCase();
       if (nameLower.contains('leek')) {
-        dotColor = AppColors.dashAlertRed;
-        pillBg = AppColors.dashPillRedBg;
-        pillTextColor = AppColors.dashAlertRed;
+        pillBg = isDark ? const Color(0xFF450A0A) : AppColors.dashPillRedBg;
+        pillTextColor = isDark ? const Color(0xFFFCA5A5) : AppColors.dashAlertRed;
+        borderColor = const Color(0xFFFCA5A5);
         badgeText = tr('overplanted_badge');
+        riskSubNote = '⚠️ Over-Planted Glut Risk';
       } else if (nameLower.contains('carrot')) {
-        dotColor = AppColors.dashCautionAmber;
-        pillBg = AppColors.dashPillAmberBg;
-        pillTextColor = AppColors.dashCautionText;
+        pillBg = isDark ? const Color(0xFF451A03) : AppColors.dashPillAmberBg;
+        pillTextColor = isDark ? const Color(0xFFFCD34D) : AppColors.dashCautionText;
+        borderColor = const Color(0xFFFCD34D);
         badgeText = tr('caution_badge');
+        riskSubNote = '⚡ Approaching Saturation';
       }
     }
 
@@ -528,15 +824,15 @@ class FarmerDashboardScreen extends StatelessWidget {
       },
       borderRadius: BorderRadius.circular(20),
       child: Container(
-        width: 145,
+        width: 165,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.cardBg,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFFEFF3EF), width: 1),
+          border: Border.all(color: borderColor, width: 1.4),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: isDark ? Colors.black.withOpacity(0.2) : Colors.black.withOpacity(0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -546,44 +842,51 @@ class FarmerDashboardScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Title & Dot Indicator
+            // Emoji and Status Pill
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(
-                  child: Text(
-                    planting.cropName,
-                    style: GoogleFonts.poppins(
-                      fontSize: 15.5,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.dashHeaderTitle,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
+                Text(emoji, style: const TextStyle(fontSize: 28)),
                 Container(
-                  width: 7,
-                  height: 7,
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: dotColor,
-                    shape: BoxShape.circle,
+                    color: pillBg,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    badgeText,
+                    style: GoogleFonts.inter(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w700,
+                      color: pillTextColor,
+                    ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 8),
 
-            // Acreage & Countdown
+            // Crop Name & Acreage
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
+                  planting.cropName,
+                  style: GoogleFonts.poppins(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: context.titleText,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
                   '${planting.allocatedAcres.toStringAsFixed(1)} ${tr('acre_unit')}',
                   style: GoogleFonts.inter(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.dashHeaderDate,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: context.subText,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -591,224 +894,43 @@ class FarmerDashboardScreen extends StatelessWidget {
                   '${planting.daysRemaining} ${tr('days_to_harvest')}',
                   style: GoogleFonts.inter(
                     fontSize: 11,
-                    fontWeight: FontWeight.w400,
-                    color: const Color(0xFF9CA3AF),
+                    fontWeight: FontWeight.w500,
+                    color: context.subText,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
 
-            // Badge Pill
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: pillBg,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                badgeText,
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: pillTextColor,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // 2. Weather Card (Directly below Header)
-  Widget _buildWeatherCard(BuildContext context, String Function(String) tr) {
-    return InkWell(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const WeatherScreen()),
-        );
-      },
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFFEFF3EF), width: 1.2),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.03),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            // Top Row: Weather Info & Location Pill
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            // Risk Sub-Note & Progress Bar
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF0FDF4),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: const Color(0xFFDCFCE7), width: 1.5),
-                        ),
-                        child: const Center(
-                          child: Text('⛅', style: TextStyle(fontSize: 22)),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.baseline,
-                              textBaseline: TextBaseline.alphabetic,
-                              children: [
-                                Text(
-                                  '21°C',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.dashHeaderTitle,
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                Flexible(
-                                  child: Text(
-                                    tr('partly_cloudy'),
-                                    style: GoogleFonts.inter(
-                                      fontSize: 12.5,
-                                      fontWeight: FontWeight.w500,
-                                      color: AppColors.dashHeaderDate,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Text(
-                              tr('weather_optimal'),
-                              style: GoogleFonts.inter(
-                                fontSize: 11,
-                                color: const Color(0xFF9CA3AF),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: AppColors.primarySoft,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.location_on_rounded,
-                        size: 13,
-                        color: AppColors.asvannaButtonGreen,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Bandarawela',
-                        style: GoogleFonts.inter(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.asvannaButtonGreen,
-                        ),
-                      ),
-                      const SizedBox(width: 2),
-                      const Icon(
-                        Icons.chevron_right_rounded,
-                        size: 15,
-                        color: AppColors.asvannaButtonGreen,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            // Bottom Badges Row: Rain, Humidity, Advisory
-            Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF0F9FF),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text('🌧️', style: TextStyle(fontSize: 12)),
-                        const SizedBox(width: 5),
-                        Flexible(
-                          child: Text(
-                            tr('rain_forecast'),
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF0284C7),
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: planting.growthProgress,
+                    minHeight: 5,
+                    backgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFE5E7EB),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      badgeText == tr('safe_badge')
+                          ? AppColors.primary
+                          : (badgeText == tr('caution_badge')
+                              ? AppColors.dashCautionAmber
+                              : AppColors.dashAlertRed),
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-                    decoration: BoxDecoration(
-                      color: AppColors.primarySoft,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text('💧', style: TextStyle(fontSize: 12)),
-                        const SizedBox(width: 5),
-                        Flexible(
-                          child: Text(
-                            tr('humidity_label'),
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.asvannaButtonGreen,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
+                const SizedBox(height: 6),
+                Text(
+                  riskSubNote,
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: pillTextColor,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -818,8 +940,9 @@ class FarmerDashboardScreen extends StatelessWidget {
     );
   }
 
-  // 8. Farmland Utilization Card
+  // 7. Farmland Utilization Card
   Widget _buildLandUtilizationCard(BuildContext context, dynamic farmer, String Function(String) tr) {
+    final isDark = context.isDarkMode;
     final used = farmer.usedAcres;
     final total = farmer.totalLandAcres;
     final percent = farmer.landUtilizationPercentage / 100.0;
@@ -835,12 +958,12 @@ class FarmerDashboardScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.cardBg,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFFEFF3EF)),
+          border: Border.all(color: context.cardBorder),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: isDark ? Colors.black.withOpacity(0.2) : Colors.black.withOpacity(0.03),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -859,17 +982,21 @@ class FarmerDashboardScreen extends StatelessWidget {
                       style: GoogleFonts.poppins(
                         fontSize: 14.5,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.dashHeaderTitle,
+                        color: context.titleText,
                       ),
                     ),
                     const SizedBox(width: 6),
-                    const Icon(Icons.map_outlined, size: 15, color: AppColors.asvannaButtonGreen),
+                    Icon(
+                      Icons.map_outlined,
+                      size: 15,
+                      color: isDark ? const Color(0xFF4ADE80) : AppColors.asvannaButtonGreen,
+                    ),
                   ],
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: AppColors.primarySoft,
+                    color: context.softGreenBg,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Text(
@@ -877,7 +1004,7 @@ class FarmerDashboardScreen extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.asvannaButtonGreen,
+                      color: isDark ? const Color(0xFF86EFAC) : AppColors.asvannaButtonGreen,
                     ),
                   ),
                 ),
@@ -889,17 +1016,19 @@ class FarmerDashboardScreen extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: percent,
                 minHeight: 8,
-                backgroundColor: const Color(0xFFE8EFE8),
-                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.asvannaButtonGreen),
+                backgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFE8EFE8),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  isDark ? const Color(0xFF4ADE80) : AppColors.asvannaButtonGreen,
+                ),
               ),
             ),
             const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildStatItem(tr('total_land'), '$total ${tr('acre_unit')}', Icons.landscape_outlined),
-                _buildStatItem(tr('cultivated_label'), '${used.toStringAsFixed(1)} ${tr('acre_unit')}', Icons.eco_outlined),
-                _buildStatItem(tr('available_land'), '${farmer.availableAcres.toStringAsFixed(1)} ${tr('acre_unit')}', Icons.check_circle_outline),
+                _buildStatItem(context, tr('total_land'), '$total ${tr('acre_unit')}', Icons.landscape_outlined),
+                _buildStatItem(context, tr('cultivated_label'), '${used.toStringAsFixed(1)} ${tr('acre_unit')}', Icons.eco_outlined),
+                _buildStatItem(context, tr('available_land'), '${farmer.availableAcres.toStringAsFixed(1)} ${tr('acre_unit')}', Icons.check_circle_outline),
               ],
             ),
           ],
@@ -908,17 +1037,17 @@ class FarmerDashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatItem(String label, String value, IconData icon) {
+  Widget _buildStatItem(BuildContext context, String label, String value, IconData icon) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(icon, size: 12, color: AppColors.dashHeaderDate),
+            Icon(icon, size: 12, color: context.subText),
             const SizedBox(width: 4),
             Text(
               label,
-              style: GoogleFonts.inter(fontSize: 10.5, color: AppColors.dashHeaderDate),
+              style: GoogleFonts.inter(fontSize: 10.5, color: context.subText),
             ),
           ],
         ),
@@ -928,10 +1057,11 @@ class FarmerDashboardScreen extends StatelessWidget {
           style: GoogleFonts.inter(
             fontSize: 13,
             fontWeight: FontWeight.bold,
-            color: AppColors.dashHeaderTitle,
+            color: context.titleText,
           ),
         ),
       ],
     );
   }
 }
+
