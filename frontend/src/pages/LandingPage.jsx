@@ -1,22 +1,19 @@
 import React, { useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { LanguageContext } from '../context/LanguageContext';
+import landingBg from '../assets/landing-bg.jpg';
 
 export default function LandingPage() {
   const navigate = useNavigate();
   const { lang, setLanguage, t } = useContext(LanguageContext);
 
   return (
-    <div className="bg-background text-on-surface font-body-md min-h-screen flex flex-col items-center justify-between relative overflow-x-hidden">
-      {/* Subtle Atmospheric Background (Stitch Pattern) */}
-      <div className="fixed inset-0 bg-pattern pointer-events-none" />
-      <div className="fixed top-0 left-0 w-full h-full pointer-events-none">
-        <div className="absolute top-[-10%] right-[-5%] w-[45%] h-[45%] rounded-full bg-secondary-container blur-[130px] opacity-25" />
-        <div className="absolute bottom-[-10%] left-[-5%] w-[45%] h-[45%] rounded-full bg-primary-fixed blur-[130px] opacity-25" />
-      </div>
-
+    <div 
+      className="relative min-h-screen text-on-surface font-body-md flex flex-col items-center justify-between overflow-x-hidden bg-cover bg-center bg-fixed bg-no-repeat"
+      style={{ backgroundImage: `url(${landingBg})` }}
+    >
       {/* Header / Nav (Anchor Component with Language Switcher) */}
-      <header className="sticky top-0 w-full px-margin-mobile md:px-margin-desktop py-4 flex justify-between items-center z-50 bg-surface-bright/80 backdrop-blur-md border-b border-outline-variant/30">
+      <header className="sticky top-0 w-full px-margin-mobile md:px-margin-desktop py-4 flex justify-between items-center z-50 bg-white/90 backdrop-blur-md border-b border-outline-variant/30 shadow-xs">
         <div className="flex items-center gap-3">
           <img
             src="/logo.png"
@@ -75,7 +72,7 @@ export default function LandingPage() {
       <main className="relative z-10 w-full max-w-container-max px-margin-mobile md:px-margin-desktop py-12 flex flex-col items-center flex-1 justify-center">
         {/* Hero Section */}
         <div className="text-center mb-12 animate-fadeIn max-w-3xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary-container/60 border border-secondary/30 text-on-secondary-container text-xs font-bold uppercase tracking-wider mb-4">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-xs border border-secondary/30 text-on-secondary-container text-xs font-bold uppercase tracking-wider mb-4 shadow-sm">
             <span className="material-symbols-outlined text-sm">eco</span>
             Sri Lanka Upcountry Agrarian Pilot • Bandarawela
           </div>
@@ -90,7 +87,7 @@ export default function LandingPage() {
         {/* Role Selection Bento Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 w-full max-w-5xl">
           {/* Card 1: Farmer */}
-          <div className="role-card group bg-surface-container-lowest border-t-4 border-primary p-6 md:p-8 rounded-2xl flex flex-col transition-all duration-300 shadow-card hover:shadow-card-hover border border-outline-variant/30 hover:-translate-y-1">
+          <div className="role-card group bg-white border-t-4 border-primary p-6 md:p-8 rounded-2xl flex flex-col transition-all duration-300 shadow-lg hover:shadow-xl border border-outline-variant/30 hover:-translate-y-1">
             <div className="mb-6">
               <div className="w-16 h-16 bg-primary-fixed rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300 shadow-sm">
                 <span className="material-symbols-outlined text-primary text-[34px]">agriculture</span>
@@ -135,7 +132,7 @@ export default function LandingPage() {
           </div>
 
           {/* Card 2: Local Buyer */}
-          <div className="role-card group bg-surface-container-lowest border-t-4 border-secondary p-6 md:p-8 rounded-2xl flex flex-col transition-all duration-300 shadow-card hover:shadow-card-hover border border-outline-variant/30 hover:-translate-y-1">
+          <div className="role-card group bg-white border-t-4 border-secondary p-6 md:p-8 rounded-2xl flex flex-col transition-all duration-300 shadow-lg hover:shadow-xl border border-outline-variant/30 hover:-translate-y-1">
             <div className="mb-6">
               <div className="w-16 h-16 bg-secondary-container rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300 shadow-sm">
                 <span className="material-symbols-outlined text-secondary text-[34px]">shopping_cart</span>
@@ -180,7 +177,7 @@ export default function LandingPage() {
           </div>
 
           {/* Card 3: Divisional Officer */}
-          <div className="role-card group bg-surface-container-lowest border-t-4 border-primary-container p-6 md:p-8 rounded-2xl flex flex-col transition-all duration-300 shadow-card hover:shadow-card-hover border border-outline-variant/30 hover:-translate-y-1">
+          <div className="role-card group bg-white border-t-4 border-primary-container p-6 md:p-8 rounded-2xl flex flex-col transition-all duration-300 shadow-lg hover:shadow-xl border border-outline-variant/30 hover:-translate-y-1">
             <div className="mb-6">
               <div className="w-16 h-16 bg-surface-variant rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300 shadow-sm">
                 <span className="material-symbols-outlined text-primary text-[34px]">admin_panel_settings</span>
@@ -226,7 +223,7 @@ export default function LandingPage() {
         </div>
 
         {/* Existing User Callout Banner */}
-        <div className="mt-12 bg-surface-container-low border border-outline-variant/40 rounded-2xl px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 max-w-xl w-full shadow-sm">
+        <div className="mt-12 bg-white/95 backdrop-blur-md border border-outline-variant/40 rounded-2xl px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 max-w-xl w-full shadow-md">
           <div className="flex items-center gap-3">
             <span className="material-symbols-outlined text-primary text-2xl">verified_user</span>
             <div>
@@ -244,9 +241,9 @@ export default function LandingPage() {
       </main>
 
       {/* Global Footer */}
-      <footer className="w-full border-t border-outline-variant/30 py-6 px-margin-desktop bg-surface-bright/50">
+      <footer className="w-full border-t border-outline-variant/30 py-6 px-margin-desktop bg-white/80 backdrop-blur-xs">
         <div className="max-w-container-max mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-on-surface-variant">
-          <p>© 2026 ASVANNA (අස්වැන්න) Ecosystem • ITUM NDIT Final Year Research Initiative Group 15</p>
+          <p>© 2026 ASVANNA (අස්වැන්න) Ecosystem • ITUM NDIT Final Year Research Initiative</p>
           <div className="flex gap-4">
             <span className="text-outline">Bandarawela Pilot Division</span>
             <span>•</span>

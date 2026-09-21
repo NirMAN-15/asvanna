@@ -27,5 +27,6 @@ router.get('/me', authenticate, AuthController.getProfile);
 router.get('/profile', authenticate, AuthController.getProfile);
 router.put('/profile', authenticate, AuthController.updateProfile);
 router.post('/fcm-token', authenticate, AuthController.updateFcmToken);
+router.put('/change-password', authenticate, AuthController.changePassword);
 
 module.exports = router;
