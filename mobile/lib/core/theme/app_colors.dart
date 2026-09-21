@@ -6,6 +6,7 @@ class AppColors {
   static const Color primaryDark = Color(0xFF1B5E20);
   static const Color primaryLight = Color(0xFF4CAF50);
   static const Color primarySoft = Color(0xFFE8F5E9);
+  static const Color darkEmerald = Color(0xFF059669);
   
   // Secondary Earthy & Gold accents
   static const Color secondary = Color(0xFF8D6E63);

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/providers/app_state_provider.dart';
 import '../../core/localization/app_translations.dart';
 import 'farmer_registration_screen.dart';
@@ -13,45 +14,60 @@ class RoleSelectionScreen extends StatelessWidget {
   const RoleSelectionScreen({super.key});
 
   void _showLanguageDialog(BuildContext context, AppStateProvider appState) {
+    final isDark = context.isDarkMode;
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
+        backgroundColor: context.cardBg,
         title: Text(
           'Select Language / භාෂාව / மொழி',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16),
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            color: context.titleText,
+          ),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
               leading: const Text('🇬🇧', style: TextStyle(fontSize: 22)),
-              title: const Text('English'),
+              title: Text(
+                'English',
+                style: GoogleFonts.inter(color: context.titleText),
+              ),
               trailing: appState.currentLanguage == AppLanguage.english
-                  ? const Icon(Icons.check_circle, color: AppColors.primary)
+                  ? Icon(Icons.check_circle, color: isDark ? const Color(0xFF4ADE80) : AppColors.primary)
                   : null,
               onTap: () {
                 appState.setLanguage(AppLanguage.english);
                 Navigator.pop(context);
               },
             ),
-            const Divider(),
+            Divider(color: context.dividerColor),
             ListTile(
               leading: const Text('🇱🇰', style: TextStyle(fontSize: 22)),
-              title: const Text('සිංහල (Sinhala)'),
+              title: Text(
+                'සිංහල (Sinhala)',
+                style: GoogleFonts.inter(color: context.titleText),
+              ),
               trailing: appState.currentLanguage == AppLanguage.sinhala
-                  ? const Icon(Icons.check_circle, color: AppColors.primary)
+                  ? Icon(Icons.check_circle, color: isDark ? const Color(0xFF4ADE80) : AppColors.primary)
                   : null,
               onTap: () {
                 appState.setLanguage(AppLanguage.sinhala);
                 Navigator.pop(context);
               },
             ),
-            const Divider(),
+            Divider(color: context.dividerColor),
             ListTile(
               leading: const Text('🇱🇰', style: TextStyle(fontSize: 22)),
-              title: const Text('தமிழ் (Tamil)'),
+              title: Text(
+                'தமிழ் (Tamil)',
+                style: GoogleFonts.inter(color: context.titleText),
+              ),
               trailing: appState.currentLanguage == AppLanguage.tamil
-                  ? const Icon(Icons.check_circle, color: AppColors.primary)
+                  ? Icon(Icons.check_circle, color: isDark ? const Color(0xFF4ADE80) : AppColors.primary)
                   : null,
               onTap: () {
                 appState.setLanguage(AppLanguage.tamil);
@@ -67,20 +83,27 @@ class RoleSelectionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppStateProvider>(context);
+    final isDark = context.isDarkMode;
     final lang = appState.currentLanguage;
     String tr(String key) => AppTranslations.tr(lang, key);
 
     return Scaffold(
+      backgroundColor: context.scaffoldBg,
       body: SafeArea(
         child: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFFE8F5E9),
-                Color(0xFFF6F8F6),
-              ],
+              colors: isDark
+                  ? [
+                      const Color(0xFF0F172A),
+                      const Color(0xFF0B1120),
+                    ]
+                  : [
+                      const Color(0xFFE8F5E9),
+                      const Color(0xFFF6F8F6),
+                    ],
             ),
           ),
           child: Padding(
@@ -88,51 +111,77 @@ class RoleSelectionScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Top language switch button
-                Align(
-                  alignment: Alignment.topRight,
-                  child: OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      side: const BorderSide(color: Color(0xFFC8E6C9)),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    ),
-                    icon: const Icon(Icons.language, size: 16, color: AppColors.primaryDark),
-                    label: Text(
-                      lang == AppLanguage.english
-                          ? 'English'
-                          : lang == AppLanguage.sinhala
-                              ? 'සිංහල'
-                              : 'தமிழ்',
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primaryDark,
+                // Top controls: Dark mode toggle & language switch
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      tooltip: isDark ? 'Light Mode' : 'Dark Mode',
+                      icon: Icon(
+                        isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+                        color: isDark ? const Color(0xFFFBBF24) : AppColors.asvannaButtonGreen,
                       ),
+                      onPressed: () => appState.toggleDarkMode(),
                     ),
-                    onPressed: () => _showLanguageDialog(context, appState),
-                  ),
+                    OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: context.cardBg,
+                        side: BorderSide(color: context.cardBorder),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      ),
+                      icon: Icon(
+                        Icons.language,
+                        size: 16,
+                        color: isDark ? const Color(0xFF4ADE80) : AppColors.primaryDark,
+                      ),
+                      label: Text(
+                        lang == AppLanguage.english
+                            ? 'English'
+                            : lang == AppLanguage.sinhala
+                                ? 'සිංහල'
+                                : 'தமிழ்',
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? const Color(0xFF4ADE80) : AppColors.primaryDark,
+                        ),
+                      ),
+                      onPressed: () => _showLanguageDialog(context, appState),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 10),
 
-                // Logo & Header
+                // Official Aswenna Logo & Header
                 Center(
                   child: Container(
-                    padding: const EdgeInsets.all(18),
+                    width: 86,
+                    height: 86,
                     decoration: BoxDecoration(
-                      color: Colors.white,
                       shape: BoxShape.circle,
+                      color: Colors.black,
+                      border: Border.all(
+                        color: isDark ? const Color(0xFF4ADE80) : AppColors.primary,
+                        width: 3,
+                      ),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primary.withOpacity(0.15),
+                          color: (isDark ? const Color(0xFF4ADE80) : AppColors.primary).withValues(alpha: 0.25),
                           blurRadius: 20,
                           offset: const Offset(0, 8),
                         ),
                       ],
                     ),
-                    child: const Text(
-                      '🌾',
-                      style: TextStyle(fontSize: 48),
+                    child: ClipOval(
+                      child: Image.asset(
+                        'assets/images/aswanna_logo.png',
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Center(
+                            child: Icon(Icons.eco, color: Colors.greenAccent, size: 46),
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ),
@@ -144,7 +193,7 @@ class RoleSelectionScreen extends StatelessWidget {
                       fontSize: 32,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 2.0,
-                      color: AppColors.primaryDark,
+                      color: isDark ? const Color(0xFF4ADE80) : AppColors.primaryDark,
                     ),
                   ),
                 ),
@@ -155,7 +204,7 @@ class RoleSelectionScreen extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
-                      color: AppColors.textSecondary,
+                      color: context.subText,
                     ),
                   ),
                 ),
@@ -164,7 +213,7 @@ class RoleSelectionScreen extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
+                      color: context.softGreenBg,
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -172,7 +221,7 @@ class RoleSelectionScreen extends StatelessWidget {
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
+                        color: isDark ? const Color(0xFF86EFAC) : AppColors.primary,
                       ),
                     ),
                   ),
@@ -184,7 +233,7 @@ class RoleSelectionScreen extends StatelessWidget {
                   style: GoogleFonts.inter(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: context.titleText,
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -194,7 +243,7 @@ class RoleSelectionScreen extends StatelessWidget {
                   title: tr('farmer_role'),
                   subtitle: tr('farmer_role_desc'),
                   iconEmoji: '🧑‍🌾',
-                  badgeColor: AppColors.primary,
+                  badgeColor: isDark ? const Color(0xFF4ADE80) : AppColors.primary,
                   onTap: () {
                     appState.setRole(UserRole.farmer);
                     Navigator.pushReplacement(
@@ -210,7 +259,7 @@ class RoleSelectionScreen extends StatelessWidget {
                   title: tr('buyer_role'),
                   subtitle: tr('buyer_role_desc'),
                   iconEmoji: '🏢',
-                  badgeColor: AppColors.accent,
+                  badgeColor: isDark ? const Color(0xFF2DD4BF) : AppColors.accent,
                   onTap: () {
                     appState.setRole(UserRole.buyer);
                     Navigator.pushReplacement(
@@ -237,11 +286,11 @@ class RoleSelectionScreen extends StatelessWidget {
                         tr('new_farmer_reg'),
                         style: GoogleFonts.inter(
                           fontWeight: FontWeight.w600,
-                          color: AppColors.primaryDark,
+                          color: isDark ? const Color(0xFF4ADE80) : AppColors.primaryDark,
                         ),
                       ),
                     ),
-                    const Text('•', style: TextStyle(color: AppColors.textMuted)),
+                    Text('•', style: TextStyle(color: context.mutedText)),
                     TextButton(
                       onPressed: () {
                         Navigator.push(
@@ -253,7 +302,7 @@ class RoleSelectionScreen extends StatelessWidget {
                         tr('buyer_onboarding'),
                         style: GoogleFonts.inter(
                           fontWeight: FontWeight.w600,
-                          color: AppColors.accent,
+                          color: isDark ? const Color(0xFF2DD4BF) : AppColors.accent,
                         ),
                       ),
                     ),
@@ -286,18 +335,19 @@ class _RoleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.isDarkMode;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.cardBg,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE2EBE2), width: 1.5),
+          border: Border.all(color: context.cardBorder, width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: isDark ? Colors.black.withValues(alpha: 0.2) : Colors.black.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -308,7 +358,7 @@ class _RoleCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: badgeColor.withOpacity(0.1),
+                color: badgeColor.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Text(
@@ -326,7 +376,7 @@ class _RoleCard extends StatelessWidget {
                     style: GoogleFonts.poppins(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                      color: context.titleText,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -334,17 +384,17 @@ class _RoleCard extends StatelessWidget {
                     subtitle,
                     style: GoogleFonts.inter(
                       fontSize: 12,
-                      color: AppColors.textSecondary,
+                      color: context.subText,
                       height: 1.3,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               Icons.arrow_forward_ios_rounded,
               size: 16,
-              color: AppColors.textMuted,
+              color: context.mutedText,
             ),
           ],
         ),
@@ -352,3 +402,4 @@ class _RoleCard extends StatelessWidget {
     );
   }
 }
+

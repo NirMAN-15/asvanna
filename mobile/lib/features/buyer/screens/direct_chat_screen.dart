@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 
 class DirectChatScreen extends StatefulWidget {
   final String farmerName;
@@ -73,7 +74,7 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
             ),
             Text(
               '${widget.cropName} Surplus Purchase (${widget.requestedQuantityKg.toStringAsFixed(0)} Kg)',
-              style: GoogleFonts.inter(fontSize: 11, color: AppColors.textSecondary),
+              style: GoogleFonts.inter(fontSize: 11, color: context.subText),
             ),
           ],
         ),
@@ -93,7 +94,7 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
           // Order summary mini header
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            color: AppColors.accent.withOpacity(0.08),
+            color: context.isDarkMode ? const Color(0xFF132B20) : AppColors.accent.withOpacity(0.08),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -127,15 +128,15 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
-                      color: isMe ? AppColors.accent : Colors.white,
+                      color: isMe ? AppColors.accent : context.cardBg,
                       borderRadius: BorderRadius.circular(16).copyWith(
                         bottomLeft: !isMe ? const Radius.circular(0) : const Radius.circular(16),
                         bottomRight: isMe ? const Radius.circular(0) : const Radius.circular(16),
                       ),
-                      border: !isMe ? Border.all(color: const Color(0xFFE2ECE2)) : null,
+                      border: !isMe ? Border.all(color: context.cardBorder) : null,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.04),
+                          color: Colors.black.withOpacity(context.isDarkMode ? 0.2 : 0.04),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
@@ -148,7 +149,7 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
                           msg['text'] as String,
                           style: GoogleFonts.inter(
                             fontSize: 13,
-                            color: isMe ? Colors.white : AppColors.textPrimary,
+                            color: isMe ? Colors.white : context.titleText,
                             height: 1.3,
                           ),
                         ),
@@ -157,7 +158,7 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
                           msg['time'] as String,
                           style: GoogleFonts.inter(
                             fontSize: 10,
-                            color: isMe ? Colors.white70 : AppColors.textMuted,
+                            color: isMe ? Colors.white70 : context.subText,
                           ),
                         ),
                       ],
@@ -172,10 +173,11 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.cardBg,
+              border: Border(top: BorderSide(color: context.cardBorder)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withOpacity(context.isDarkMode ? 0.2 : 0.05),
                   blurRadius: 8,
                   offset: const Offset(0, -2),
                 ),
@@ -187,15 +189,17 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
                   Expanded(
                     child: TextField(
                       controller: _messageController,
+                      style: TextStyle(color: context.titleText),
                       decoration: InputDecoration(
                         hintText: 'Coordinate pickup time & details...',
+                        hintStyle: TextStyle(color: context.subText),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(24),
                           borderSide: BorderSide.none,
                         ),
                         filled: true,
-                        fillColor: const Color(0xFFF2F5F2),
+                        fillColor: context.isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFF2F5F2),
                       ),
                     ),
                   ),

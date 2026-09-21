@@ -16,6 +16,7 @@ enum AppLanguage { english, sinhala, tamil }
 class AppStateProvider with ChangeNotifier {
   UserRole _currentUserRole = UserRole.unauthenticated;
   AppLanguage _currentLanguage = AppLanguage.english;
+  bool _isDarkMode = false;
 
   late FarmerProfile _farmerProfile;
   BuyerProfile? _buyerProfile;
@@ -72,6 +73,10 @@ class AppStateProvider with ChangeNotifier {
         if (cachedLang == 'ta') _currentLanguage = AppLanguage.tamil;
         if (cachedLang == 'en') _currentLanguage = AppLanguage.english;
       }
+      final cachedDark = await OfflineStorageService.loadDarkMode();
+      if (cachedDark != null) {
+        _isDarkMode = cachedDark;
+      }
       final queue = await OfflineStorageService.getOfflineQueue();
       _pendingOfflineSyncs = queue.length;
       notifyListeners();
@@ -84,6 +89,7 @@ class AppStateProvider with ChangeNotifier {
   // Getters
   UserRole get currentUserRole => _currentUserRole;
   AppLanguage get currentLanguage => _currentLanguage;
+  bool get isDarkMode => _isDarkMode;
   FarmerProfile get farmerProfile => _farmerProfile;
   BuyerProfile? get buyerProfile => _buyerProfile;
   List<Crop> get availableCrops => _availableCrops;
@@ -210,6 +216,18 @@ class AppStateProvider with ChangeNotifier {
     final code = lang == AppLanguage.sinhala ? 'si' : (lang == AppLanguage.tamil ? 'ta' : 'en');
     OfflineStorageService.saveLanguage(code);
     fetchLiveRiskData();
+    notifyListeners();
+  }
+
+  void toggleDarkMode() {
+    _isDarkMode = !_isDarkMode;
+    OfflineStorageService.saveDarkMode(_isDarkMode);
+    notifyListeners();
+  }
+
+  void setDarkMode(bool isDark) {
+    _isDarkMode = isDark;
+    OfflineStorageService.saveDarkMode(_isDarkMode);
     notifyListeners();
   }
 

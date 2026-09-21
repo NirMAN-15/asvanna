@@ -7,6 +7,19 @@ class OfflineStorageService {
   static const String _keyFarmerProfile = 'asvanna_farmer_profile';
   static const String _keyLanguage = 'asvanna_language';
   static const String _keyOfflineQueue = 'asvanna_offline_queue';
+  static const String _keyDarkMode = 'asvanna_dark_mode';
+
+  // Save Dark Mode state
+  static Future<void> saveDarkMode(bool isDark) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyDarkMode, isDark);
+  }
+
+  // Load Dark Mode state
+  static Future<bool?> loadDarkMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_keyDarkMode);
+  }
 
   // Save Farmer Profile locally
   static Future<bool> saveFarmerProfile(FarmerProfile profile) async {
