@@ -5,12 +5,24 @@ import FarmerPlantingModal from '../components/FarmerPlantingModal';
 
 export default function RiskAnalytics() {
   const { t, lang } = useContext(LanguageContext);
-  const [searchCrop, setSearchCrop] = useState('');
+  
+  // Read query from URL if exists
+  const initialQuery = new URLSearchParams(window.location.search).get('query') || '';
+  const [searchCrop, setSearchCrop] = useState(initialQuery);
+  
   const [searchResult, setSearchResult] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedModalCropId, setSelectedModalCropId] = useState(4);
   const [toastMessage, setToastMessage] = useState(null);
+
+  // Scroll to top on mount
+  useEffect(() => {
+    const appContent = document.querySelector('.app-content');
+    if (appContent) {
+      appContent.scrollTo(0, 0);
+    }
+  }, []);
 
   // Debounced search effect
   useEffect(() => {
@@ -165,14 +177,14 @@ export default function RiskAnalytics() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 bg-surface-container border border-outline-variant/50 px-4 py-2.5 rounded-xl shadow-xs focus-within:ring-2 focus-within:ring-primary/20 w-full sm:w-auto">
-          <span className="material-symbols-outlined text-slate-500 text-lg">search</span>
+        <div className="flex items-center gap-3 bg-surface-container border border-outline-variant/50 px-5 py-3.5 rounded-xl shadow-md focus-within:ring-2 focus-within:ring-primary/30 w-full sm:w-auto">
+          <span className="material-symbols-outlined text-slate-500 text-xl">search</span>
           <input
             type="text"
             value={searchCrop}
             onChange={(e) => setSearchCrop(e.target.value)}
             placeholder={t('search_crop_placeholder')}
-            className="text-xs bg-transparent text-slate-900 placeholder-slate-500 focus:outline-none font-bold w-full sm:w-64 md:w-80"
+            className="text-sm bg-transparent text-slate-900 placeholder-slate-500 focus:outline-none font-bold w-full sm:w-72 md:w-96"
           />
         </div>
       </div>
