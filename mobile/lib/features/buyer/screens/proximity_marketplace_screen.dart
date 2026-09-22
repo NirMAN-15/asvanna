@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/app_state_provider.dart';
 import '../../../core/models/surplus_listing_model.dart';
 import '../../../core/localization/app_translations.dart';
 import 'surplus_detail_screen.dart';
 import '../../auth/login_screen.dart';
-import '../../farmer/widgets/presentation_demo_panel.dart';
 
 class ProximityMarketplaceScreen extends StatefulWidget {
   const ProximityMarketplaceScreen({super.key});
@@ -42,25 +42,11 @@ class _ProximityMarketplaceScreenState extends State<ProximityMarketplaceScreen>
             ),
             Text(
               '${buyer?.category ?? "Bulk Buyer"} • Bandarawela Zone',
-              style: GoogleFonts.inter(fontSize: 11, color: AppColors.textSecondary),
+              style: GoogleFonts.inter(fontSize: 11, color: context.subText),
             ),
           ],
         ),
         actions: [
-          IconButton(
-            tooltip: 'University Demo Showcase',
-            icon: const Icon(Icons.auto_awesome_rounded, color: AppColors.goldAccent),
-            onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                ),
-                builder: (_) => const PresentationDemoPanel(),
-              );
-            },
-          ),
           IconButton(
             tooltip: 'Switch Account / Log Out',
             icon: const Icon(Icons.logout_rounded, color: AppColors.accent),
@@ -84,7 +70,7 @@ class _ProximityMarketplaceScreenState extends State<ProximityMarketplaceScreen>
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardBg,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: AppColors.accent.withOpacity(0.3)),
                 boxShadow: [
@@ -107,7 +93,7 @@ class _ProximityMarketplaceScreenState extends State<ProximityMarketplaceScreen>
                           const SizedBox(width: 8),
                           Text(
                             tr('proximity_radius'),
-                            style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600),
+                            style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: context.titleText),
                           ),
                         ],
                       ),
@@ -147,9 +133,9 @@ class _ProximityMarketplaceScreenState extends State<ProximityMarketplaceScreen>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('1 KM (Local)', style: GoogleFonts.inter(fontSize: 11, color: AppColors.textMuted)),
+                      Text('1 KM (Local)', style: GoogleFonts.inter(fontSize: 11, color: context.subText)),
                       Text('5 KM (Catering Zone)', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.accent)),
-                      Text('10 KM (Regional)', style: GoogleFonts.inter(fontSize: 11, color: AppColors.textMuted)),
+                      Text('10 KM (Regional)', style: GoogleFonts.inter(fontSize: 11, color: context.subText)),
                     ],
                   ),
                 ],
@@ -182,7 +168,7 @@ class _ProximityMarketplaceScreenState extends State<ProximityMarketplaceScreen>
                       selected: isSelected,
                       selectedColor: AppColors.accent,
                       labelStyle: TextStyle(
-                        color: isSelected ? Colors.white : AppColors.textPrimary,
+                        color: isSelected ? Colors.white : (context.isDarkMode ? Colors.white70 : AppColors.textPrimary),
                         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                       ),
                       onSelected: (val) {
@@ -198,12 +184,12 @@ class _ProximityMarketplaceScreenState extends State<ProximityMarketplaceScreen>
             // Results count
             Text(
               'Available Fresh Surplus Batches (${listings.length})',
-              style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w600),
+              style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w600, color: context.titleText),
             ),
             const SizedBox(height: 10),
 
             if (listings.isEmpty)
-              _buildEmptyMarketplace()
+              _buildEmptyMarketplace(context)
             else
               ...listings.map((item) => _buildSurplusCard(context, item, tr)),
 
@@ -372,15 +358,15 @@ class _ProximityMarketplaceScreenState extends State<ProximityMarketplaceScreen>
         margin: const EdgeInsets.only(bottom: 14),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.cardBg,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: item.isUrgent ? AppColors.riskCritical.withOpacity(0.3) : const Color(0xFFE2EBE2),
+            color: item.isUrgent ? AppColors.riskCritical.withOpacity(0.3) : context.cardBorder,
             width: item.isUrgent ? 1.5 : 1.0,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withOpacity(context.isDarkMode ? 0.2 : 0.04),
               blurRadius: 10,
               offset: const Offset(0, 3),
             ),
@@ -394,7 +380,7 @@ class _ProximityMarketplaceScreenState extends State<ProximityMarketplaceScreen>
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.primarySoft,
+                    color: context.softGreenBg,
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Text(item.cropEmoji, style: const TextStyle(fontSize: 28)),
@@ -411,7 +397,7 @@ class _ProximityMarketplaceScreenState extends State<ProximityMarketplaceScreen>
                             style: GoogleFonts.poppins(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.textPrimary,
+                              color: context.titleText,
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -435,7 +421,7 @@ class _ProximityMarketplaceScreenState extends State<ProximityMarketplaceScreen>
                       ),
                       Text(
                         'Farmer: ${item.farmerName} • ${item.farmLocation}',
-                        style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary),
+                        style: GoogleFonts.inter(fontSize: 12, color: context.subText),
                       ),
                     ],
                   ),
@@ -469,7 +455,7 @@ class _ProximityMarketplaceScreenState extends State<ProximityMarketplaceScreen>
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFFF7FAF7),
+                color: context.isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFF7FAF7),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -478,10 +464,10 @@ class _ProximityMarketplaceScreenState extends State<ProximityMarketplaceScreen>
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Available Volume', style: GoogleFonts.inter(fontSize: 11, color: AppColors.textMuted)),
+                      Text('Available Volume', style: GoogleFonts.inter(fontSize: 11, color: context.subText)),
                       Text(
                         '${item.availableQuantityKg.toStringAsFixed(0)} Kg',
-                        style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                        style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.bold, color: context.titleText),
                       ),
                     ],
                   ),
@@ -495,7 +481,7 @@ class _ProximityMarketplaceScreenState extends State<ProximityMarketplaceScreen>
                             style: GoogleFonts.inter(
                               fontSize: 12,
                               decoration: TextDecoration.lineThrough,
-                              color: AppColors.textMuted,
+                              color: context.subText,
                             ),
                           ),
                           const SizedBox(width: 6),
@@ -504,14 +490,18 @@ class _ProximityMarketplaceScreenState extends State<ProximityMarketplaceScreen>
                             style: GoogleFonts.poppins(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.primaryDark,
+                              color: context.isDarkMode ? const Color(0xFF86EFAC) : AppColors.primaryDark,
                             ),
                           ),
                         ],
                       ),
                       Text(
                         'Save ${item.discountPercentage.toStringAsFixed(0)}% vs Market Price',
-                        style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.primary),
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: context.isDarkMode ? const Color(0xFF4ADE80) : AppColors.primary,
+                        ),
                       ),
                     ],
                   ),
@@ -528,7 +518,7 @@ class _ProximityMarketplaceScreenState extends State<ProximityMarketplaceScreen>
                     item.notes,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.inter(fontSize: 12, color: AppColors.textMuted, fontStyle: FontStyle.italic),
+                    style: GoogleFonts.inter(fontSize: 12, color: context.subText, fontStyle: FontStyle.italic),
                   ),
                 ),
                 Text(
@@ -543,12 +533,13 @@ class _ProximityMarketplaceScreenState extends State<ProximityMarketplaceScreen>
     );
   }
 
-  Widget _buildEmptyMarketplace() {
+  Widget _buildEmptyMarketplace(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.cardBorder),
       ),
       child: Center(
         child: Column(
@@ -557,13 +548,13 @@ class _ProximityMarketplaceScreenState extends State<ProximityMarketplaceScreen>
             const SizedBox(height: 8),
             Text(
               'No surplus crops within current radius',
-              style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold),
+              style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold, color: context.titleText),
             ),
             const SizedBox(height: 4),
             Text(
               'Try expanding your radius slider above to 7 km or 10 km.',
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary),
+              style: GoogleFonts.inter(fontSize: 13, color: context.subText),
             ),
           ],
         ),

@@ -2,55 +2,70 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/app_state_provider.dart';
 import '../../../core/localization/app_translations.dart';
 import 'farm_land_map_screen.dart';
-import '../widgets/presentation_demo_panel.dart';
 import '../../auth/login_screen.dart';
 
 class FarmerProfileScreen extends StatelessWidget {
   const FarmerProfileScreen({super.key});
 
   void _showLanguageDialog(BuildContext context, AppStateProvider appState) {
+    final isDark = context.isDarkMode;
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
+        backgroundColor: context.cardBg,
         title: Text(
           'Select Language / භාෂාව / மொழி',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16),
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            color: context.titleText,
+          ),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
               leading: const Text('🇬🇧', style: TextStyle(fontSize: 22)),
-              title: const Text('English'),
+              title: Text(
+                'English',
+                style: GoogleFonts.inter(color: context.titleText),
+              ),
               trailing: appState.currentLanguage == AppLanguage.english
-                  ? const Icon(Icons.check_circle, color: AppColors.primary)
+                  ? Icon(Icons.check_circle, color: isDark ? const Color(0xFF4ADE80) : AppColors.primary)
                   : null,
               onTap: () {
                 appState.setLanguage(AppLanguage.english);
                 Navigator.pop(context);
               },
             ),
-            const Divider(),
+            Divider(color: context.dividerColor),
             ListTile(
               leading: const Text('🇱🇰', style: TextStyle(fontSize: 22)),
-              title: const Text('සිංහල (Sinhala)'),
+              title: Text(
+                'සිංහල (Sinhala)',
+                style: GoogleFonts.inter(color: context.titleText),
+              ),
               trailing: appState.currentLanguage == AppLanguage.sinhala
-                  ? const Icon(Icons.check_circle, color: AppColors.primary)
+                  ? Icon(Icons.check_circle, color: isDark ? const Color(0xFF4ADE80) : AppColors.primary)
                   : null,
               onTap: () {
                 appState.setLanguage(AppLanguage.sinhala);
                 Navigator.pop(context);
               },
             ),
-            const Divider(),
+            Divider(color: context.dividerColor),
             ListTile(
               leading: const Text('🇱🇰', style: TextStyle(fontSize: 22)),
-              title: const Text('தமிழ் (Tamil)'),
+              title: Text(
+                'தமிழ் (Tamil)',
+                style: GoogleFonts.inter(color: context.titleText),
+              ),
               trailing: appState.currentLanguage == AppLanguage.tamil
-                  ? const Icon(Icons.check_circle, color: AppColors.primary)
+                  ? Icon(Icons.check_circle, color: isDark ? const Color(0xFF4ADE80) : AppColors.primary)
                   : null,
               onTap: () {
                 appState.setLanguage(AppLanguage.tamil);
@@ -66,42 +81,29 @@ class FarmerProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppStateProvider>(context);
+    final isDark = context.isDarkMode;
     final lang = appState.currentLanguage;
     final farmer = appState.farmerProfile;
 
     String tr(String key) => AppTranslations.tr(lang, key);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.scaffoldBg,
       appBar: AppBar(
         title: Text(
-          'Farmer Profile',
+          tr('profile_title'),
           style: GoogleFonts.poppins(
             fontWeight: FontWeight.bold,
             fontSize: 18,
-            color: AppColors.dashHeaderTitle,
+            color: context.titleText,
           ),
         ),
         elevation: 0,
         backgroundColor: Colors.transparent,
         actions: [
           IconButton(
-            tooltip: 'University Demo Showcase',
-            icon: const Icon(Icons.auto_awesome_rounded, color: AppColors.goldAccent),
-            onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                ),
-                builder: (_) => const PresentationDemoPanel(),
-              );
-            },
-          ),
-          IconButton(
-            tooltip: 'Log Out',
-            icon: const Icon(Icons.logout_rounded, color: AppColors.primary),
+            tooltip: tr('sign_out'),
+            icon: Icon(Icons.logout_rounded, color: isDark ? const Color(0xFFFCA5A5) : AppColors.primary),
             onPressed: () {
               appState.logout();
               Navigator.pushAndRemoveUntil(
@@ -121,11 +123,12 @@ class FarmerProfileScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardBg,
                 borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: context.cardBorder),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
+                    color: isDark ? Colors.black.withOpacity(0.2) : Colors.black.withOpacity(0.04),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -140,7 +143,10 @@ class FarmerProfileScreen extends StatelessWidget {
                         height: 80,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          border: Border.all(color: AppColors.asvannaButtonGreen, width: 2.5),
+                          border: Border.all(
+                            color: isDark ? const Color(0xFF4ADE80) : AppColors.asvannaButtonGreen,
+                            width: 2.5,
+                          ),
                           image: const DecorationImage(
                             image: NetworkImage(
                               'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80',
@@ -169,7 +175,7 @@ class FarmerProfileScreen extends StatelessWidget {
                     style: GoogleFonts.poppins(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.dashHeaderTitle,
+                      color: context.titleText,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -177,27 +183,35 @@ class FarmerProfileScreen extends StatelessWidget {
                     '${farmer.gndDivision}, ${farmer.agrarianDivision}',
                     style: GoogleFonts.inter(
                       fontSize: 13,
-                      color: AppColors.dashHeaderDate,
+                      color: context.subText,
                     ),
                   ),
                   const SizedBox(height: 12),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: AppColors.primarySoft,
+                      color: context.softGreenBg,
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.verified_rounded, size: 15, color: AppColors.asvannaButtonGreen),
+                        Icon(
+                          Icons.verified_rounded,
+                          size: 15,
+                          color: isDark ? const Color(0xFF86EFAC) : AppColors.asvannaButtonGreen,
+                        ),
                         const SizedBox(width: 6),
-                        Text(
-                          'Verified Agrarian Registered Farmer',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.asvannaButtonGreen,
+                        Flexible(
+                          child: Text(
+                            tr('verified_farmer'),
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? const Color(0xFF86EFAC) : AppColors.asvannaButtonGreen,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
@@ -212,11 +226,12 @@ class FarmerProfileScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardBg,
                 borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: context.cardBorder),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
+                    color: isDark ? Colors.black.withOpacity(0.2) : Colors.black.withOpacity(0.04),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -229,11 +244,11 @@ class FarmerProfileScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Farmland Holdings',
+                        tr('farmland_holdings'),
                         style: GoogleFonts.poppins(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.dashHeaderTitle,
+                          color: context.titleText,
                         ),
                       ),
                       TextButton(
@@ -244,10 +259,10 @@ class FarmerProfileScreen extends StatelessWidget {
                           );
                         },
                         child: Text(
-                          'View Map',
+                          tr('view_map'),
                           style: GoogleFonts.inter(
                             fontWeight: FontWeight.w600,
-                            color: AppColors.asvannaButtonGreen,
+                            color: isDark ? const Color(0xFF4ADE80) : AppColors.asvannaButtonGreen,
                           ),
                         ),
                       ),
@@ -258,24 +273,27 @@ class FarmerProfileScreen extends StatelessWidget {
                     children: [
                       Expanded(
                         child: _buildHoldingItem(
-                          'Total Land',
-                          '${farmer.totalLandAcres.toStringAsFixed(1)} Ac',
+                          context,
+                          tr('total_land'),
+                          '${farmer.totalLandAcres.toStringAsFixed(1)} ${tr('acre_unit')}',
                           Icons.landscape_outlined,
-                          AppColors.asvannaButtonGreen,
+                          isDark ? const Color(0xFF4ADE80) : AppColors.asvannaButtonGreen,
                         ),
                       ),
                       Expanded(
                         child: _buildHoldingItem(
-                          'Cultivated',
-                          '${farmer.usedAcres.toStringAsFixed(1)} Ac',
+                          context,
+                          tr('cultivated_label'),
+                          '${farmer.usedAcres.toStringAsFixed(1)} ${tr('acre_unit')}',
                           Icons.eco_outlined,
                           AppColors.dashSafeGreen,
                         ),
                       ),
                       Expanded(
                         child: _buildHoldingItem(
-                          'Available',
-                          '${farmer.availableAcres.toStringAsFixed(1)} Ac',
+                          context,
+                          tr('available_land'),
+                          '${farmer.availableAcres.toStringAsFixed(1)} ${tr('acre_unit')}',
                           Icons.check_circle_outline,
                           AppColors.goldAccent,
                         ),
@@ -290,11 +308,12 @@ class FarmerProfileScreen extends StatelessWidget {
             // Settings & Tools List
             Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardBg,
                 borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: context.cardBorder),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
+                    color: isDark ? Colors.black.withOpacity(0.2) : Colors.black.withOpacity(0.04),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -306,14 +325,22 @@ class FarmerProfileScreen extends StatelessWidget {
                     leading: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: AppColors.primarySoft,
+                        color: context.softGreenBg,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(Icons.language_rounded, color: AppColors.asvannaButtonGreen, size: 20),
+                      child: Icon(
+                        Icons.language_rounded,
+                        color: isDark ? const Color(0xFF86EFAC) : AppColors.asvannaButtonGreen,
+                        size: 20,
+                      ),
                     ),
                     title: Text(
-                      'App Language',
-                      style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14),
+                      tr('app_language'),
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        color: context.titleText,
+                      ),
                     ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -326,53 +353,59 @@ class FarmerProfileScreen extends StatelessWidget {
                                   : 'தமிழ்',
                           style: GoogleFonts.inter(
                             fontSize: 13,
-                            color: AppColors.dashHeaderDate,
+                            color: context.subText,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        const Icon(Icons.chevron_right_rounded, color: Colors.grey),
+                        Icon(Icons.chevron_right_rounded, color: context.subText),
                       ],
                     ),
                     onTap: () => _showLanguageDialog(context, appState),
                   ),
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: Container(
+                  Divider(height: 1, color: context.dividerColor),
+                  SwitchListTile(
+                    secondary: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFEF3C7),
+                        color: isDark ? const Color(0xFF334155) : AppColors.primarySoft,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(Icons.auto_awesome_rounded, color: Color(0xFFD97706), size: 20),
+                      child: Icon(
+                        isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                        color: isDark ? const Color(0xFFFBBF24) : AppColors.asvannaButtonGreen,
+                        size: 20,
+                      ),
                     ),
                     title: Text(
-                      'Presentation Demo Panel',
-                      style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14),
+                      'Dark Mode / අඳුරු තේමාව',
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        color: context.titleText,
+                      ),
                     ),
-                    trailing: const Icon(Icons.chevron_right_rounded, color: Colors.grey),
-                    onTap: () {
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                        ),
-                        builder: (_) => const PresentationDemoPanel(),
-                      );
+                    subtitle: Text(
+                      isDark ? 'Dark theme active' : 'Light theme active',
+                      style: GoogleFonts.inter(fontSize: 12, color: context.subText),
+                    ),
+                    value: isDark,
+                    activeThumbColor: const Color(0xFF4ADE80),
+                    onChanged: (val) {
+                      appState.setDarkMode(val);
                     },
                   ),
-                  const Divider(height: 1),
+                  Divider(height: 1, color: context.dividerColor),
                   ListTile(
                     leading: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: AppColors.dashMetricAlertBg,
+                        color: isDark ? const Color(0xFF450A0A) : AppColors.dashMetricAlertBg,
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Icon(Icons.logout_rounded, color: AppColors.dashAlertRed, size: 20),
                     ),
                     title: Text(
-                      'Sign Out',
+                      tr('sign_out'),
                       style: GoogleFonts.inter(
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
@@ -398,7 +431,7 @@ class FarmerProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHoldingItem(String label, String value, IconData icon, Color iconColor) {
+  Widget _buildHoldingItem(BuildContext context, String label, String value, IconData icon, Color iconColor) {
     return Column(
       children: [
         Icon(icon, color: iconColor, size: 20),
@@ -406,18 +439,22 @@ class FarmerProfileScreen extends StatelessWidget {
         Text(
           value,
           style: GoogleFonts.poppins(
-            fontSize: 16,
+            fontSize: 15,
             fontWeight: FontWeight.bold,
-            color: AppColors.dashHeaderTitle,
+            color: context.titleText,
           ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: 2),
         Text(
           label,
           style: GoogleFonts.inter(
             fontSize: 11,
-            color: AppColors.dashHeaderDate,
+            color: context.subText,
           ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
       ],
     );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/models/crop_model.dart';
 import '../../../core/models/risk_analysis_model.dart';
 import '../../../core/providers/app_state_provider.dart';
@@ -41,9 +42,9 @@ class _CropComparisonModalState extends State<CropComparisonModal> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       height: MediaQuery.of(context).size.height * 0.85,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: context.cardBg,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -51,25 +52,30 @@ class _CropComparisonModalState extends State<CropComparisonModal> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  const Text('⚖️', style: TextStyle(fontSize: 22)),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Side-by-Side Crop Comparison',
-                    style: GoogleFonts.poppins(fontSize: 17, fontWeight: FontWeight.bold),
-                  ),
-                ],
+              Expanded(
+                child: Row(
+                  children: [
+                    const Text('⚖️', style: TextStyle(fontSize: 22)),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        'Side-by-Side Crop Comparison',
+                        style: GoogleFonts.poppins(fontSize: 17, fontWeight: FontWeight.bold, color: context.titleText),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
               ),
               IconButton(
-                icon: const Icon(Icons.close),
+                icon: Icon(Icons.close, color: context.titleText),
                 onPressed: () => Navigator.pop(context),
               ),
             ],
           ),
           Text(
             'Compare market saturation, cultivation cycle, and projected harvest return.',
-            style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary),
+            style: GoogleFonts.inter(fontSize: 12, color: context.subText),
           ),
           const SizedBox(height: 16),
 
@@ -81,18 +87,22 @@ class _CropComparisonModalState extends State<CropComparisonModal> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF4F6F4),
+                    color: context.isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFF4F6F4),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFDDE5DD)),
+                    border: Border.all(color: context.cardBorder),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<Crop>(
                       value: _cropA,
                       isExpanded: true,
+                      dropdownColor: context.cardBg,
                       items: appState.availableCrops.map((c) {
                         return DropdownMenuItem(
                           value: c,
-                          child: Text('${c.iconEmoji} ${c.name}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                          child: Text(
+                            '${c.iconEmoji} ${c.name}',
+                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: context.titleText),
+                          ),
                         );
                       }).toList(),
                       onChanged: (val) {
@@ -102,16 +112,16 @@ class _CropComparisonModalState extends State<CropComparisonModal> {
                   ),
                 ),
               ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 8.0),
-                child: Text('VS', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textMuted)),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Text('VS', style: TextStyle(fontWeight: FontWeight.bold, color: context.subText)),
               ),
               // Right Crop Selector
               Expanded(
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.primarySoft,
+                    color: context.softGreenBg,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: AppColors.primary.withOpacity(0.3)),
                   ),
@@ -119,10 +129,18 @@ class _CropComparisonModalState extends State<CropComparisonModal> {
                     child: DropdownButton<Crop>(
                       value: _cropB,
                       isExpanded: true,
+                      dropdownColor: context.cardBg,
                       items: appState.availableCrops.map((c) {
                         return DropdownMenuItem(
                           value: c,
-                          child: Text('${c.iconEmoji} ${c.name}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                          child: Text(
+                            '${c.iconEmoji} ${c.name}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: context.isDarkMode ? const Color(0xFF86EFAC) : AppColors.primaryDark,
+                            ),
+                          ),
                         );
                       }).toList(),
                       onChanged: (val) {
@@ -142,6 +160,7 @@ class _CropComparisonModalState extends State<CropComparisonModal> {
               child: Column(
                 children: [
                   _buildComparisonRow(
+                    context,
                     metric: 'Risk Level',
                     valA: riskA?.riskTitle ?? 'Unknown',
                     valB: riskB?.riskTitle ?? 'Unknown',
@@ -150,35 +169,41 @@ class _CropComparisonModalState extends State<CropComparisonModal> {
                     isHighlight: true,
                   ),
                   _buildComparisonRow(
+                    context,
                     metric: 'Regional Saturation',
                     valA: '${riskA?.saturationPercentage.toStringAsFixed(1)}%',
                     valB: '${riskB?.saturationPercentage.toStringAsFixed(1)}%',
-                    colorA: (riskA?.saturationPercentage ?? 0) > 100 ? AppColors.riskCritical : AppColors.primaryDark,
-                    colorB: (riskB?.saturationPercentage ?? 0) > 100 ? AppColors.riskCritical : AppColors.primaryDark,
+                    colorA: (riskA?.saturationPercentage ?? 0) > 100 ? AppColors.riskCritical : (context.isDarkMode ? const Color(0xFF86EFAC) : AppColors.primaryDark),
+                    colorB: (riskB?.saturationPercentage ?? 0) > 100 ? AppColors.riskCritical : (context.isDarkMode ? const Color(0xFF86EFAC) : AppColors.primaryDark),
                   ),
                   _buildComparisonRow(
+                    context,
                     metric: 'Maturity Duration',
                     valA: '${_cropA.maturityDays} Days',
                     valB: '${_cropB.maturityDays} Days',
                   ),
                   _buildComparisonRow(
+                    context,
                     metric: 'Avg Yield / Acre',
                     valA: '${_cropA.expectedYieldKgPerAcre.toStringAsFixed(0)} Kg',
                     valB: '${_cropB.expectedYieldKgPerAcre.toStringAsFixed(0)} Kg',
                   ),
                   _buildComparisonRow(
+                    context,
                     metric: 'Current Spot Price',
                     valA: 'Rs. ${_cropA.currentMarketPricePerKg.toStringAsFixed(0)} /kg',
                     valB: 'Rs. ${_cropB.currentMarketPricePerKg.toStringAsFixed(0)} /kg',
                   ),
                   _buildComparisonRow(
+                    context,
                     metric: 'Predicted Harvest Price',
                     valA: 'Rs. ${riskA?.predictedHarvestPriceLkr.toStringAsFixed(0)} /kg',
                     valB: 'Rs. ${riskB?.predictedHarvestPriceLkr.toStringAsFixed(0)} /kg',
-                    colorA: (riskA?.priceDropRiskPercentage ?? 0) > 0 ? AppColors.riskCritical : AppColors.primaryDark,
-                    colorB: (riskB?.priceDropRiskPercentage ?? 0) > 0 ? AppColors.riskCritical : AppColors.primaryDark,
+                    colorA: (riskA?.priceDropRiskPercentage ?? 0) > 0 ? AppColors.riskCritical : (context.isDarkMode ? const Color(0xFF86EFAC) : AppColors.primaryDark),
+                    colorB: (riskB?.priceDropRiskPercentage ?? 0) > 0 ? AppColors.riskCritical : (context.isDarkMode ? const Color(0xFF86EFAC) : AppColors.primaryDark),
                   ),
                   _buildComparisonRow(
+                    context,
                     metric: 'Est. Revenue / Acre',
                     valA: 'Rs. ${((_cropA.expectedYieldKgPerAcre * (riskA?.predictedHarvestPriceLkr ?? _cropA.currentMarketPricePerKg)) / 1000000).toStringAsFixed(2)}M',
                     valB: 'Rs. ${((_cropB.expectedYieldKgPerAcre * (riskB?.predictedHarvestPriceLkr ?? _cropB.currentMarketPricePerKg)) / 1000000).toStringAsFixed(2)}M',
@@ -190,7 +215,7 @@ class _CropComparisonModalState extends State<CropComparisonModal> {
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: AppColors.primarySoft,
+                      color: context.softGreenBg,
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(color: AppColors.primary.withOpacity(0.3)),
                     ),
@@ -199,18 +224,21 @@ class _CropComparisonModalState extends State<CropComparisonModal> {
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.psychology_outlined, color: AppColors.primary),
+                            Icon(Icons.psychology_outlined, color: context.isDarkMode ? const Color(0xFF4ADE80) : AppColors.primary),
                             const SizedBox(width: 8),
                             Text(
                               'Asvanna Agronomic Verdict:',
-                              style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: AppColors.primaryDark),
+                              style: GoogleFonts.inter(
+                                fontWeight: FontWeight.bold,
+                                color: context.isDarkMode ? const Color(0xFF86EFAC) : AppColors.primaryDark,
+                              ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 6),
                         Text(
                           _getVerdictText(_cropA, _cropB, riskA, riskB),
-                          style: GoogleFonts.inter(fontSize: 12, height: 1.4, color: AppColors.textPrimary),
+                          style: GoogleFonts.inter(fontSize: 12, height: 1.4, color: context.titleText),
                         ),
                       ],
                     ),
@@ -256,7 +284,8 @@ class _CropComparisonModalState extends State<CropComparisonModal> {
     return '${cropB.name} has a balanced regional supply (${(riskB?.saturationPercentage ?? 0).toStringAsFixed(0)}% saturation) and steady wholesale demand in Dambulla & Colombo Manning markets.';
   }
 
-  Widget _buildComparisonRow({
+  Widget _buildComparisonRow(
+    BuildContext context, {
     required String metric,
     required String valA,
     required String valB,
@@ -268,9 +297,11 @@ class _CropComparisonModalState extends State<CropComparisonModal> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: isHighlight ? const Color(0xFFF9FAF9) : Colors.white,
+        color: isHighlight
+            ? (context.isDarkMode ? const Color(0xFF132B20) : const Color(0xFFF9FAF9))
+            : (context.isDarkMode ? const Color(0xFF1E293B) : Colors.white),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFEEF3EE)),
+        border: Border.all(color: context.cardBorder),
       ),
       child: Row(
         children: [
@@ -281,7 +312,7 @@ class _CropComparisonModalState extends State<CropComparisonModal> {
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: isHighlight ? FontWeight.bold : FontWeight.w500,
-                color: AppColors.textSecondary,
+                color: context.subText,
               ),
             ),
           ),
@@ -293,7 +324,7 @@ class _CropComparisonModalState extends State<CropComparisonModal> {
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
-                color: colorA ?? AppColors.textPrimary,
+                color: colorA ?? context.titleText,
               ),
             ),
           ),
@@ -305,7 +336,7 @@ class _CropComparisonModalState extends State<CropComparisonModal> {
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
-                color: colorB ?? AppColors.textPrimary,
+                color: colorB ?? context.titleText,
               ),
             ),
           ),

@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/app_state_provider.dart';
 import '../../../core/localization/app_translations.dart';
 import 'planting_entry_screen.dart';
@@ -33,12 +34,12 @@ class FarmLandMapScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardBg,
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: const Color(0xFFE2EBE2)),
+                border: Border.all(color: context.cardBorder),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
+                    color: Colors.black.withOpacity(context.isDarkMode ? 0.2 : 0.03),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -59,11 +60,11 @@ class FarmLandMapScreen extends StatelessWidget {
                             children: [
                               Text(
                                 '${farmer.fullName}\'s Farm Plots',
-                                style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold),
+                                style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: context.titleText),
                               ),
                               Text(
                                 '${farmer.gndDivision}, ${farmer.agrarianDivision}',
-                                style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary),
+                                style: GoogleFonts.inter(fontSize: 12, color: context.subText),
                               ),
                             ],
                           ),
@@ -72,26 +73,30 @@ class FarmLandMapScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: AppColors.primarySoft,
+                          color: context.softGreenBg,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
                           '${farmer.totalLandAcres} Acres Total',
-                          style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryDark),
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: context.isDarkMode ? const Color(0xFF86EFAC) : AppColors.primaryDark,
+                          ),
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 14),
-                  const Divider(),
+                  Divider(color: context.cardBorder),
                   const SizedBox(height: 8),
 
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildSummaryItem('Active Plots', '${plantings.length}', Icons.eco_outlined, AppColors.primary),
-                      _buildSummaryItem('Cultivated', '${farmer.usedAcres.toStringAsFixed(1)} Ac', Icons.pie_chart_outline, AppColors.primaryDark),
-                      _buildSummaryItem('Free Sowing Land', '${farmer.availableAcres.toStringAsFixed(1)} Ac', Icons.add_circle_outline, AppColors.accent),
+                      _buildSummaryItem(context, 'Active Plots', '${plantings.length}', Icons.eco_outlined, context.isDarkMode ? const Color(0xFF4ADE80) : AppColors.primary),
+                      _buildSummaryItem(context, 'Cultivated', '${farmer.usedAcres.toStringAsFixed(1)} Ac', Icons.pie_chart_outline, context.isDarkMode ? const Color(0xFF86EFAC) : AppColors.primaryDark),
+                      _buildSummaryItem(context, 'Free Sowing Land', '${farmer.availableAcres.toStringAsFixed(1)} Ac', Icons.add_circle_outline, AppColors.accent),
                     ],
                   ),
                 ],
@@ -102,12 +107,12 @@ class FarmLandMapScreen extends StatelessWidget {
             // Visual Terraces & Plots Interactive Layout
             Text(
               'Interactive Plot & Terrace Layout',
-              style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold),
+              style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: context.titleText),
             ),
             const SizedBox(height: 4),
             Text(
               'Tap on any active plot to inspect crop care schedules or tap free plots to plan sowing.',
-              style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary),
+              style: GoogleFonts.inter(fontSize: 12, color: context.subText),
             ),
             const SizedBox(height: 14),
 
@@ -160,10 +165,10 @@ class FarmLandMapScreen extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF7FAF7),
+                    color: context.isDarkMode ? const Color(0xFF132B20) : const Color(0xFFF7FAF7),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: AppColors.primary,
+                      color: context.isDarkMode ? const Color(0xFF059669) : AppColors.primary,
                       width: 1.5,
                       style: BorderStyle.solid,
                     ),
@@ -173,10 +178,10 @@ class FarmLandMapScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.12),
+                          color: (context.isDarkMode ? const Color(0xFF4ADE80) : AppColors.primary).withOpacity(0.12),
                           borderRadius: BorderRadius.circular(14),
                         ),
-                        child: const Icon(Icons.add_circle_outline_rounded, color: AppColors.primary, size: 28),
+                        child: Icon(Icons.add_circle_outline_rounded, color: context.isDarkMode ? const Color(0xFF4ADE80) : AppColors.primary, size: 28),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
@@ -188,17 +193,21 @@ class FarmLandMapScreen extends StatelessWidget {
                               children: [
                                 Text(
                                   'Plot C — Upper Ridge (Free Land)',
-                                  style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold),
+                                  style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold, color: context.titleText),
                                 ),
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: AppColors.primarySoft,
+                                    color: context.softGreenBg,
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
                                     '${farmer.availableAcres.toStringAsFixed(1)} Acres Ready',
-                                    style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.primaryDark),
+                                    style: GoogleFonts.inter(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: context.isDarkMode ? const Color(0xFF86EFAC) : AppColors.primaryDark,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -206,7 +215,7 @@ class FarmLandMapScreen extends StatelessWidget {
                             const SizedBox(height: 4),
                             Text(
                               'Prepared soil, fallow rest complete. Tap to check pre-planting risk & sow.',
-                              style: GoogleFonts.inter(fontSize: 12, color: AppColors.primary),
+                              style: GoogleFonts.inter(fontSize: 12, color: context.isDarkMode ? const Color(0xFF86EFAC) : AppColors.primary),
                             ),
                           ],
                         ),
@@ -223,13 +232,13 @@ class FarmLandMapScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSummaryItem(String label, String value, IconData icon, Color color) {
+  Widget _buildSummaryItem(BuildContext context, String label, String value, IconData icon, Color color) {
     return Column(
       children: [
         Icon(icon, color: color, size: 20),
         const SizedBox(height: 4),
-        Text(value, style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-        Text(label, style: GoogleFonts.inter(fontSize: 11, color: AppColors.textMuted)),
+        Text(value, style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold, color: context.titleText)),
+        Text(label, style: GoogleFonts.inter(fontSize: 11, color: context.subText)),
       ],
     );
   }
@@ -261,12 +270,12 @@ class FarmLandMapScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.cardBg,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: borderColor.withOpacity(0.4), width: 1.2),
+          border: Border.all(color: context.isDarkMode ? borderColor.withOpacity(0.6) : borderColor.withOpacity(0.4), width: 1.2),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withOpacity(context.isDarkMode ? 0.2 : 0.03),
               blurRadius: 8,
               offset: const Offset(0, 3),
             ),
@@ -280,7 +289,7 @@ class FarmLandMapScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: color,
+                    color: context.isDarkMode ? color.withOpacity(0.15) : color,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(cropEmoji, style: const TextStyle(fontSize: 26)),
@@ -295,17 +304,21 @@ class FarmLandMapScreen extends StatelessWidget {
                         children: [
                           Text(
                             plotName,
-                            style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold),
+                            style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: context.titleText),
                           ),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
-                              color: AppColors.primarySoft,
+                              color: context.softGreenBg,
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
                               '$allocatedAcres Acres',
-                              style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.primaryDark),
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: context.isDarkMode ? const Color(0xFF86EFAC) : AppColors.primaryDark,
+                              ),
                             ),
                           ),
                         ],
@@ -313,7 +326,7 @@ class FarmLandMapScreen extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         '$cropName • $status',
-                        style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary),
+                        style: GoogleFonts.inter(fontSize: 12, color: context.subText),
                       ),
                     ],
                   ),
@@ -326,7 +339,7 @@ class FarmLandMapScreen extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: progress,
                 minHeight: 6,
-                backgroundColor: const Color(0xFFE8EFE8),
+                backgroundColor: context.isDarkMode ? const Color(0xFF334155) : const Color(0xFFE8EFE8),
                 valueColor: AlwaysStoppedAnimation<Color>(borderColor),
               ),
             ),
@@ -336,11 +349,15 @@ class FarmLandMapScreen extends StatelessWidget {
               children: [
                 Text(
                   '${(progress * 100).toStringAsFixed(0)}% Growth Progress',
-                  style: GoogleFonts.inter(fontSize: 11, color: AppColors.textMuted),
+                  style: GoogleFonts.inter(fontSize: 11, color: context.subText),
                 ),
                 Text(
                   '$daysLeft Days to Harvest →',
-                  style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.primary),
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: context.isDarkMode ? const Color(0xFF4ADE80) : AppColors.primary,
+                  ),
                 ),
               ],
             ),

@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/providers/app_state_provider.dart';
+import '../../core/localization/app_translations.dart';
 import 'screens/farmer_dashboard_screen.dart';
 import 'screens/pre_planting_risk_screen.dart';
 import 'screens/price_trends_screen.dart';
@@ -46,21 +50,29 @@ class _FarmerMainNavState extends State<FarmerMainNav> {
 
   @override
   Widget build(BuildContext context) {
+    final appState = Provider.of<AppStateProvider>(context);
+    final isDark = context.isDarkMode;
+    final lang = appState.currentLanguage;
+    String tr(String key) => AppTranslations.tr(lang, key);
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.scaffoldBg,
       body: IndexedStack(
         index: _currentIndex,
         children: _screens,
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.navBarBg,
           border: Border(
-            top: BorderSide(color: Colors.grey.withOpacity(0.12), width: 1),
+            top: BorderSide(
+              color: isDark ? const Color(0xFF334155) : Colors.grey.withOpacity(0.12),
+              width: 1,
+            ),
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.04),
               blurRadius: 12,
               offset: const Offset(0, -3),
             ),
@@ -78,32 +90,36 @@ class _FarmerMainNavState extends State<FarmerMainNav> {
                   children: [
                     _buildNavItem(
                       index: 0,
-                      label: 'Home',
+                      label: tr('nav_home'),
                       icon: Icons.home_outlined,
                       activeIcon: Icons.home_rounded,
                       isActive: _currentIndex == 0,
+                      isDark: isDark,
                     ),
                     _buildNavItem(
                       index: 1,
-                      label: 'Search',
+                      label: tr('nav_search'),
                       icon: Icons.search_rounded,
                       activeIcon: Icons.search_rounded,
                       isActive: _currentIndex == 1,
+                      isDark: isDark,
                     ),
                     _buildCenterAddButton(),
                     _buildNavItem(
                       index: 2,
-                      label: 'Market',
+                      label: tr('nav_market'),
                       icon: Icons.storefront_outlined,
                       activeIcon: Icons.storefront_rounded,
                       isActive: _currentIndex == 2,
+                      isDark: isDark,
                     ),
                     _buildNavItem(
                       index: 3,
-                      label: 'Profile',
+                      label: tr('nav_profile'),
                       icon: Icons.person_outline_rounded,
                       activeIcon: Icons.person_rounded,
                       isActive: _currentIndex == 3,
+                      isDark: isDark,
                     ),
                   ],
                 ),
@@ -116,7 +132,7 @@ class _FarmerMainNavState extends State<FarmerMainNav> {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 6),
                   decoration: BoxDecoration(
-                    color: Colors.black,
+                    color: isDark ? const Color(0xFF334155) : Colors.black26,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -134,9 +150,10 @@ class _FarmerMainNavState extends State<FarmerMainNav> {
     required IconData icon,
     required IconData activeIcon,
     required bool isActive,
+    required bool isDark,
   }) {
-    final activeColor = AppColors.asvannaButtonGreen;
-    final inactiveColor = AppColors.dashHeaderDate;
+    final activeColor = isDark ? const Color(0xFF4ADE80) : AppColors.asvannaButtonGreen;
+    final inactiveColor = isDark ? const Color(0xFF94A3B8) : AppColors.dashHeaderDate;
 
     return InkWell(
       onTap: () => _onItemTapped(index),

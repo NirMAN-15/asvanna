@@ -30,7 +30,7 @@ class RiskEngineService {
          COUNT(*) as plot_count
        FROM planting_records
        WHERE crop_id = $1 AND district = $2 AND status IN ('PLANTED', 'GROWING')`,
-      [cropId, district]
+      [crop.id, district]
     );
 
     const plantingRow = (plantingAgg && plantingAgg.rows && plantingAgg.rows[0]) ? plantingAgg.rows[0] : {};
@@ -39,7 +39,7 @@ class RiskEngineService {
     const activePlotsCount = parseInt(plantingRow.plot_count, 10) || 0;
 
     // Retrieve Demand Benchmark via CropixService
-    const demandBenchmark = await CropixService.getDemandBenchmark(cropId, district, currentMonth, currentYear);
+    const demandBenchmark = await CropixService.getDemandBenchmark(crop.id, district, currentMonth, currentYear);
     const targetDemandKg = parseFloat(demandBenchmark.regional_quota_kg) || (crop.avg_yield_per_acre_kg * 12);
 
     // Calculate overplanting ratio
@@ -65,7 +65,7 @@ class RiskEngineService {
       `SELECT * FROM crop_seasons
        WHERE crop_id = $1
        ORDER BY suitability_score DESC`,
-      [cropId]
+      [crop.id]
     );
 
     let seasonalRiskScore = 30; // Default moderate
@@ -82,7 +82,7 @@ class RiskEngineService {
     }
 
     // 5. FACTOR 4: Historical Price Risk (15% weight)
-    const priceAnalysis = await PriceService.getCropPriceHistory(cropId, 60);
+    const priceAnalysis = await PriceService.getCropPriceHistory(crop.id, 60);
     let priceRiskScore = 20; // Default
     if (priceAnalysis.metrics && priceAnalysis.metrics.volatilityPercentage) {
       const vol = priceAnalysis.metrics.volatilityPercentage;

@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/models/crop_model.dart';
 import '../../../core/providers/app_state_provider.dart';
 import '../../../core/localization/app_translations.dart';
@@ -24,22 +25,16 @@ class PlantingEntryScreen extends StatefulWidget {
 class _PlantingEntryScreenState extends State<PlantingEntryScreen> {
   late int _selectedStage; // 0 = Log Planting, 1 = Post Surplus
 
-  // --- Stage 1: Log Planting Form State ---
-  final _plantingFormKey = GlobalKey<FormState>();
+  // --- Stage 1: Log Planting State ---
   late Crop _selectedPlantingCrop;
-  final _acresController = TextEditingController(text: '1.0');
+  double _allocatedAcres = 1.0;
   DateTime _plantingDate = DateTime.now();
   late DateTime _expectedHarvestDate;
 
-  // --- Stage 2: Post Surplus Form State ---
-  final _surplusFormKey = GlobalKey<FormState>();
+  // --- Stage 2: Post Surplus State ---
   late Crop _selectedSurplusCrop;
-  final _surplusQuantityController = TextEditingController(text: '350');
-  final _surplusPriceController = TextEditingController(text: '140');
-  final _surplusNotesController = TextEditingController(
-    text: 'Fresh harvest, washed and graded in 25kg bags.',
-  );
-  bool _isUrgentSurplus = true;
+  double _surplusQuantityKg = 350.0;
+  late double _surplusPricePerKg;
 
   @override
   void initState() {
@@ -51,24 +46,23 @@ class _PlantingEntryScreenState extends State<PlantingEntryScreen> {
     _expectedHarvestDate = _plantingDate.add(Duration(days: _selectedPlantingCrop.maturityDays));
 
     _selectedSurplusCrop = widget.preSelectedCrop ?? appState.availableCrops.first;
-    _surplusPriceController.text =
-        (_selectedSurplusCrop.currentMarketPricePerKg * 0.75).toStringAsFixed(0);
-  }
-
-  @override
-  void dispose() {
-    _acresController.dispose();
-    _surplusQuantityController.dispose();
-    _surplusPriceController.dispose();
-    _surplusNotesController.dispose();
-    super.dispose();
+    _surplusPricePerKg = (_selectedSurplusCrop.currentMarketPricePerKg * 0.75).roundToDouble();
   }
 
   // --- Stage 1 Handlers ---
-  void _onPlantingCropChanged(Crop newCrop) {
+  void _onPlantingCropSelected(Crop crop) {
     setState(() {
-      _selectedPlantingCrop = newCrop;
-      _expectedHarvestDate = _plantingDate.add(Duration(days: newCrop.maturityDays));
+      _selectedPlantingCrop = crop;
+      _expectedHarvestDate = _plantingDate.add(Duration(days: crop.maturityDays));
+    });
+  }
+
+  void _adjustAcres(double delta, double maxAvailable) {
+    setState(() {
+      double next = _allocatedAcres + delta;
+      if (next < 0.25) next = 0.25;
+      if (next > maxAvailable) next = maxAvailable;
+      _allocatedAcres = double.parse(next.toStringAsFixed(2));
     });
   }
 
@@ -87,91 +81,89 @@ class _PlantingEntryScreenState extends State<PlantingEntryScreen> {
     }
   }
 
-  void _selectHarvestDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _expectedHarvestDate,
-      firstDate: _plantingDate.add(const Duration(days: 15)),
-      lastDate: _plantingDate.add(const Duration(days: 200)),
-    );
-    if (picked != null) {
-      setState(() {
-        _expectedHarvestDate = picked;
-      });
-    }
-  }
-
-  void _submitPlanting() {
-    if (_plantingFormKey.currentState!.validate()) {
-      final acres = double.tryParse(_acresController.text) ?? 1.0;
-      final appState = Provider.of<AppStateProvider>(context, listen: false);
-
-      final success = appState.addPlantingEntry(
-        crop: _selectedPlantingCrop,
-        allocatedAcres: acres,
-        plantingDate: _plantingDate,
-        expectedHarvestDate: _expectedHarvestDate,
-      );
-
-      if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '${_selectedPlantingCrop.name} (${_selectedPlantingCrop.sinhalaName}) planting logged successfully! Shared with Agrarian Services.',
-            ),
-            backgroundColor: AppColors.primary,
-          ),
-        );
-        Navigator.pop(context);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Cannot allocate $acres Acres. You only have ${appState.farmerProfile.availableAcres.toStringAsFixed(1)} Acres free.',
-            ),
-            backgroundColor: AppColors.riskCritical,
-          ),
-        );
-      }
-    }
-  }
-
-  // --- Stage 2 Handlers ---
-  void _onSurplusCropChanged(Crop newCrop) {
-    setState(() {
-      _selectedSurplusCrop = newCrop;
-      _surplusPriceController.text =
-          (newCrop.currentMarketPricePerKg * 0.75).toStringAsFixed(0);
-    });
-  }
-
-  void _submitSurplus() {
-    if (_surplusFormKey.currentState!.validate()) {
-      final qty = double.tryParse(_surplusQuantityController.text) ?? 100.0;
-      final price =
-          double.tryParse(_surplusPriceController.text) ?? _selectedSurplusCrop.currentMarketPricePerKg;
-      final appState = Provider.of<AppStateProvider>(context, listen: false);
-
-      appState.addSurplusListing(
-        cropName: _selectedSurplusCrop.name,
-        cropEmoji: _selectedSurplusCrop.iconEmoji,
-        quantityKg: qty,
-        askingPricePerKg: price,
-        regularPricePerKg: _selectedSurplusCrop.currentMarketPricePerKg,
-        isUrgent: _isUrgentSurplus,
-        notes: _surplusNotesController.text.trim(),
-      );
-
+  void _submitPlanting(AppStateProvider appState) {
+    final farmer = appState.farmerProfile;
+    final lang = appState.currentLanguage;
+    if (_allocatedAcres > farmer.availableAcres) {
+      final msg = lang == AppLanguage.english
+          ? 'Not enough land available. You only have ${farmer.availableAcres.toStringAsFixed(1)} acres free.'
+          : lang == AppLanguage.tamil
+              ? 'போதுமான நிலம் இல்லை. உங்களிடம் ${farmer.availableAcres.toStringAsFixed(1)} ஏக்கர் மட்டுமே உள்ளது.'
+              : 'ඉඩම ප්‍රමාණවත් නොවේ. ඔබට ඇත්තේ ${farmer.availableAcres.toStringAsFixed(1)} අක්කර පමණි.';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            '${_selectedSurplusCrop.name} surplus published! Local buyers within 5km are notified.',
-          ),
-          backgroundColor: AppColors.badgeHarvest,
+          content: Text(msg),
+          backgroundColor: AppColors.riskCritical,
+        ),
+      );
+      return;
+    }
+
+    final success = appState.addPlantingEntry(
+      crop: _selectedPlantingCrop,
+      allocatedAcres: _allocatedAcres,
+      plantingDate: _plantingDate,
+      expectedHarvestDate: _expectedHarvestDate,
+    );
+
+    if (success) {
+      final cropName = lang == AppLanguage.sinhala ? _selectedPlantingCrop.sinhalaName : _selectedPlantingCrop.name;
+      final successMsg = lang == AppLanguage.english
+          ? '$cropName planting entry logged successfully!'
+          : lang == AppLanguage.tamil
+              ? '$cropName பயிர்செய்கை வெற்றிகரமாக பதிவு செய்யப்பட்டது!'
+              : '$cropName වගාව සාර්ථකව සටහන් විය!';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(successMsg),
+          backgroundColor: AppColors.primary,
         ),
       );
       Navigator.pop(context);
     }
+  }
+
+  // --- Stage 2 Handlers ---
+  void _onSurplusCropSelected(Crop crop) {
+    setState(() {
+      _selectedSurplusCrop = crop;
+      _surplusPricePerKg = (crop.currentMarketPricePerKg * 0.75).roundToDouble();
+    });
+  }
+
+  void _adjustSurplusQty(double delta) {
+    setState(() {
+      double next = _surplusQuantityKg + delta;
+      if (next < 50) next = 50;
+      _surplusQuantityKg = next;
+    });
+  }
+
+  void _submitSurplus(AppStateProvider appState) {
+    final lang = appState.currentLanguage;
+    appState.addSurplusListing(
+      cropName: _selectedSurplusCrop.name,
+      cropEmoji: _selectedSurplusCrop.iconEmoji,
+      quantityKg: _surplusQuantityKg,
+      askingPricePerKg: _surplusPricePerKg,
+      regularPricePerKg: _selectedSurplusCrop.currentMarketPricePerKg,
+      isUrgent: true,
+      notes: 'Fresh harvest from Bandarawela.',
+    );
+
+    final cropName = lang == AppLanguage.sinhala ? _selectedSurplusCrop.sinhalaName : _selectedSurplusCrop.name;
+    final surplusMsg = lang == AppLanguage.english
+        ? '$cropName surplus published to 5km marketplace!'
+        : lang == AppLanguage.tamil
+            ? '$cropName உபரி 5 கி.மீ சந்தையில் வெளியிடப்பட்டது!'
+            : '$cropName අතිරික්තය කි.මී. 5 වෙළඳපොළට සාර්ථකව පළකරන ලදී!';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(surplusMsg),
+        backgroundColor: AppColors.badgeHarvest,
+      ),
+    );
+    Navigator.pop(context);
   }
 
   @override
@@ -180,48 +172,49 @@ class _PlantingEntryScreenState extends State<PlantingEntryScreen> {
     final lang = appState.currentLanguage;
     String tr(String key) => AppTranslations.tr(lang, key);
 
+    final isDark = context.isDarkMode;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.scaffoldBg,
       appBar: AppBar(
         title: Text(
-          _selectedStage == 0 ? tr('log_planting_title') : 'Post Surplus Produce',
+          _selectedStage == 0 ? tr('log_planting_tab') : tr('post_surplus_tab'),
           style: GoogleFonts.poppins(
-            fontSize: 18,
+            fontSize: 17,
             fontWeight: FontWeight.bold,
-            color: AppColors.dashHeaderTitle,
           ),
         ),
         elevation: 0,
-        backgroundColor: Colors.white,
       ),
       body: Column(
         children: [
-          // 2-Stage Segmented Toggle
+          // Segmented Tab Selector
           Container(
-            color: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            color: context.cardBg,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: const Color(0xFFEFF3EF),
+                color: isDark ? const Color(0xFF0F172A) : const Color(0xFFEFF3EF),
                 borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: context.cardBorder),
               ),
               child: Row(
                 children: [
                   Expanded(
                     child: _buildStageTab(
+                      context: context,
                       stageIndex: 0,
-                      label: 'Log New Planting',
-                      icon: Icons.eco_outlined,
-                      activeColor: AppColors.asvannaButtonGreen,
+                      label: '🌱 ${tr('log_planting_tab')}',
+                      activeColor: isDark ? AppColors.darkEmerald : AppColors.primary,
                       isSelected: _selectedStage == 0,
                     ),
                   ),
                   Expanded(
                     child: _buildStageTab(
+                      context: context,
                       stageIndex: 1,
-                      label: 'Post Surplus',
-                      icon: Icons.storefront_rounded,
+                      label: '🏪 ${tr('post_surplus_tab')}',
                       activeColor: AppColors.badgeHarvest,
                       isSelected: _selectedStage == 1,
                     ),
@@ -230,15 +223,15 @@ class _PlantingEntryScreenState extends State<PlantingEntryScreen> {
               ),
             ),
           ),
-          const Divider(height: 1, color: Color(0xFFE5EBE5)),
+          Divider(height: 1, color: context.cardBorder),
 
-          // Active Stage Content
+          // Stage Content
           Expanded(
             child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 250),
+              duration: const Duration(milliseconds: 200),
               child: _selectedStage == 0
-                  ? _buildLogPlantingStage(context, appState, tr)
-                  : _buildPostSurplusStage(context, appState),
+                  ? _buildUltraSimplePlantingStage(context, appState, tr, lang)
+                  : _buildUltraSimpleSurplusStage(context, appState, tr, lang),
             ),
           ),
         ],
@@ -247,12 +240,14 @@ class _PlantingEntryScreenState extends State<PlantingEntryScreen> {
   }
 
   Widget _buildStageTab({
+    required BuildContext context,
     required int stageIndex,
     required String label,
-    required IconData icon,
     required Color activeColor,
     required bool isSelected,
   }) {
+    final isDark = context.isDarkMode;
+
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -260,706 +255,592 @@ class _PlantingEntryScreenState extends State<PlantingEntryScreen> {
         });
       },
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Colors.transparent,
+          color: isSelected ? (isDark ? const Color(0xFF1E293B) : Colors.white) : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.06),
+                    color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
                 ]
               : [],
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 18,
-              color: isSelected ? activeColor : AppColors.dashHeaderDate,
+        child: Center(
+          child: Text(
+            label,
+            style: GoogleFonts.poppins(
+              fontSize: 13,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+              color: isSelected ? activeColor : context.subText,
             ),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                color: isSelected ? activeColor : AppColors.dashHeaderDate,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 
   // ==========================================
-  // STAGE 1: Log New Planting Entry
+  // ULTRA-SIMPLE STAGE 1: Log New Planting
   // ==========================================
-  Widget _buildLogPlantingStage(
+  Widget _buildUltraSimplePlantingStage(
     BuildContext context,
     AppStateProvider appState,
     String Function(String) tr,
+    AppLanguage lang,
   ) {
+    final isDark = context.isDarkMode;
     final farmer = appState.farmerProfile;
-    final risk = appState.getRiskForCrop(_selectedPlantingCrop.id);
-    final acres = double.tryParse(_acresController.text) ?? 1.0;
-    final projectedYield = acres * _selectedPlantingCrop.expectedYieldKgPerAcre;
-    final dateFormat = DateFormat('EEE, MMM dd, yyyy');
+    final projectedYield = _allocatedAcres * _selectedPlantingCrop.expectedYieldKgPerAcre;
+    final projectedRevenue = projectedYield * _selectedPlantingCrop.currentMarketPricePerKg;
+    final dateFormat = DateFormat('yyyy MMM dd');
+    final String currencyUnit = lang == AppLanguage.sinhala ? 'රු.' : (lang == AppLanguage.tamil ? 'ரூ.' : 'Rs.');
 
     return SingleChildScrollView(
-      key: const ValueKey('stage_planting'),
-      padding: const EdgeInsets.all(18.0),
-      child: Form(
-        key: _plantingFormKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Available Acreage Header Card
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF0FDF4),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFDCFCE7), width: 1.2),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    tr('available_free_land'),
-                    style: GoogleFonts.inter(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.dashHeaderTitle,
-                    ),
-                  ),
-                  Text(
-                    '${farmer.availableAcres.toStringAsFixed(1)} / ${farmer.totalLandAcres} Acres',
-                    style: GoogleFonts.inter(
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.asvannaButtonGreen,
-                    ),
-                  ),
-                ],
-              ),
+      key: const ValueKey('stage_simple_planting'),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Step 1: Select Crop
+          Text(
+            tr('step_select_crop'),
+            style: GoogleFonts.poppins(
+              fontSize: 14.5,
+              fontWeight: FontWeight.bold,
+              color: context.titleText,
             ),
-            const SizedBox(height: 18),
+          ),
+          const SizedBox(height: 10),
+          _buildCropCardGrid(
+            context: context,
+            crops: appState.availableCrops,
+            selectedCrop: _selectedPlantingCrop,
+            activeColor: isDark ? AppColors.darkEmerald : AppColors.primary,
+            onSelect: _onPlantingCropSelected,
+            lang: lang,
+          ),
+          const SizedBox(height: 18),
 
-            // Crop Selection Dropdown
-            Text(
-              tr('select_crop_to_plant'),
-              style: GoogleFonts.poppins(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: AppColors.dashHeaderTitle,
-              ),
-            ),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<Crop>(
-              value: _selectedPlantingCrop,
-              decoration: InputDecoration(
-                labelText: 'Upcountry Vegetable',
-                prefixIcon: const Icon(Icons.eco_outlined, color: AppColors.asvannaButtonGreen),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFFE5EBE5)),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFFE5EBE5)),
+          // Step 2: Land Area Stepper
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                tr('step_land_area'),
+                style: GoogleFonts.poppins(
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.bold,
+                  color: context.titleText,
                 ),
               ),
-              items: appState.availableCrops.map((c) {
-                return DropdownMenuItem(
-                  value: c,
-                  child: Row(
-                    children: [
-                      Text(c.iconEmoji, style: const TextStyle(fontSize: 18)),
-                      const SizedBox(width: 10),
-                      Text('${c.name} (${c.sinhalaName})'),
-                    ],
-                  ),
-                );
-              }).toList(),
-              onChanged: (val) {
-                if (val != null) _onPlantingCropChanged(val);
-              },
-            ),
-            const SizedBox(height: 14),
-
-            // Regional Risk Status Callout
-            if (risk != null) ...[
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: risk.riskLevel == CropRiskLevel.critical
-                      ? AppColors.riskCriticalBg
-                      : risk.riskLevel == CropRiskLevel.moderate
-                          ? AppColors.riskModerateBg
-                          : AppColors.riskSafeBg,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: risk.riskLevel == CropRiskLevel.critical
-                        ? AppColors.riskCritical.withOpacity(0.4)
-                        : risk.riskLevel == CropRiskLevel.moderate
-                            ? AppColors.dashCautionAmber.withOpacity(0.4)
-                            : AppColors.asvannaButtonGreen.withOpacity(0.3),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      risk.riskLevel == CropRiskLevel.critical
-                          ? Icons.warning_amber_rounded
-                          : risk.riskLevel == CropRiskLevel.moderate
-                              ? Icons.info_outline_rounded
-                              : Icons.check_circle_outline,
-                      color: risk.riskLevel == CropRiskLevel.critical
-                          ? AppColors.riskCritical
-                          : risk.riskLevel == CropRiskLevel.moderate
-                              ? AppColors.dashCautionText
-                              : AppColors.asvannaButtonGreen,
-                      size: 22,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        '${risk.riskTitle}: ${risk.saturationPercentage.toStringAsFixed(0)}% regional saturation in ${farmer.agrarianDivision}.',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: risk.riskLevel == CropRiskLevel.critical
-                              ? AppColors.riskCritical
-                              : risk.riskLevel == CropRiskLevel.moderate
-                                  ? AppColors.dashCautionText
-                                  : AppColors.asvannaButtonGreen,
-                        ),
-                      ),
-                    ),
-                  ],
+              Text(
+                '${tr('available_land')}: ${farmer.availableAcres.toStringAsFixed(1)} ${tr('acre_unit')}',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? AppColors.darkEmerald : AppColors.primaryDark,
                 ),
               ),
-              const SizedBox(height: 18),
             ],
+          ),
+          const SizedBox(height: 10),
+          _buildStepperBox(
+            context: context,
+            displayValue: '${_allocatedAcres.toStringAsFixed(2)} ${tr('acre_unit')}',
+            onMinus: () => _adjustAcres(-0.25, farmer.availableAcres),
+            onPlus: () => _adjustAcres(0.25, farmer.availableAcres),
+            presetChips: [
+              _buildPresetChip(context, '0.25 ${tr('acre_unit')}', () => setState(() => _allocatedAcres = 0.25)),
+              _buildPresetChip(context, '0.5 ${tr('acre_unit')}', () => setState(() => _allocatedAcres = 0.5)),
+              _buildPresetChip(context, '1.0 ${tr('acre_unit')}', () => setState(() => _allocatedAcres = 1.0)),
+              _buildPresetChip(context, '2.0 ${tr('acre_unit')}', () => setState(() => _allocatedAcres = 2.0 <= farmer.availableAcres ? 2.0 : farmer.availableAcres)),
+            ],
+          ),
+          const SizedBox(height: 18),
 
-            // Acreage Input
-            Text(
-              tr('allocated_land_area'),
-              style: GoogleFonts.poppins(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: AppColors.dashHeaderTitle,
-              ),
+          // Step 3: Planting Date
+          Text(
+            tr('step_planting_date'),
+            style: GoogleFonts.poppins(
+              fontSize: 14.5,
+              fontWeight: FontWeight.bold,
+              color: context.titleText,
             ),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _acresController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(
-                labelText: 'Cultivated Area (Acres)',
-                prefixIcon: const Icon(Icons.square_foot_outlined, color: AppColors.asvannaButtonGreen),
-                suffixText: 'Acres',
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFFE5EBE5)),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFFE5EBE5)),
-                ),
-              ),
-              onChanged: (v) => setState(() {}),
-              validator: (v) {
-                if (v == null || v.isEmpty) return 'Please enter allocated acreage';
-                final val = double.tryParse(v);
-                if (val == null || val <= 0) return 'Enter a valid number';
-                if (val > farmer.availableAcres) {
-                  return 'Exceeds available land (${farmer.availableAcres.toStringAsFixed(1)} Acres)';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 18),
-
-            // Cultivation Schedule (Sowing & Expected Harvest Date)
-            Text(
-              tr('cultivation_schedule'),
-              style: GoogleFonts.poppins(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: AppColors.dashHeaderTitle,
-              ),
-            ),
-            const SizedBox(height: 8),
-
-            // Sowing Date
-            InkWell(
-              onTap: _selectPlantingDate,
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE5EBE5)),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.calendar_today_outlined, color: AppColors.asvannaButtonGreen, size: 20),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Sowing / Planting Date',
-                          style: GoogleFonts.inter(fontSize: 11, color: AppColors.dashHeaderDate),
-                        ),
-                        Text(
-                          dateFormat.format(_plantingDate),
-                          style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                    const Spacer(),
-                    const Icon(Icons.edit_calendar, size: 18, color: AppColors.dashHeaderDate),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Expected Harvest Date
-            InkWell(
-              onTap: _selectHarvestDate,
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE5EBE5)),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.event_available_outlined, color: AppColors.badgeHarvest, size: 20),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Expected Harvest Date (~${_selectedPlantingCrop.maturityDays} days)',
-                          style: GoogleFonts.inter(fontSize: 11, color: AppColors.dashHeaderDate),
-                        ),
-                        Text(
-                          dateFormat.format(_expectedHarvestDate),
-                          style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                    const Spacer(),
-                    const Icon(Icons.edit_calendar, size: 18, color: AppColors.dashHeaderDate),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Projected Yield & Farmgate Revenue Box
-            Container(
-              padding: const EdgeInsets.all(16),
+          ),
+          const SizedBox(height: 10),
+          InkWell(
+            onTap: _selectPlantingDate,
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFEFF3EF)),
+                color: context.cardBg,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: context.cardBorder),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.02),
+                    color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.03),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
                 ],
               ),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Projected Yield:',
-                        style: GoogleFonts.inter(fontSize: 13, color: AppColors.dashHeaderDate),
-                      ),
-                      Text(
-                        '~${projectedYield.toStringAsFixed(0)} Kg',
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.asvannaButtonGreen,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Est. Farmgate Revenue:',
-                        style: GoogleFonts.inter(fontSize: 13, color: AppColors.dashHeaderDate),
-                      ),
-                      Text(
-                        'Rs. ${(projectedYield * _selectedPlantingCrop.currentMarketPricePerKg).toStringAsFixed(0)}',
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.badgeHarvest,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Submit Planting Button
-            ElevatedButton.icon(
-              icon: const Icon(Icons.check_circle_outline, color: Colors.white),
-              label: Text(
-                tr('submit_planting_btn'),
-                style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.asvannaButtonGreen,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              onPressed: _submitPlanting,
-            ),
-            const SizedBox(height: 24),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ==========================================
-  // STAGE 2: Post Surplus Produce
-  // ==========================================
-  Widget _buildPostSurplusStage(BuildContext context, AppStateProvider appState) {
-    final qty = double.tryParse(_surplusQuantityController.text) ?? 0.0;
-    final price = double.tryParse(_surplusPriceController.text) ?? 0.0;
-    final totalEstimatedValue = qty * price;
-
-    return SingleChildScrollView(
-      key: const ValueKey('stage_surplus'),
-      padding: const EdgeInsets.all(18.0),
-      child: Form(
-        key: _surplusFormKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Proximity Marketplace Info Banner
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFF8F0),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFFFD199), width: 1.2),
-              ),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: AppColors.badgeHarvest.withOpacity(0.12),
-                      shape: BoxShape.circle,
+                      color: context.softGreenBg,
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(
-                      Icons.storefront_rounded,
-                      color: AppColors.badgeHarvest,
-                      size: 22,
-                    ),
+                    child: Icon(Icons.calendar_today_rounded, color: isDark ? AppColors.darkEmerald : AppColors.primaryDark, size: 22),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '5km Proximity Zero-Waste Market',
-                          style: GoogleFonts.poppins(
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF943A00),
-                          ),
+                          '📅 ${dateFormat.format(_plantingDate)} (${tr('today_label')})',
+                          style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold, color: context.titleText),
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'Broadcast directly to registered event caterers, hotels, and bulk buyers within 5km for immediate pickup.',
-                          style: GoogleFonts.inter(
-                            fontSize: 11.5,
-                            color: const Color(0xFF78350F),
-                            height: 1.35,
-                          ),
+                          '${tr('expected_harvest_date')}: ${dateFormat.format(_expectedHarvestDate)} (~${_selectedPlantingCrop.maturityDays} ${tr('days_left')})',
+                          style: GoogleFonts.inter(fontSize: 11.5, color: context.subText),
                         ),
                       ],
                     ),
                   ),
+                  Icon(Icons.edit_calendar, size: 20, color: isDark ? AppColors.darkEmerald : AppColors.primary),
                 ],
               ),
             ),
-            const SizedBox(height: 18),
+          ),
+          const SizedBox(height: 18),
 
-            // Select Crop Dropdown
-            Text(
-              'Select Harvested Crop',
-              style: GoogleFonts.poppins(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: AppColors.dashHeaderTitle,
-              ),
+          // Summary Box
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF143E23) : const Color(0xFFE8F5E9),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: (isDark ? AppColors.darkEmerald : AppColors.primary).withValues(alpha: 0.3)),
             ),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<Crop>(
-              value: _selectedSurplusCrop,
-              decoration: InputDecoration(
-                labelText: 'Crop Produce',
-                prefixIcon: const Icon(Icons.eco_outlined, color: AppColors.badgeHarvest),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFFE5EBE5)),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFFE5EBE5)),
-                ),
-              ),
-              items: appState.availableCrops.map((c) {
-                return DropdownMenuItem(
-                  value: c,
-                  child: Row(
-                    children: [
-                      Text(c.iconEmoji, style: const TextStyle(fontSize: 18)),
-                      const SizedBox(width: 10),
-                      Text('${c.name} (${c.sinhalaName})'),
-                    ],
-                  ),
-                );
-              }).toList(),
-              onChanged: (val) {
-                if (val != null) _onSurplusCropChanged(val);
-              },
-            ),
-            const SizedBox(height: 16),
-
-            // Quantity & Asking Price Row
-            Row(
+            child: Row(
               children: [
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Text('📦 ${tr('est_harvest_label')}', style: GoogleFonts.inter(fontSize: 11.5, color: isDark ? AppColors.darkEmerald : AppColors.primaryDark)),
+                      const SizedBox(height: 2),
                       Text(
-                        'Available Quantity',
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.dashHeaderTitle,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      TextFormField(
-                        controller: _surplusQuantityController,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        decoration: InputDecoration(
-                          hintText: 'e.g. 350',
-                          suffixText: 'Kg',
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: Color(0xFFE5EBE5)),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: Color(0xFFE5EBE5)),
-                          ),
-                        ),
-                        onChanged: (v) => setState(() {}),
-                        validator: (v) => v == null || v.isEmpty ? 'Enter quantity' : null,
+                        '~${projectedYield.toStringAsFixed(0)} Kg',
+                        style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold, color: isDark ? Colors.white : AppColors.primaryDark),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 12),
+                Container(width: 1, height: 36, color: (isDark ? AppColors.darkEmerald : AppColors.primary).withValues(alpha: 0.3)),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Text('💰 ${tr('est_revenue_label')}', style: GoogleFonts.inter(fontSize: 11.5, color: isDark ? AppColors.darkEmerald : AppColors.primaryDark)),
+                      const SizedBox(height: 2),
                       Text(
-                        'Asking Price',
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.dashHeaderTitle,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      TextFormField(
-                        controller: _surplusPriceController,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        decoration: InputDecoration(
-                          hintText: 'e.g. 140',
-                          prefixText: 'Rs. ',
-                          suffixText: '/Kg',
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: Color(0xFFE5EBE5)),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: Color(0xFFE5EBE5)),
-                          ),
-                        ),
-                        onChanged: (v) => setState(() {}),
-                        validator: (v) => v == null || v.isEmpty ? 'Enter price' : null,
+                        '$currencyUnit ${projectedRevenue.toStringAsFixed(0)}',
+                        style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold, color: isDark ? Colors.white : AppColors.primaryDark),
                       ),
                     ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 6),
-            Text(
-              'Wholesale Market Benchmark: Rs. ${_selectedSurplusCrop.currentMarketPricePerKg.toStringAsFixed(0)}/Kg',
-              style: GoogleFonts.inter(fontSize: 11, color: AppColors.dashHeaderDate),
-            ),
-            const SizedBox(height: 16),
+          ),
+          const SizedBox(height: 22),
 
-            // Urgent Perishable Clearance Switch
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFE5EBE5)),
-              ),
-              child: SwitchListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
-                title: Text(
-                  'Urgent Perishable Clearance',
-                  style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13.5,
-                    color: AppColors.dashHeaderTitle,
-                  ),
-                ),
-                subtitle: Text(
-                  'Priority push notification to buyers within 5km radius',
-                  style: GoogleFonts.inter(fontSize: 11, color: AppColors.dashHeaderDate),
-                ),
-                value: _isUrgentSurplus,
-                activeColor: AppColors.badgeHarvest,
-                onChanged: (val) => setState(() => _isUrgentSurplus = val),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Quality & Condition Notes
-            Text(
-              'Produce Condition / Packaging Notes',
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: AppColors.dashHeaderTitle,
-              ),
-            ),
-            const SizedBox(height: 6),
-            TextFormField(
-              controller: _surplusNotesController,
-              maxLines: 2,
-              decoration: InputDecoration(
-                hintText: 'e.g. Freshly harvested this morning, washed and bagged in 25kg crates.',
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFFE5EBE5)),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFFE5EBE5)),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Total Estimated Value Calculation Box
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFEFF3EF)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.02),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Total Listing Value:',
-                    style: GoogleFonts.inter(fontSize: 13.5, color: AppColors.dashHeaderDate),
-                  ),
-                  Text(
-                    'Rs. ${totalEstimatedValue.toStringAsFixed(0)}',
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.badgeHarvest,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Publish Surplus Button
-            ElevatedButton.icon(
-              icon: const Icon(Icons.send_rounded, color: Colors.white),
+          // Giant Action Button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              icon: const Text('🌱', style: TextStyle(fontSize: 20)),
               label: Text(
-                'Publish to 5km Marketplace',
-                style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold),
+                tr('save_planting_btn'),
+                style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.asvannaButtonGreen,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                elevation: 3,
+              ),
+              onPressed: () => _submitPlanting(appState),
+            ),
+          ),
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+
+  // ==========================================
+  // ULTRA-SIMPLE STAGE 2: Post Surplus Produce
+  // ==========================================
+  Widget _buildUltraSimpleSurplusStage(
+    BuildContext context,
+    AppStateProvider appState,
+    String Function(String) tr,
+    AppLanguage lang,
+  ) {
+    final isDark = context.isDarkMode;
+    final totalValue = _surplusQuantityKg * _surplusPricePerKg;
+    final String currencyUnit = lang == AppLanguage.sinhala ? 'රු.' : (lang == AppLanguage.tamil ? 'ரூ.' : 'Rs.');
+
+    return SingleChildScrollView(
+      key: const ValueKey('stage_simple_surplus'),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Step 1: Select Crop
+          Text(
+            tr('step_select_crop'),
+            style: GoogleFonts.poppins(
+              fontSize: 14.5,
+              fontWeight: FontWeight.bold,
+              color: context.titleText,
+            ),
+          ),
+          const SizedBox(height: 10),
+          _buildCropCardGrid(
+            context: context,
+            crops: appState.availableCrops,
+            selectedCrop: _selectedSurplusCrop,
+            activeColor: AppColors.badgeHarvest,
+            onSelect: _onSurplusCropSelected,
+            lang: lang,
+          ),
+          const SizedBox(height: 18),
+
+          // Step 2: Quantity Stepper (Kg)
+          Text(
+            tr('step_quantity_kg'),
+            style: GoogleFonts.poppins(
+              fontSize: 14.5,
+              fontWeight: FontWeight.bold,
+              color: context.titleText,
+            ),
+          ),
+          const SizedBox(height: 10),
+          _buildStepperBox(
+            context: context,
+            displayValue: '${_surplusQuantityKg.toStringAsFixed(0)} Kg',
+            onMinus: () => _adjustSurplusQty(-50),
+            onPlus: () => _adjustSurplusQty(50),
+            presetChips: [
+              _buildPresetChip(context, '100 Kg', () => setState(() => _surplusQuantityKg = 100)),
+              _buildPresetChip(context, '250 Kg', () => setState(() => _surplusQuantityKg = 250)),
+              _buildPresetChip(context, '500 Kg', () => setState(() => _surplusQuantityKg = 500)),
+              _buildPresetChip(context, '1,000 Kg', () => setState(() => _surplusQuantityKg = 1000)),
+            ],
+          ),
+          const SizedBox(height: 18),
+
+          // Step 3: Price per Kg
+          Text(
+            tr('step_asking_price'),
+            style: GoogleFonts.poppins(
+              fontSize: 14.5,
+              fontWeight: FontWeight.bold,
+              color: context.titleText,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: context.cardBg,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: context.cardBorder),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${tr('current_spot_price')}: $currencyUnit ${_selectedSurplusCrop.currentMarketPricePerKg.toStringAsFixed(0)} / Kg',
+                      style: GoogleFonts.inter(fontSize: 11.5, color: context.subText),
+                    ),
+                    Text(
+                      '$currencyUnit ${_surplusPricePerKg.toStringAsFixed(0)} / Kg',
+                      style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.badgeHarvest),
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.remove_circle_outline, color: AppColors.badgeHarvest),
+                      onPressed: () {
+                        if (_surplusPricePerKg > 20) {
+                          setState(() => _surplusPricePerKg -= 5);
+                        }
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.add_circle_outline, color: AppColors.badgeHarvest),
+                      onPressed: () {
+                        setState(() => _surplusPricePerKg += 5);
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+
+          // Summary Box
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF38230B) : const Color(0xFFFFF8E1),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: isDark ? const Color(0xFFFBBF24) : const Color(0xFFFFD54F)),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('📦 ${tr('total_value_label')}:', style: GoogleFonts.inter(fontSize: 13, color: isDark ? const Color(0xFFFDE68A) : AppColors.textSecondary)),
+                    Text(
+                      '$currencyUnit ${totalValue.toStringAsFixed(0)}',
+                      style: GoogleFonts.poppins(fontSize: 17, fontWeight: FontWeight.bold, color: isDark ? const Color(0xFFFCD34D) : AppColors.badgeHarvest),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Icon(Icons.location_on, color: isDark ? const Color(0xFFFCD34D) : AppColors.badgeHarvest, size: 16),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        tr('radius_5km_notify'),
+                        style: GoogleFonts.inter(fontSize: 11.5, color: isDark ? const Color(0xFFFDE68A) : AppColors.textSecondary),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 22),
+
+          // Giant Action Button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              icon: const Text('📦', style: TextStyle(fontSize: 20)),
+              label: Text(
+                tr('publish_surplus_btn'),
+                style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.badgeHarvest,
+                foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                elevation: 3,
               ),
-              onPressed: _submitSurplus,
+              onPressed: () => _submitSurplus(appState),
             ),
-            const SizedBox(height: 24),
-          ],
+          ),
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+
+  // --- Helper Widgets ---
+  Widget _buildCropCardGrid({
+    required BuildContext context,
+    required List<Crop> crops,
+    required Crop selectedCrop,
+    required Color activeColor,
+    required ValueChanged<Crop> onSelect,
+    required AppLanguage lang,
+  }) {
+    final isDark = context.isDarkMode;
+
+    return SizedBox(
+      height: 104,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: crops.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        itemBuilder: (_, index) {
+          final crop = crops[index];
+          final isSelected = crop.id == selectedCrop.id;
+
+          final primaryName = lang == AppLanguage.sinhala ? crop.sinhalaName : crop.name;
+          final secondaryName = lang == AppLanguage.sinhala ? crop.name : crop.sinhalaName;
+
+          return GestureDetector(
+            onTap: () => onSelect(crop),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              width: 88,
+              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+              decoration: BoxDecoration(
+                color: isSelected ? activeColor.withValues(alpha: isDark ? 0.2 : 0.1) : context.cardBg,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isSelected ? activeColor : context.cardBorder,
+                  width: isSelected ? 2.2 : 1.2,
+                ),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: activeColor.withValues(alpha: 0.25),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : [],
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(crop.iconEmoji, style: const TextStyle(fontSize: 26)),
+                  const SizedBox(height: 3),
+                  Text(
+                    primaryName,
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                      color: isSelected ? activeColor : context.titleText,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    secondaryName,
+                    style: GoogleFonts.inter(
+                      fontSize: 9.5,
+                      color: isSelected ? activeColor : context.subText,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildStepperBox({
+    required BuildContext context,
+    required String displayValue,
+    required VoidCallback onMinus,
+    required VoidCallback onPlus,
+    required List<Widget> presetChips,
+  }) {
+    final isDark = context.isDarkMode;
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: context.cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.cardBorder),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                style: IconButton.styleFrom(
+                  backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFEFF3EF),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.all(12),
+                ),
+                icon: Icon(Icons.remove, size: 22, color: context.titleText),
+                onPressed: onMinus,
+              ),
+              Text(
+                displayValue,
+                style: GoogleFonts.poppins(
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                  color: context.titleText,
+                ),
+              ),
+              IconButton(
+                style: IconButton.styleFrom(
+                  backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFEFF3EF),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.all(12),
+                ),
+                icon: Icon(Icons.add, size: 22, color: context.titleText),
+                onPressed: onPlus,
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: presetChips,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPresetChip(BuildContext context, String label, VoidCallback onTap) {
+    final isDark = context.isDarkMode;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: context.cardBorder),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 11.5,
+            fontWeight: FontWeight.w600,
+            color: context.titleText,
+          ),
         ),
       ),
     );

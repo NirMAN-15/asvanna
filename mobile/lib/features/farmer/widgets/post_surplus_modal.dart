@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/models/crop_model.dart';
 import '../../../core/providers/app_state_provider.dart';
 
@@ -67,7 +68,11 @@ class _PostSurplusModalState extends State<PostSurplusModal> {
   Widget build(BuildContext context) {
     final appState = Provider.of<AppStateProvider>(context);
 
-    return Padding(
+    return Container(
+      decoration: BoxDecoration(
+        color: context.cardBg,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       padding: EdgeInsets.only(
         left: 20,
         right: 20,
@@ -86,27 +91,33 @@ class _PostSurplusModalState extends State<PostSurplusModal> {
                 children: [
                   Text(
                     'Post Surplus Produce',
-                    style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: context.titleText),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close),
+                    icon: Icon(Icons.close, color: context.titleText),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
               ),
               Text(
                 'Connect directly with event caterers and bulk buyers within a 5km radius.',
-                style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary),
+                style: GoogleFonts.inter(fontSize: 12, color: context.subText),
               ),
               const SizedBox(height: 16),
 
               DropdownButtonFormField<Crop>(
                 value: _selectedCrop,
+                isExpanded: true,
+                dropdownColor: context.cardBg,
                 decoration: const InputDecoration(labelText: 'Select Crop', prefixIcon: Icon(Icons.eco)),
                 items: appState.availableCrops.map((c) {
                   return DropdownMenuItem(
                     value: c,
-                    child: Text('${c.iconEmoji} ${c.name} (${c.sinhalaName})'),
+                    child: Text(
+                      '${c.iconEmoji} ${c.name} (${c.sinhalaName})',
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: context.titleText),
+                    ),
                   );
                 }).toList(),
                 onChanged: (c) {
@@ -145,8 +156,8 @@ class _PostSurplusModalState extends State<PostSurplusModal> {
 
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: Text('Urgent Perishable Clearance', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-                subtitle: const Text('Priority broadcast to local hotels & wedding caterers'),
+                title: Text('Urgent Perishable Clearance', style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: context.titleText)),
+                subtitle: Text('Priority broadcast to local hotels & wedding caterers', style: TextStyle(color: context.subText)),
                 value: _isUrgent,
                 activeColor: AppColors.riskCritical,
                 onChanged: (val) => setState(() => _isUrgent = val),

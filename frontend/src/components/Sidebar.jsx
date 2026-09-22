@@ -42,8 +42,6 @@ export default function Sidebar() {
       return [
         { path: '/dashboard', label: t('nav_procurement_dashboard'), icon: 'dashboard' },
         { path: '/marketplace', label: t('nav_surplus_marketplace'), icon: 'shopping_cart' },
-        { path: '/prices', label: 'Wholesale Rates', icon: 'trending_up' },
-        { path: '/weather', label: 'Agro Weather', icon: 'cloud' },
         { path: '/history', label: t('nav_history'), icon: 'history' },
         { path: '/settings', label: t('settings'), icon: 'settings' },
       ];
