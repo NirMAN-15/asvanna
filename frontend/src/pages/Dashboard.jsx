@@ -257,13 +257,23 @@ export default function Dashboard() {
                             {crop.status}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-4 py-3 text-right flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => {
+                              // navigate to risk analytics with crop name
+                              window.location.href = `/risk-analytics?query=${encodeURIComponent(crop.name_en)}`;
+                            }}
+                            className="text-amber-500 hover:text-amber-700 p-1 rounded transition"
+                            title="Check Risk"
+                          >
+                            <span className="material-symbols-outlined text-base">analytics</span>
+                          </button>
                           <button
                             onClick={() => handleDeleteCrop(crop.id)}
-                            className="text-error hover:bg-error/10 p-1.5 rounded transition"
-                            title="Remove Crop"
+                            className="text-red-500 hover:text-red-700 p-1 rounded transition"
+                            title="Delete Crop"
                           >
-                            <span className="material-symbols-outlined text-lg">delete</span>
+                            <span className="material-symbols-outlined text-base">delete</span>
                           </button>
                         </td>
                       </tr>
@@ -274,46 +284,33 @@ export default function Dashboard() {
           </section>
         )}
 
-        {/* Status Badge Card: Risk Indicator (From Stitch Design) */}
+        {/* Status Badge Card: Crop Advisory Link */}
         <section>
-          <div className="bg-surface-container-lowest border-l-4 border-error rounded-2xl shadow-card p-6 md:p-7 touch-active border border-outline-variant/30 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="bg-surface-container-lowest border-l-4 border-primary rounded-2xl shadow-card p-6 md:p-7 touch-active border border-outline-variant/30 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div className="flex items-start sm:items-center gap-5">
-              <div className="w-14 h-14 bg-error-container/40 flex items-center justify-center rounded-2xl flex-shrink-0 border border-error/20">
-                <span className="material-symbols-outlined text-error text-3xl icon-fill">warning</span>
+              <div className="w-14 h-14 bg-primary-container/40 flex items-center justify-center rounded-2xl flex-shrink-0 border border-primary/20">
+                <span className="material-symbols-outlined text-primary text-3xl icon-fill">analytics</span>
               </div>
               <div className="space-y-1.5">
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                   <h2 className="font-headline text-lg sm:text-xl font-bold text-on-surface">
-                    {t('farmer_risk_title')}
+                    {lang === 'si' ? 'වගා උපදේශන සහ අවදානම් විශ්ලේෂණය' : 'Crop Advisory & Risk Analytics'}
                   </h2>
-                  <span className="inline-flex items-center px-3 py-1 rounded-full bg-error-container text-on-error-container font-label-sm text-xs font-extrabold uppercase tracking-wide">
-                    {t('farmer_risk_badge')}
-                  </span>
                 </div>
                 <p className="text-on-surface-variant text-sm max-w-3xl leading-relaxed">
-                  {t('farmer_risk_desc')}
+                  {lang === 'si' 
+                    ? 'ඔබ වගා කිරීමට පෙර කලාපයේ භෝග අතිරික්තයක් (Over-planting) තිබේදැයි පරීක්ෂා කර බුද්ධිමත් තීරණ ගන්න.' 
+                    : 'Check regional crop saturation and get smart recommendations before you plant to avoid over-planting risks.'}
                 </p>
-
-                {/* Visual Saturation Progress Bar */}
-                <div className="w-full max-w-md pt-2">
-                  <div className="flex justify-between text-xs font-semibold text-on-surface-variant mb-1">
-                    <span>{t('regional_quota_saturation')}</span>
-                    <span className="text-error font-bold">{t('quota_benchmark_note')}</span>
-                  </div>
-                  <div className="w-full h-3 bg-surface-container-high rounded-full overflow-hidden relative">
-                    <div className="h-full bg-gradient-to-r from-amber-400 to-error rounded-full transition-all duration-500" style={{ width: '92.5%' }} />
-                    <div className="absolute top-0 bottom-0 left-[90%] w-0.5 bg-on-surface/60" title="90% Quota Threshold" />
-                  </div>
-                </div>
               </div>
             </div>
 
             <Link
               to="/risk-analytics"
-              className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-secondary-container/70 text-on-secondary-fixed font-label-md text-sm font-bold hover:bg-secondary-fixed transition border border-secondary/30 self-start lg:self-center whitespace-nowrap shadow-xs"
+              className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-primary text-white font-label-md text-sm font-bold hover:bg-primary/90 transition shadow-xs whitespace-nowrap self-start lg:self-center"
             >
-              <span>{t('view_alternatives')}</span>
-              <span className="material-symbols-outlined text-base">chevron_right</span>
+              <span>{lang === 'si' ? 'අවදානම පරීක්ෂා කරන්න' : 'Check Risk Now'}</span>
+              <span className="material-symbols-outlined text-base">arrow_forward</span>
             </Link>
           </div>
         </section>
