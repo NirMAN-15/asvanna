@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/app_state_provider.dart';
 import '../../../core/localization/app_translations.dart';
 
@@ -98,23 +99,17 @@ class _WeatherScreenState extends State<WeatherScreen> {
       'hourly': [
         {'time': '06:00', 'temp': '18°C', 'icon': '⛅', 'rain': '5%'},
         {'time': '09:00', 'temp': '22°C', 'icon': '☀️', 'rain': '10%'},
-        {'time': '12:00', 'temp': '26°C', 'icon': '☀️', 'rain': '20%'},
+        {'time': '12:00', 'temp': '25°C', 'icon': '🌤️', 'rain': '20%'},
         {'time': '15:00', 'temp': '24°C', 'icon': '⛅', 'rain': '35%'},
-        {'time': '18:00', 'temp': '21°C', 'icon': '⛅', 'rain': '15%'},
-        {'time': '21:00', 'temp': '18°C', 'icon': '🌙', 'rain': '10%'},
+        {'time': '18:00', 'temp': '20°C', 'icon': '⛅', 'rain': '25%'},
+        {'time': '21:00', 'temp': '17°C', 'icon': '🌙', 'rain': '10%'},
       ],
       'diseases': [
         {
-          'name': 'Thrips & Aphids (කොළ කුඩිත්තන්)',
-          'risk': 'Moderate',
-          'color': AppColors.riskModerate,
-          'advice': 'Dry daytime heat favors thrips activity in capsicum and beans.',
-        },
-        {
-          'name': 'Fungal Leaf Spot',
-          'risk': 'Safe',
+          'name': 'Powdery Mildew (අළු පුස්)',
+          'risk': 'Low Risk',
           'color': AppColors.riskSafe,
-          'advice': 'Favorable sunshine hours. Ideal for foliar fertilizer application.',
+          'advice': 'Favorable conditions across Welimada plains for beans & capsicum.',
         },
       ],
     },
@@ -123,16 +118,24 @@ class _WeatherScreenState extends State<WeatherScreen> {
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppStateProvider>(context);
+    final isDark = context.isDarkMode;
     final lang = appState.currentLanguage;
     String tr(String key) => AppTranslations.tr(lang, key);
 
-    final currentData = _divisionWeatherData[_selectedDivision] ?? _divisionWeatherData['Bandarawela']!;
+    final currentData = _divisionWeatherData[_selectedDivision]!;
     final hourly = currentData['hourly'] as List<Map<String, dynamic>>;
     final diseases = currentData['diseases'] as List<Map<String, dynamic>>;
 
     return Scaffold(
+      backgroundColor: context.scaffoldBg,
       appBar: AppBar(
-        title: Text(tr('weather_intelligence')),
+        title: Text(
+          tr('weather_intelligence'),
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.bold,
+            color: context.titleText,
+          ),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
@@ -151,9 +154,10 @@ class _WeatherScreenState extends State<WeatherScreen> {
                     child: ChoiceChip(
                       label: Text(div),
                       selected: isSel,
-                      selectedColor: AppColors.primary,
+                      selectedColor: isDark ? const Color(0xFF16A34A) : AppColors.primary,
+                      backgroundColor: context.cardBg,
                       labelStyle: TextStyle(
-                        color: isSel ? Colors.white : AppColors.textPrimary,
+                        color: isSel ? Colors.white : context.titleText,
                         fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
                       ),
                       onSelected: (val) {
@@ -172,15 +176,15 @@ class _WeatherScreenState extends State<WeatherScreen> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: _selectedDivision == 'Nuwara Eliya'
-                      ? [const Color(0xFF2C3E50), const Color(0xFF4CA1AF)]
-                      : [const Color(0xFF1B4F72), const Color(0xFF2E86C1)],
+                      ? [const Color(0xFF1E293B), const Color(0xFF334155)]
+                      : [const Color(0xFF1E3A5F), const Color(0xFF0F766E)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF1B4F72).withOpacity(0.25),
+                    color: const Color(0xFF1B4F72).withValues(alpha: 0.25),
                     blurRadius: 15,
                     offset: const Offset(0, 5),
                   ),
@@ -214,7 +218,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -245,7 +249,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
                             currentData['condition'] as String,
                             style: GoogleFonts.inter(
                               fontSize: 13,
-                              color: Colors.white.withOpacity(0.95),
+                              color: Colors.white.withValues(alpha: 0.95),
                             ),
                           ),
                         ],
@@ -272,7 +276,11 @@ class _WeatherScreenState extends State<WeatherScreen> {
             // Hourly Rain Forecast Carousel
             Text(
               tr('hourly_forecast'),
-              style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold),
+              style: GoogleFonts.poppins(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: context.titleText,
+              ),
             ),
             const SizedBox(height: 10),
             SizedBox(
@@ -287,16 +295,23 @@ class _WeatherScreenState extends State<WeatherScreen> {
                     width: 72,
                     padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: context.cardBg,
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: const Color(0xFFE2EBE2)),
+                      border: Border.all(color: context.cardBorder),
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        Text(h['time'] as String, style: GoogleFonts.inter(fontSize: 11, color: AppColors.textMuted)),
+                        Text(h['time'] as String, style: GoogleFonts.inter(fontSize: 11, color: context.mutedText)),
                         Text(h['icon'] as String, style: const TextStyle(fontSize: 18)),
-                        Text(h['temp'] as String, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold)),
+                        Text(
+                          h['temp'] as String,
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: context.titleText,
+                          ),
+                        ),
                         Text(
                           h['rain'] as String,
                           style: TextStyle(
@@ -304,7 +319,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
                             fontWeight: FontWeight.bold,
                             color: (int.tryParse((h['rain'] as String).replaceAll('%', '')) ?? 0) > 50
                                 ? AppColors.riskCritical
-                                : AppColors.primary,
+                                : (isDark ? const Color(0xFF4ADE80) : AppColors.primary),
                           ),
                         ),
                       ],
@@ -318,7 +333,11 @@ class _WeatherScreenState extends State<WeatherScreen> {
             // Crop Disease Vulnerability Index
             Text(
               tr('disease_advisories'),
-              style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold),
+              style: GoogleFonts.poppins(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: context.titleText,
+              ),
             ),
             const SizedBox(height: 10),
 
@@ -328,9 +347,9 @@ class _WeatherScreenState extends State<WeatherScreen> {
                 margin: const EdgeInsets.only(bottom: 10),
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.cardBg,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: color.withOpacity(0.3), width: 1.2),
+                  border: Border.all(color: color.withValues(alpha: 0.3), width: 1.2),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -338,7 +357,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: color.withOpacity(0.12),
+                        color: color.withValues(alpha: 0.12),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(Icons.shield_outlined, color: color, size: 20),
@@ -353,12 +372,16 @@ class _WeatherScreenState extends State<WeatherScreen> {
                             children: [
                               Text(
                                 d['name'] as String,
-                                style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold),
+                                style: GoogleFonts.inter(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: context.titleText,
+                                ),
                               ),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: color.withOpacity(0.12),
+                                  color: color.withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
@@ -371,7 +394,11 @@ class _WeatherScreenState extends State<WeatherScreen> {
                           const SizedBox(height: 4),
                           Text(
                             d['advice'] as String,
-                            style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary, height: 1.3),
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              color: context.subText,
+                              height: 1.3,
+                            ),
                           ),
                         ],
                       ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/providers/app_state_provider.dart';
 import '../buyer/buyer_main_nav.dart';
 import 'login_screen.dart';
@@ -115,8 +116,10 @@ class _BuyerRegistrationScreenState extends State<BuyerRegistrationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.isDarkMode;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.scaffoldBg,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -148,10 +151,10 @@ class _BuyerRegistrationScreenState extends State<BuyerRegistrationScreen> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(
+                              Icon(
                                 Icons.arrow_back,
                                 size: 18,
-                                color: AppColors.asvannaDarkGreen,
+                                color: isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen,
                               ),
                               const SizedBox(width: 6),
                               Text(
@@ -159,7 +162,7 @@ class _BuyerRegistrationScreenState extends State<BuyerRegistrationScreen> {
                                 style: GoogleFonts.inter(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w700,
-                                  color: AppColors.asvannaDarkGreen,
+                                  color: isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen,
                                 ),
                               ),
                             ],
@@ -175,7 +178,7 @@ class _BuyerRegistrationScreenState extends State<BuyerRegistrationScreen> {
                       style: GoogleFonts.poppins(
                         fontSize: 24,
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFF132B1E),
+                        color: context.titleText,
                         letterSpacing: -0.2,
                       ),
                     ),
@@ -185,7 +188,7 @@ class _BuyerRegistrationScreenState extends State<BuyerRegistrationScreen> {
                       style: GoogleFonts.inter(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w400,
-                        color: const Color(0xFF556955),
+                        color: context.subText,
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -196,26 +199,26 @@ class _BuyerRegistrationScreenState extends State<BuyerRegistrationScreen> {
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1A3828),
+                        color: context.titleText,
                       ),
                     ),
                     const SizedBox(height: 6),
                     TextFormField(
                       controller: _businessNameController,
-                      style: GoogleFonts.inter(fontSize: 14, color: AppColors.asvannaTextDark),
+                      style: GoogleFonts.inter(fontSize: 14, color: context.titleText),
                       decoration: InputDecoration(
                         hintText: 'e.g. Green Leaf Caterings',
-                        hintStyle: GoogleFonts.inter(fontSize: 13.5, color: const Color(0xFF90A395)),
+                        hintStyle: GoogleFonts.inter(fontSize: 13.5, color: isDark ? const Color(0xFF64748B) : const Color(0xFF90A395)),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: context.cardBg,
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(color: AppColors.asvannaBorder, width: 1.2),
+                          borderSide: BorderSide(color: context.cardBorder, width: 1.2),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(color: AppColors.asvannaDarkGreen, width: 1.8),
+                          borderSide: BorderSide(color: isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen, width: 1.8),
                         ),
                       ),
                       validator: (v) => v == null || v.trim().isEmpty ? 'Please enter business name' : null,
@@ -228,29 +231,30 @@ class _BuyerRegistrationScreenState extends State<BuyerRegistrationScreen> {
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1A3828),
+                        color: context.titleText,
                       ),
                     ),
                     const SizedBox(height: 6),
                     DropdownButtonFormField<String>(
                       value: _selectedCategory,
                       isExpanded: true,
-                      icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF556955)),
-                      style: GoogleFonts.inter(fontSize: 14, color: AppColors.asvannaTextDark),
+                      dropdownColor: context.cardBg,
+                      icon: Icon(Icons.keyboard_arrow_down_rounded, color: context.subText),
+                      style: GoogleFonts.inter(fontSize: 14, color: context.titleText),
                       decoration: InputDecoration(
                         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: context.cardBg,
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(color: AppColors.asvannaBorder, width: 1.2),
+                          borderSide: BorderSide(color: context.cardBorder, width: 1.2),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(color: AppColors.asvannaDarkGreen, width: 1.8),
+                          borderSide: BorderSide(color: isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen, width: 1.8),
                         ),
                       ),
-                      hint: Text('Select category', style: GoogleFonts.inter(color: const Color(0xFF90A395), fontSize: 13.5)),
+                      hint: Text('Select category', style: GoogleFonts.inter(color: isDark ? const Color(0xFF64748B) : const Color(0xFF90A395), fontSize: 13.5)),
                       items: _categories.map((cat) {
                         return DropdownMenuItem(value: cat, child: Text(cat));
                       }).toList(),
@@ -274,26 +278,26 @@ class _BuyerRegistrationScreenState extends State<BuyerRegistrationScreen> {
                                 style: GoogleFonts.inter(
                                   fontSize: 12.5,
                                   fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF1A3828),
+                                  color: context.titleText,
                                 ),
                               ),
                               const SizedBox(height: 6),
                               TextFormField(
                                 controller: _contactPersonController,
-                                style: GoogleFonts.inter(fontSize: 14, color: AppColors.asvannaTextDark),
+                                style: GoogleFonts.inter(fontSize: 14, color: context.titleText),
                                 decoration: InputDecoration(
                                   hintText: 'Full Name',
-                                  hintStyle: GoogleFonts.inter(fontSize: 13.5, color: const Color(0xFF90A395)),
+                                  hintStyle: GoogleFonts.inter(fontSize: 13.5, color: isDark ? const Color(0xFF64748B) : const Color(0xFF90A395)),
                                   contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                                   filled: true,
-                                  fillColor: Colors.white,
+                                  fillColor: context.cardBg,
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(10),
-                                    borderSide: const BorderSide(color: AppColors.asvannaBorder, width: 1.2),
+                                    borderSide: BorderSide(color: context.cardBorder, width: 1.2),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(10),
-                                    borderSide: const BorderSide(color: AppColors.asvannaDarkGreen, width: 1.8),
+                                    borderSide: BorderSide(color: isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen, width: 1.8),
                                   ),
                                 ),
                                 validator: (v) => v == null || v.trim().isEmpty ? 'Enter name' : null,
@@ -312,26 +316,26 @@ class _BuyerRegistrationScreenState extends State<BuyerRegistrationScreen> {
                                 style: GoogleFonts.inter(
                                   fontSize: 12.5,
                                   fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF1A3828),
+                                  color: context.titleText,
                                 ),
                               ),
                               const SizedBox(height: 6),
                               TextFormField(
                                 controller: _nicController,
-                                style: GoogleFonts.inter(fontSize: 14, color: AppColors.asvannaTextDark),
+                                style: GoogleFonts.inter(fontSize: 14, color: context.titleText),
                                 decoration: InputDecoration(
                                   hintText: 'V / JX',
-                                  hintStyle: GoogleFonts.inter(fontSize: 13.5, color: const Color(0xFF90A395)),
+                                  hintStyle: GoogleFonts.inter(fontSize: 13.5, color: isDark ? const Color(0xFF64748B) : const Color(0xFF90A395)),
                                   contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                                   filled: true,
-                                  fillColor: Colors.white,
+                                  fillColor: context.cardBg,
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(10),
-                                    borderSide: const BorderSide(color: AppColors.asvannaBorder, width: 1.2),
+                                    borderSide: BorderSide(color: context.cardBorder, width: 1.2),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(10),
-                                    borderSide: const BorderSide(color: AppColors.asvannaDarkGreen, width: 1.8),
+                                    borderSide: BorderSide(color: isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen, width: 1.8),
                                   ),
                                 ),
                                 validator: (v) => v == null || v.trim().isEmpty ? 'Enter NIC' : null,
@@ -349,29 +353,29 @@ class _BuyerRegistrationScreenState extends State<BuyerRegistrationScreen> {
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1A3828),
+                        color: context.titleText,
                       ),
                     ),
                     const SizedBox(height: 6),
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: context.cardBg,
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: AppColors.asvannaBorder, width: 1.2),
+                        border: Border.all(color: context.cardBorder, width: 1.2),
                       ),
                       child: Row(
                         children: [
                           // +94 Prefix Box
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                            decoration: const BoxDecoration(
-                              color: AppColors.asvannaPrefixBg,
-                              borderRadius: BorderRadius.only(
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF0F172A) : AppColors.asvannaPrefixBg,
+                              borderRadius: const BorderRadius.only(
                                 topLeft: Radius.circular(9),
                                 bottomLeft: Radius.circular(9),
                               ),
                               border: Border(
-                                right: BorderSide(color: AppColors.asvannaBorder, width: 1.2),
+                                right: BorderSide(color: context.cardBorder, width: 1.2),
                               ),
                             ),
                             child: Text(
@@ -379,7 +383,7 @@ class _BuyerRegistrationScreenState extends State<BuyerRegistrationScreen> {
                               style: GoogleFonts.inter(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: const Color(0xFF2C3E32),
+                                color: context.titleText,
                               ),
                             ),
                           ),
@@ -388,10 +392,10 @@ class _BuyerRegistrationScreenState extends State<BuyerRegistrationScreen> {
                             child: TextFormField(
                               controller: _phoneController,
                               keyboardType: TextInputType.phone,
-                              style: GoogleFonts.inter(fontSize: 14, color: AppColors.asvannaTextDark),
+                              style: GoogleFonts.inter(fontSize: 14, color: context.titleText),
                               decoration: InputDecoration(
                                 hintText: '77 123 4567',
-                                hintStyle: GoogleFonts.inter(fontSize: 13.5, color: const Color(0xFF90A395)),
+                                hintStyle: GoogleFonts.inter(fontSize: 13.5, color: isDark ? const Color(0xFF64748B) : const Color(0xFF90A395)),
                                 border: InputBorder.none,
                                 enabledBorder: InputBorder.none,
                                 focusedBorder: InputBorder.none,
@@ -411,27 +415,27 @@ class _BuyerRegistrationScreenState extends State<BuyerRegistrationScreen> {
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1A3828),
+                        color: context.titleText,
                       ),
                     ),
                     const SizedBox(height: 6),
                     TextFormField(
                       controller: _deliveryAddressController,
                       maxLines: 3,
-                      style: GoogleFonts.inter(fontSize: 14, color: AppColors.asvannaTextDark),
+                      style: GoogleFonts.inter(fontSize: 14, color: context.titleText),
                       decoration: InputDecoration(
                         hintText: 'Street, City, Postal Code',
-                        hintStyle: GoogleFonts.inter(fontSize: 13.5, color: const Color(0xFF90A395)),
+                        hintStyle: GoogleFonts.inter(fontSize: 13.5, color: isDark ? const Color(0xFF64748B) : const Color(0xFF90A395)),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: context.cardBg,
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(color: AppColors.asvannaBorder, width: 1.2),
+                          borderSide: BorderSide(color: context.cardBorder, width: 1.2),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(color: AppColors.asvannaDarkGreen, width: 1.8),
+                          borderSide: BorderSide(color: isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen, width: 1.8),
                         ),
                       ),
                       validator: (v) => v == null || v.trim().isEmpty ? 'Please enter delivery address' : null,
@@ -447,9 +451,9 @@ class _BuyerRegistrationScreenState extends State<BuyerRegistrationScreen> {
                           height: 24,
                           child: Checkbox(
                             value: _agreedToTerms,
-                            activeColor: AppColors.asvannaDarkGreen,
+                            activeColor: isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                            side: const BorderSide(color: Color(0xFFB5C4B5), width: 1.5),
+                            side: BorderSide(color: isDark ? const Color(0xFF475569) : const Color(0xFFB5C4B5), width: 1.5),
                             onChanged: (val) {
                               setState(() => _agreedToTerms = val ?? false);
                             },
@@ -460,7 +464,7 @@ class _BuyerRegistrationScreenState extends State<BuyerRegistrationScreen> {
                           child: RichText(
                             text: TextSpan(
                               text: 'I agree to the ',
-                              style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF4C6152), height: 1.35),
+                              style: GoogleFonts.inter(fontSize: 12, color: context.subText, height: 1.35),
                               children: [
                                 WidgetSpan(
                                   child: GestureDetector(
@@ -470,7 +474,7 @@ class _BuyerRegistrationScreenState extends State<BuyerRegistrationScreen> {
                                       style: GoogleFonts.inter(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w700,
-                                        color: AppColors.asvannaDarkGreen,
+                                        color: isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen,
                                         decoration: TextDecoration.underline,
                                       ),
                                     ),
@@ -485,7 +489,7 @@ class _BuyerRegistrationScreenState extends State<BuyerRegistrationScreen> {
                                       style: GoogleFonts.inter(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w700,
-                                        color: AppColors.asvannaDarkGreen,
+                                        color: isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen,
                                         decoration: TextDecoration.underline,
                                       ),
                                     ),
@@ -540,7 +544,7 @@ class _BuyerRegistrationScreenState extends State<BuyerRegistrationScreen> {
                     const SizedBox(height: 24),
 
                     // Divider
-                    const Divider(color: Color(0xFFE5ECE5), thickness: 1),
+                    Divider(color: context.cardBorder, thickness: 1),
                     const SizedBox(height: 16),
 
                     // Already have an account? Log in here
@@ -558,14 +562,14 @@ class _BuyerRegistrationScreenState extends State<BuyerRegistrationScreen> {
                             text: 'Already have an account? ',
                             style: GoogleFonts.inter(
                               fontSize: 13,
-                              color: const Color(0xFF556955),
+                              color: context.subText,
                             ),
                             children: [
                               TextSpan(
                                 text: 'Log in here',
                                 style: GoogleFonts.inter(
                                   fontWeight: FontWeight.w700,
-                                  color: AppColors.asvannaDarkGreen,
+                                  color: isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen,
                                 ),
                               ),
                             ],

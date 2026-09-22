@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_theme.dart';
 import 'screens/proximity_marketplace_screen.dart';
 import 'screens/order_history_screen.dart';
 import '../auth/role_selection_screen.dart';
@@ -21,17 +22,25 @@ class _BuyerMainNavState extends State<BuyerMainNav> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.isDarkMode;
     return Scaffold(
+      backgroundColor: context.scaffoldBg,
       body: IndexedStack(
         index: _currentIndex,
         children: _screens,
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.navBarBg,
+          border: Border(
+            top: BorderSide(
+              color: isDark ? const Color(0xFF334155) : Colors.grey.withValues(alpha: 0.12),
+              width: 1,
+            ),
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
+              color: isDark ? Colors.black.withValues(alpha: 0.3) : Colors.black.withValues(alpha: 0.06),
               blurRadius: 16,
               offset: const Offset(0, -4),
             ),
@@ -44,8 +53,8 @@ class _BuyerMainNavState extends State<BuyerMainNav> {
               _currentIndex = index;
             });
           },
-          backgroundColor: Colors.white,
-          indicatorColor: AppColors.accent.withOpacity(0.15),
+          backgroundColor: context.navBarBg,
+          indicatorColor: isDark ? const Color(0xFF143E23) : AppColors.accent.withValues(alpha: 0.15),
           elevation: 0,
           destinations: const [
             NavigationDestination(
@@ -64,3 +73,4 @@ class _BuyerMainNavState extends State<BuyerMainNav> {
     );
   }
 }
+

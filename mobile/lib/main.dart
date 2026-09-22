@@ -23,22 +23,28 @@ class AsvannaApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Asvanna - The Zero-Waste Marketplace',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      home: Consumer<AppStateProvider>(
-        builder: (context, appState, child) {
-          switch (appState.currentUserRole) {
-            case UserRole.farmer:
-              return const FarmerMainNav();
-            case UserRole.buyer:
-              return const BuyerMainNav();
-            case UserRole.unauthenticated:
-              return const LoginScreen();
-          }
-        },
-      ),
+    return Consumer<AppStateProvider>(
+      builder: (context, appState, child) {
+        return MaterialApp(
+          title: 'Asvanna - The Zero-Waste Marketplace',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: appState.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+          home: Builder(
+            builder: (ctx) {
+              switch (appState.currentUserRole) {
+                case UserRole.farmer:
+                  return const FarmerMainNav();
+                case UserRole.buyer:
+                  return const BuyerMainNav();
+                case UserRole.unauthenticated:
+                  return const LoginScreen();
+              }
+            },
+          ),
+        );
+      },
     );
   }
 }

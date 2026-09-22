@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/providers/app_state_provider.dart';
 import 'farmer_registration_screen.dart';
 import 'buyer_registration_screen.dart';
@@ -259,8 +260,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.isDarkMode;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F8F7),
+      backgroundColor: context.scaffoldBg,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -268,12 +271,12 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Container(
               constraints: const BoxConstraints(maxWidth: 440),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardBg,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFFE5ECE5), width: 1.2),
+                border: Border.all(color: context.cardBorder, width: 1.2),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
+                    color: Colors.black.withOpacity(isDark ? 0.3 : 0.04),
                     blurRadius: 16,
                     offset: const Offset(0, 4),
                   ),
@@ -285,23 +288,55 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Brand Header
+                    // Brand Logo & Header
+                    Center(
+                      child: Container(
+                        width: 76,
+                        height: 76,
+                        margin: const EdgeInsets.only(bottom: 14),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: isDark ? const Color(0xFF0F172A) : Colors.black,
+                          border: Border.all(color: AppColors.asvannaButtonGreen, width: 2.5),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.asvannaButtonGreen.withOpacity(0.25),
+                              blurRadius: 14,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: ClipOval(
+                          child: Image.asset(
+                            'assets/images/aswanna_logo.png',
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Center(
+                                child: Icon(Icons.eco, color: Colors.greenAccent, size: 40),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
                     Text(
                       'ASVANNA',
+                      textAlign: TextAlign.center,
                       style: GoogleFonts.poppins(
                         fontSize: 26,
                         fontWeight: FontWeight.w900,
-                        color: AppColors.asvannaDarkGreen,
+                        color: isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen,
                         letterSpacing: 0.5,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Unified Access Portal for Agricultural Stakeholders',
+                      textAlign: TextAlign.center,
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
-                        color: AppColors.asvannaTextSubtitle,
+                        color: context.subText,
                         height: 1.3,
                       ),
                     ),
@@ -311,8 +346,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: AppColors.asvannaPillBg,
+                        color: isDark ? const Color(0xFF0F172A) : AppColors.asvannaPillBg,
                         borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: context.cardBorder),
                       ),
                       child: Row(
                         children: [
@@ -320,11 +356,13 @@ class _LoginScreenState extends State<LoginScreen> {
                             role: UserRole.farmer,
                             label: 'Farmer',
                             icon: Icons.person_outline_rounded,
+                            isDark: isDark,
                           ),
                           _buildRoleTab(
                             role: UserRole.buyer,
                             label: 'Local Buyer',
                             icon: Icons.shopping_cart_outlined,
+                            isDark: isDark,
                           ),
                         ],
                       ),
@@ -337,7 +375,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: GoogleFonts.inter(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.asvannaDarkGreen,
+                        color: context.titleText,
                       ),
                     ),
                     const SizedBox(height: 7),
@@ -346,30 +384,30 @@ class _LoginScreenState extends State<LoginScreen> {
                       keyboardType: TextInputType.text,
                       style: GoogleFonts.inter(
                         fontSize: 14.5,
-                        color: AppColors.asvannaTextDark,
+                        color: context.titleText,
                         fontWeight: FontWeight.w500,
                       ),
                       decoration: InputDecoration(
                         hintText: 'e.g. 0712345678 or 199012345678',
                         hintStyle: GoogleFonts.inter(
                           fontSize: 13.5,
-                          color: const Color(0xFF90A395),
+                          color: isDark ? const Color(0xFF64748B) : const Color(0xFF90A395),
                         ),
-                        prefixIcon: const Icon(
+                        prefixIcon: Icon(
                           Icons.phone_android_outlined,
-                          color: Color(0xFF6F8274),
+                          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF6F8274),
                           size: 20,
                         ),
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: isDark ? const Color(0xFF0F172A) : Colors.white,
                         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: AppColors.asvannaBorder, width: 1.2),
+                          borderSide: BorderSide(color: context.cardBorder, width: 1.2),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: AppColors.asvannaDarkGreen, width: 1.8),
+                          borderSide: BorderSide(color: isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen, width: 1.8),
                         ),
                         errorBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -398,7 +436,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 13.5,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.asvannaDarkGreen,
+                            color: context.titleText,
                           ),
                         ),
                         GestureDetector(
@@ -408,7 +446,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             style: GoogleFonts.inter(
                               fontSize: 12.5,
                               fontWeight: FontWeight.w700,
-                              color: AppColors.asvannaDarkGreen,
+                              color: isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen,
                             ),
                           ),
                         ),
@@ -420,24 +458,24 @@ class _LoginScreenState extends State<LoginScreen> {
                       obscureText: _obscurePassword,
                       style: GoogleFonts.inter(
                         fontSize: 14.5,
-                        color: AppColors.asvannaTextDark,
+                        color: context.titleText,
                         fontWeight: FontWeight.w500,
                       ),
                       decoration: InputDecoration(
                         hintText: 'Enter your password',
                         hintStyle: GoogleFonts.inter(
                           fontSize: 13.5,
-                          color: const Color(0xFF90A395),
+                          color: isDark ? const Color(0xFF64748B) : const Color(0xFF90A395),
                         ),
-                        prefixIcon: const Icon(
+                        prefixIcon: Icon(
                           Icons.lock_outline_rounded,
-                          color: Color(0xFF6F8274),
+                          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF6F8274),
                           size: 20,
                         ),
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                            color: const Color(0xFF6F8274),
+                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF6F8274),
                             size: 20,
                           ),
                           onPressed: () {
@@ -445,15 +483,15 @@ class _LoginScreenState extends State<LoginScreen> {
                           },
                         ),
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: isDark ? const Color(0xFF0F172A) : Colors.white,
                         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: AppColors.asvannaBorder, width: 1.2),
+                          borderSide: BorderSide(color: context.cardBorder, width: 1.2),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: AppColors.asvannaDarkGreen, width: 1.8),
+                          borderSide: BorderSide(color: isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen, width: 1.8),
                         ),
                         errorBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -481,9 +519,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           height: 24,
                           child: Checkbox(
                             value: _rememberSession,
-                            activeColor: AppColors.asvannaDarkGreen,
+                            activeColor: isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                            side: const BorderSide(color: Color(0xFFB5C4B5), width: 1.5),
+                            side: BorderSide(color: isDark ? const Color(0xFF475569) : const Color(0xFFB5C4B5), width: 1.5),
                             onChanged: (val) {
                               setState(() => _rememberSession = val ?? true);
                             },
@@ -499,7 +537,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               'Remember session (8 Hours)',
                               style: GoogleFonts.inter(
                                 fontSize: 13,
-                                color: const Color(0xFF4C6353),
+                                color: context.subText,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -551,7 +589,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     // SECURE ACCESS Divider
                     Row(
                       children: [
-                        const Expanded(child: Divider(color: Color(0xFFE0E7E0), thickness: 1.2)),
+                        Expanded(child: Divider(color: isDark ? const Color(0xFF334155) : const Color(0xFFE0E7E0), thickness: 1.2)),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 12),
                           child: Text(
@@ -560,11 +598,11 @@ class _LoginScreenState extends State<LoginScreen> {
                               fontSize: 10.5,
                               fontWeight: FontWeight.w800,
                               letterSpacing: 1.4,
-                              color: const Color(0xFF7A8F7F),
+                              color: context.subText,
                             ),
                           ),
                         ),
-                        const Expanded(child: Divider(color: Color(0xFFE0E7E0), thickness: 1.2)),
+                        Expanded(child: Divider(color: isDark ? const Color(0xFF334155) : const Color(0xFFE0E7E0), thickness: 1.2)),
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -573,25 +611,25 @@ class _LoginScreenState extends State<LoginScreen> {
                     ElevatedButton.icon(
                       onPressed: _showOtpLoginDialog,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.asvannaLightGreen,
-                        foregroundColor: AppColors.asvannaDarkGreen,
+                        backgroundColor: context.softGreenBg,
+                        foregroundColor: isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen,
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(vertical: 13),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.verified_user_outlined,
                         size: 18,
-                        color: AppColors.asvannaDarkGreen,
+                        color: isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen,
                       ),
                       label: Text(
                         'Login with OTP',
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.asvannaDarkGreen,
+                          color: isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen,
                         ),
                       ),
                     ),
@@ -607,14 +645,14 @@ class _LoginScreenState extends State<LoginScreen> {
                             text: 'Need help accessing your account? ',
                             style: GoogleFonts.inter(
                               fontSize: 12.5,
-                              color: const Color(0xFF5A7261),
+                              color: context.subText,
                             ),
                             children: [
                               TextSpan(
                                 text: 'Contact Support',
                                 style: GoogleFonts.inter(
                                   fontWeight: FontWeight.w700,
-                                  color: AppColors.asvannaDarkGreen,
+                                  color: isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen,
                                 ),
                               ),
                             ],
@@ -634,7 +672,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             text: "Don't have an account? ",
                             style: GoogleFonts.inter(
                               fontSize: 12.5,
-                              color: const Color(0xFF5A7261),
+                              color: context.subText,
                             ),
                             children: [
                               TextSpan(
@@ -674,6 +712,7 @@ class _LoginScreenState extends State<LoginScreen> {
     required UserRole role,
     required String label,
     required IconData icon,
+    required bool isDark,
   }) {
     final isSelected = _selectedRole == role;
 
@@ -688,7 +727,9 @@ class _LoginScreenState extends State<LoginScreen> {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
           decoration: BoxDecoration(
-            color: isSelected ? AppColors.asvannaLightGreen : Colors.transparent,
+            color: isSelected
+                ? (isDark ? const Color(0xFF143E23) : AppColors.asvannaLightGreen)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -698,7 +739,9 @@ class _LoginScreenState extends State<LoginScreen> {
               Icon(
                 icon,
                 size: 19,
-                color: isSelected ? AppColors.asvannaDarkGreen : const Color(0xFF6B7E70),
+                color: isSelected
+                    ? (isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen)
+                    : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF6B7E70)),
               ),
               const SizedBox(height: 4),
               Text(
@@ -707,7 +750,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 style: GoogleFonts.inter(
                   fontSize: 11.5,
                   fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                  color: isSelected ? AppColors.asvannaDarkGreen : const Color(0xFF4C6152),
+                  color: isSelected
+                      ? (isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen)
+                      : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF4C6152)),
                   height: 1.15,
                 ),
               ),
@@ -734,25 +779,27 @@ class _SupportItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.isDarkMode;
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFFF4F7F4),
+          color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF4F7F4),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFE2EBE2)),
+          border: Border.all(color: context.cardBorder),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: isDark ? const Color(0xFF1E293B) : Colors.white,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, color: AppColors.asvannaDarkGreen, size: 20),
+              child: Icon(icon, color: isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen, size: 20),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -764,7 +811,7 @@ class _SupportItem extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 13.5,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.asvannaTextDark,
+                      color: context.titleText,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -772,13 +819,13 @@ class _SupportItem extends StatelessWidget {
                     subtitle,
                     style: GoogleFonts.inter(
                       fontSize: 12,
-                      color: AppColors.textSecondary,
+                      color: context.subText,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Color(0xFF8B9E90)),
+            Icon(Icons.arrow_forward_ios_rounded, size: 14, color: isDark ? const Color(0xFF64748B) : const Color(0xFF8B9E90)),
           ],
         ),
       ),
@@ -876,10 +923,12 @@ class _OtpLoginSheetState extends State<_OtpLoginSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.isDarkMode;
+
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: context.cardBg,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: EdgeInsets.only(
         left: 24,
@@ -899,20 +948,20 @@ class _OtpLoginSheetState extends State<_OtpLoginSheet> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: AppColors.asvannaLightGreen,
+                      color: context.softGreenBg,
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.shield_outlined, color: AppColors.asvannaDarkGreen, size: 22),
+                    child: Icon(Icons.shield_outlined, color: isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen, size: 22),
                   ),
                   const SizedBox(width: 12),
                   Text(
                     'Instant OTP Login',
-                    style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: context.titleText),
                   ),
                 ],
               ),
               IconButton(
-                icon: const Icon(Icons.close),
+                icon: Icon(Icons.close, color: context.titleText),
                 onPressed: () => Navigator.pop(context),
               ),
             ],
@@ -920,19 +969,20 @@ class _OtpLoginSheetState extends State<_OtpLoginSheet> {
           const SizedBox(height: 14),
           Text(
             'We will send a 6-digit one-time password to your registered mobile number for instant verification.',
-            style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
+            style: GoogleFonts.inter(fontSize: 13, color: context.subText, height: 1.4),
           ),
           const SizedBox(height: 18),
           TextField(
             controller: _phoneController,
+            style: GoogleFonts.inter(color: context.titleText),
             decoration: InputDecoration(
               labelText: 'Phone Number / NIC',
-              prefixIcon: const Icon(Icons.phone_android),
+              prefixIcon: Icon(Icons.phone_android, color: context.subText),
               suffixIcon: TextButton(
                 onPressed: _timerSeconds == 0 || !_codeSent ? _sendOtp : null,
                 child: Text(
                   _codeSent && _timerSeconds > 0 ? '${_timerSeconds}s' : 'Send Code',
-                  style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+                  style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen),
                 ),
               ),
             ),
@@ -941,7 +991,7 @@ class _OtpLoginSheetState extends State<_OtpLoginSheet> {
             const SizedBox(height: 20),
             Text(
               'Enter 6-Digit OTP Code:',
-              style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
+              style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: context.titleText),
             ),
             const SizedBox(height: 10),
             Row(
@@ -956,19 +1006,19 @@ class _OtpLoginSheetState extends State<_OtpLoginSheet> {
                     textAlign: TextAlign.center,
                     keyboardType: TextInputType.number,
                     maxLength: 1,
-                    style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: context.titleText),
                     decoration: InputDecoration(
                       counterText: '',
                       contentPadding: EdgeInsets.zero,
                       filled: true,
-                      fillColor: const Color(0xFFF2F6F2),
+                      fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF2F6F2),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: AppColors.asvannaBorder),
+                        borderSide: BorderSide(color: context.cardBorder),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: AppColors.asvannaDarkGreen, width: 2),
+                        borderSide: BorderSide(color: isDark ? AppColors.darkEmerald : AppColors.asvannaDarkGreen, width: 2),
                       ),
                     ),
                     onChanged: (val) {
@@ -993,7 +1043,7 @@ class _OtpLoginSheetState extends State<_OtpLoginSheet> {
             ),
             child: Text(
               _codeSent ? 'Verify OTP & Log In' : 'Send Verification OTP',
-              style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.bold),
+              style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
             ),
           ),
         ],

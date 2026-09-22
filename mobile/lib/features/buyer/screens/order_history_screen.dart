@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 
 class OrderHistoryScreen extends StatelessWidget {
   const OrderHistoryScreen({super.key});
@@ -106,7 +107,7 @@ class OrderHistoryScreen extends StatelessWidget {
 
             Text(
               'Past Surplus Procurements',
-              style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold),
+              style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: context.titleText),
             ),
             const SizedBox(height: 12),
 
@@ -115,9 +116,16 @@ class OrderHistoryScreen extends StatelessWidget {
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.cardBg,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFE2ECE2)),
+                  border: Border.all(color: context.cardBorder),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(context.isDarkMode ? 0.2 : 0.03),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -127,17 +135,21 @@ class OrderHistoryScreen extends StatelessWidget {
                       children: [
                         Text(
                           ord['crop'] as String,
-                          style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold),
+                          style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: context.titleText),
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: AppColors.primarySoft,
+                            color: context.softGreenBg,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
                             ord['status'] as String,
-                            style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.primaryDark),
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: context.isDarkMode ? const Color(0xFF86EFAC) : AppColors.primaryDark,
+                            ),
                           ),
                         ),
                       ],
@@ -145,14 +157,14 @@ class OrderHistoryScreen extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(
                       'Farmer: ${ord['farmer']}',
-                      style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary),
+                      style: GoogleFonts.inter(fontSize: 12, color: context.subText),
                     ),
                     Text(
                       'Procured on ${dateFormat.format(ord['date'] as DateTime)} • Order #${ord['id']}',
-                      style: GoogleFonts.inter(fontSize: 11, color: AppColors.textMuted),
+                      style: GoogleFonts.inter(fontSize: 11, color: context.subText),
                     ),
                     const SizedBox(height: 12),
-                    const Divider(color: Color(0xFFEFF4EF)),
+                    Divider(color: context.cardBorder),
                     const SizedBox(height: 6),
 
                     Row(
@@ -160,18 +172,22 @@ class OrderHistoryScreen extends StatelessWidget {
                       children: [
                         Text(
                           'Volume: ${(ord['quantity'] as double).toStringAsFixed(0)} Kg',
-                          style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
+                          style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: context.titleText),
                         ),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
                               'Rs. ${(ord['cost'] as double).toStringAsFixed(0)} Paid',
-                              style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                              style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: context.titleText),
                             ),
                             Text(
                               'Saved Rs. ${(ord['saved'] as double).toStringAsFixed(0)}',
-                              style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.primary),
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: context.isDarkMode ? const Color(0xFF4ADE80) : AppColors.primary,
+                              ),
                             ),
                           ],
                         ),
