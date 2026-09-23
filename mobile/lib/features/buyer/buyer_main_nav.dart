@@ -3,7 +3,6 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import 'screens/proximity_marketplace_screen.dart';
 import 'screens/order_history_screen.dart';
-import '../auth/role_selection_screen.dart';
 
 class BuyerMainNav extends StatefulWidget {
   const BuyerMainNav({super.key});

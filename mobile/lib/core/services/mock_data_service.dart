@@ -1,9 +1,9 @@
 import '../models/crop_model.dart';
 import '../models/risk_analysis_model.dart';
 import '../models/farmer_model.dart';
-import '../models/buyer_model.dart';
 import '../models/surplus_listing_model.dart';
 import '../models/notice_model.dart';
+import '../models/weather_model.dart';
 
 class MockDataService {
   static List<Crop> getUpcountryCrops() {
@@ -390,4 +390,201 @@ class MockDataService {
       ),
     ];
   }
+
+  static WeatherData getFallbackWeatherData([String division = 'Bandarawela']) {
+    final divLower = division.toLowerCase();
+    final today = DateTime.now().toIso8601String().split('T')[0];
+
+    if (divLower.contains('nuwara')) {
+      return WeatherData(
+        location: WeatherLocation(
+          name: 'Nuwara Eliya',
+          district: 'Nuwara Eliya',
+          province: 'Central',
+          elevationMeters: 1868,
+          elevationText: '1,868m • Central Province',
+          latitude: 6.9497,
+          longitude: 80.7891,
+        ),
+        current: CurrentWeather(
+          date: today,
+          temp: '16°C',
+          tempMin: 8.5,
+          tempMax: 17.5,
+          tempAvg: 13.0,
+          humidity: '92%',
+          humidityAvg: 92,
+          rainfallMm: 8.5,
+          wind: '18 km/h',
+          windSpeedMax: 18.0,
+          rainProb: '85%',
+          precipitationProbability: 85,
+          condition: 'Mist & Intermittent Drizzle',
+          emoji: '🌧️',
+          elevation: '1,868m • Central Province',
+          agScore: '65/100 (Caution)',
+          frostRisk: 'HIGH RISK (Night: 7°C)',
+          agriculturalScores: AgriculturalScores(
+            tempScore: 65,
+            rainScore: 75,
+            diseaseScore: 50,
+            suitabilityScore: 65,
+            weatherRiskScore: 35,
+          ),
+        ),
+        hourly: [
+          HourlyForecast(time: '06:00', temp: '9°C', tempValue: 9.0, icon: '🌫️', rain: '40%', rainProb: 40, humidity: 95),
+          HourlyForecast(time: '09:00', temp: '13°C', tempValue: 13.0, icon: '⛅', rain: '30%', rainProb: 30, humidity: 88),
+          HourlyForecast(time: '12:00', temp: '17°C', tempValue: 17.0, icon: '🌧️', rain: '75%', rainProb: 75, humidity: 85),
+          HourlyForecast(time: '15:00', temp: '15°C', tempValue: 15.0, icon: '🌧️', rain: '90%', rainProb: 90, humidity: 92),
+          HourlyForecast(time: '18:00', temp: '12°C', tempValue: 12.0, icon: '🌧️', rain: '80%', rainProb: 80, humidity: 94),
+          HourlyForecast(time: '21:00', temp: '8°C', tempValue: 8.0, icon: '🌫️', rain: '45%', rainProb: 45, humidity: 96),
+        ],
+        forecast: [],
+        diseases: [
+          DiseaseAdvisory(
+            name: 'Ground Frost Damage (මල් තුෂාර හානිය)',
+            risk: 'Severe Frost Alert',
+            colorHex: '#DC2626',
+            advice: 'Night temperatures dropping to 7°C. Cover sensitive potato & leek beds with polythene mulch.',
+          ),
+          DiseaseAdvisory(
+            name: 'Late Blight (අර්තාපල් පාළු රෝගය)',
+            risk: 'Critical Risk',
+            colorHex: '#DC2626',
+            advice: 'Persistent leaf wetness. Apply protective copper fungicide when rain stops.',
+          ),
+        ],
+        fetchedAt: DateTime.now().toIso8601String(),
+        source: 'LOCAL_INTELLIGENCE_CACHE',
+      );
+    } else if (divLower.contains('weli')) {
+      return WeatherData(
+        location: WeatherLocation(
+          name: 'Welimada',
+          district: 'Badulla',
+          province: 'Uva',
+          elevationMeters: 1060,
+          elevationText: '1,060m • Uva Province',
+          latitude: 6.9033,
+          longitude: 80.9022,
+        ),
+        current: CurrentWeather(
+          date: today,
+          temp: '24°C',
+          tempMin: 16.5,
+          tempMax: 26.0,
+          tempAvg: 21.2,
+          humidity: '72%',
+          humidityAvg: 72,
+          rainfallMm: 1.5,
+          wind: '11 km/h',
+          windSpeedMax: 11.0,
+          rainProb: '30%',
+          precipitationProbability: 30,
+          condition: 'Partly Sunny & Mild Breeze',
+          emoji: '☀️',
+          elevation: '1,060m • Uva Province',
+          agScore: '92/100 (Safe)',
+          frostRisk: 'None',
+          agriculturalScores: AgriculturalScores(
+            tempScore: 95,
+            rainScore: 92,
+            diseaseScore: 88,
+            suitabilityScore: 92,
+            weatherRiskScore: 8,
+          ),
+        ),
+        hourly: [
+          HourlyForecast(time: '06:00', temp: '18°C', tempValue: 18.0, icon: '⛅', rain: '5%', rainProb: 5, humidity: 80),
+          HourlyForecast(time: '09:00', temp: '22°C', tempValue: 22.0, icon: '☀️', rain: '10%', rainProb: 10, humidity: 70),
+          HourlyForecast(time: '12:00', temp: '25°C', tempValue: 25.0, icon: '🌤️', rain: '20%', rainProb: 20, humidity: 65),
+          HourlyForecast(time: '15:00', temp: '24°C', tempValue: 24.0, icon: '⛅', rain: '35%', rainProb: 35, humidity: 70),
+          HourlyForecast(time: '18:00', temp: '20°C', tempValue: 20.0, icon: '⛅', rain: '25%', rainProb: 25, humidity: 78),
+          HourlyForecast(time: '21:00', temp: '17°C', tempValue: 17.0, icon: '🌙', rain: '10%', rainProb: 10, humidity: 82),
+        ],
+        forecast: [],
+        diseases: [
+          DiseaseAdvisory(
+            name: 'Powdery Mildew (අළු පුස්)',
+            risk: 'Low Risk',
+            colorHex: '#16A34A',
+            advice: 'Favorable conditions across Welimada plains for beans & capsicum.',
+          ),
+        ],
+        fetchedAt: DateTime.now().toIso8601String(),
+        source: 'LOCAL_INTELLIGENCE_CACHE',
+      );
+    }
+
+    // Default Bandarawela
+    return WeatherData(
+      location: WeatherLocation(
+        name: 'Bandarawela',
+        district: 'Badulla',
+        province: 'Uva',
+        elevationMeters: 1230,
+        elevationText: '1,230m • Badulla District',
+        latitude: 6.8304,
+        longitude: 80.9878,
+      ),
+      current: CurrentWeather(
+        date: today,
+        temp: '21°C',
+        tempMin: 14.5,
+        tempMax: 23.5,
+        tempAvg: 19.0,
+        humidity: '84%',
+        humidityAvg: 84,
+        rainfallMm: 4.2,
+        wind: '14 km/h',
+        windSpeedMax: 14.0,
+        rainProb: '75%',
+        precipitationProbability: 75,
+        condition: 'Scattered Afternoon Showers',
+        emoji: '⛅',
+        elevation: '1,230m • Badulla District',
+        agScore: '88/100 (Safe)',
+        agriculturalScores: AgriculturalScores(
+          tempScore: 92,
+          rainScore: 88,
+          diseaseScore: 82,
+          suitabilityScore: 88,
+          weatherRiskScore: 12,
+        ),
+      ),
+      hourly: [
+        HourlyForecast(time: '06:00', temp: '15°C', tempValue: 15.0, icon: '⛅', rain: '10%', rainProb: 10, humidity: 88),
+        HourlyForecast(time: '09:00', temp: '19°C', tempValue: 19.0, icon: '☀️', rain: '15%', rainProb: 15, humidity: 80),
+        HourlyForecast(time: '12:00', temp: '23°C', tempValue: 23.0, icon: '⛅', rain: '35%', rainProb: 35, humidity: 74),
+        HourlyForecast(time: '15:00', temp: '21°C', tempValue: 21.0, icon: '🌧️', rain: '80%', rainProb: 80, humidity: 86),
+        HourlyForecast(time: '18:00', temp: '18°C', tempValue: 18.0, icon: '🌧️', rain: '70%', rainProb: 70, humidity: 90),
+        HourlyForecast(time: '21:00', temp: '16°C', tempValue: 16.0, icon: '☁️', rain: '30%', rainProb: 30, humidity: 88),
+      ],
+      forecast: [],
+      diseases: [
+        DiseaseAdvisory(
+          name: 'Late Blight (තක්කාලි/අල පාළු රෝගය)',
+          risk: 'High Risk',
+          colorHex: '#DC2626',
+          advice: 'High humidity (84%) + 14°C night temp. Avoid sprinkler irrigation after 2 PM.',
+        ),
+        DiseaseAdvisory(
+          name: 'Downy Mildew (ගෝවා පුස් රෝගය)',
+          risk: 'Moderate',
+          colorHex: '#D97706',
+          advice: 'Ensure adequate row ventilation in cabbage nurseries.',
+        ),
+        DiseaseAdvisory(
+          name: 'Root Rot (මුල් කුණුවීම)',
+          risk: 'Safe',
+          colorHex: '#16A34A',
+          advice: 'Soil drainage in Heeloya valley remains within healthy thresholds.',
+        ),
+      ],
+      fetchedAt: DateTime.now().toIso8601String(),
+      source: 'LOCAL_INTELLIGENCE_CACHE',
+    );
+  }
 }
+

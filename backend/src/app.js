@@ -50,6 +50,7 @@ app.use('/api/v1/weather', weatherRoutes);
 app.use('/api/v1/prices', priceRoutes);
 app.use('/api/v1/crops', cropRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
+app.use('/api/v1/notices', notificationRoutes);
 
 // 404 Handler
 app.use((req, res) => {

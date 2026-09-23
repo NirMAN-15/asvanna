@@ -5,6 +5,7 @@ import '../models/crop_model.dart';
 import '../models/risk_analysis_model.dart';
 import '../models/surplus_listing_model.dart';
 import '../models/notice_model.dart';
+import '../models/weather_model.dart';
 import 'mock_data_service.dart';
 import 'offline_storage_service.dart';
 
@@ -304,16 +305,31 @@ class ApiService {
   }
 
   // 8. Fetch Agrarian Notices (GET /api/v1/notices)
-  static Future<List<AgrarianNotice>> getNotices() async {
+  static Future<List<AgrarianNotice>> getNotices({
+    String district = 'Badulla',
+    String division = 'Bandarawela',
+    String lang = 'en',
+    int limit = 50,
+  }) async {
     try {
-      final response = await http
-          .get(Uri.parse('$baseUrl/notices'))
-          .timeout(const Duration(seconds: 3));
+      final uri = Uri.parse('$baseUrl/notices?district=$district&division=$division&lang=$lang&limit=$limit');
+      final response = await http.get(uri).timeout(const Duration(seconds: 4));
 
       if (response.statusCode == 200) {
-        // Parse notices
+        final body = jsonDecode(response.body);
+        final list = (body['data'] as List<dynamic>?) ?? [];
+        if (list.isNotEmpty) {
+          isOnlineMode = true;
+          return list
+              .map((n) => AgrarianNotice.fromJson(n as Map<String, dynamic>, lang: lang))
+              .toList();
+        }
       }
-    } catch (_) {}
+    } catch (err) {
+      if (kDebugMode) {
+        print('Backend notices fetch failed: $err. Using local fallback.');
+      }
+    }
 
     if (useMockFallback) {
       return MockDataService.getAgrarianNotices();
@@ -321,7 +337,218 @@ class ApiService {
     return [];
   }
 
-  // 9. Sync pending offline queue when online
+  // 8.1 Register Device Token for Push Notifications (POST /api/v1/notifications/register-token)
+  static Future<bool> registerDeviceToken(String token, {Map<String, dynamic>? deviceInfo}) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/notifications/register-token'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'fcm_token': token,
+              'device_info': deviceInfo ?? {'platform': defaultTargetPlatform.name, 'client': 'Asvanna Flutter App'},
+            }),
+          )
+          .timeout(const Duration(seconds: 4));
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return true;
+      }
+    } catch (err) {
+      if (kDebugMode) {
+        print('Device token registration failed: $err');
+      }
+    }
+    return false;
+  }
+
+  // 8.2 Push Agrarian Broadcast Notice / Notification (POST /api/v1/notifications/push)
+  static Future<AgrarianNotice?> pushBroadcastAlert({
+    required String title,
+    required String description,
+    String? titleSi,
+    String? titleTa,
+    String? descriptionSi,
+    String? descriptionTa,
+    String category = 'Crop Directive',
+    NoticePriority priority = NoticePriority.urgent,
+    String district = 'Badulla',
+    String division = 'Bandarawela',
+    String department = 'Department of Agrarian Development',
+    String issuedBy = 'Bandarawela Agrarian Services Centre',
+  }) async {
+    final payload = {
+      'title': title,
+      'title_en': title,
+      'title_si': titleSi ?? title,
+      'title_ta': titleTa ?? title,
+      'description': description,
+      'description_en': description,
+      'description_si': descriptionSi ?? description,
+      'description_ta': descriptionTa ?? description,
+      'category': category,
+      'priority': priority.name,
+      'severity': priority == NoticePriority.urgent
+          ? 'CRITICAL'
+          : (priority == NoticePriority.high ? 'HIGH' : 'MEDIUM'),
+      'targetDistrict': district,
+      'targetDivision': division,
+      'department': department,
+      'issuedBy': issuedBy,
+    };
+
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/notifications/push'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(payload),
+          )
+          .timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final body = jsonDecode(response.body);
+        final data = body['data'] as Map<String, dynamic>?;
+        if (data != null) {
+          return AgrarianNotice.fromJson(data);
+        }
+      }
+    } catch (err) {
+      if (kDebugMode) {
+        print('Push alert failed: $err');
+      }
+    }
+
+    // Fallback local notice creation
+    return AgrarianNotice(
+      id: 'local_${DateTime.now().millisecondsSinceEpoch}',
+      title: title,
+      titleSi: titleSi,
+      titleTa: titleTa,
+      description: description,
+      descriptionSi: descriptionSi,
+      descriptionTa: descriptionTa,
+      category: category,
+      priority: priority,
+      department: department,
+      issuedBy: issuedBy,
+      date: DateTime.now(),
+      isOfficial: true,
+    );
+  }
+
+  // 8.3 Fetch User In-App Notifications (GET /api/v1/notifications)
+  static Future<List<AppNotification>> getNotifications({int limit = 50}) async {
+    try {
+      final response = await http
+          .get(Uri.parse('$baseUrl/notifications?limit=$limit'))
+          .timeout(const Duration(seconds: 4));
+
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        final list = (body['data'] as List<dynamic>?) ?? [];
+        return list.map((n) => AppNotification.fromJson(n as Map<String, dynamic>)).toList();
+      }
+    } catch (_) {}
+    return [];
+  }
+
+  // 8.4 Mark Notification as Read (PUT /api/v1/notifications/:id/read)
+  static Future<bool> markNotificationAsRead(String id) async {
+    try {
+      final response = await http
+          .put(Uri.parse('$baseUrl/notifications/$id/read'))
+          .timeout(const Duration(seconds: 3));
+      return response.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // 9. Fetch Live Weather Forecast & Agricultural Radar (GET /api/v1/weather/forecast)
+  static Future<WeatherData?> getWeatherForecast({
+    String division = 'Bandarawela',
+    double? lat,
+    double? lng,
+    int days = 14,
+  }) async {
+    try {
+      final queryParams = <String, String>{
+        'division': division,
+        'days': days.toString(),
+      };
+      if (lat != null) queryParams['lat'] = lat.toString();
+      if (lng != null) queryParams['lng'] = lng.toString();
+
+      final uri = Uri.parse('$baseUrl/weather/forecast').replace(queryParameters: queryParams);
+      final response = await http.get(uri).timeout(const Duration(seconds: 4));
+
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        final data = body['data'] as Map<String, dynamic>?;
+        if (data != null) {
+          isOnlineMode = true;
+          return WeatherData.fromJson(data);
+        }
+      }
+    } catch (err) {
+      if (kDebugMode) {
+        print('Weather forecast fetch failed for $division: $err. Using local fallback.');
+      }
+    }
+
+    if (useMockFallback) {
+      return MockDataService.getFallbackWeatherData(division);
+    }
+    return null;
+  }
+
+  // 10. Fetch Current Weather Summary (GET /api/v1/weather/current)
+  static Future<CurrentWeather?> getCurrentWeather({
+    String division = 'Bandarawela',
+    double? lat,
+    double? lng,
+  }) async {
+    try {
+      final queryParams = <String, String>{'division': division};
+      if (lat != null) queryParams['lat'] = lat.toString();
+      if (lng != null) queryParams['lng'] = lng.toString();
+
+      final uri = Uri.parse('$baseUrl/weather/current').replace(queryParameters: queryParams);
+      final response = await http.get(uri).timeout(const Duration(seconds: 4));
+
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        final cur = body['data']?['current'] as Map<String, dynamic>?;
+        if (cur != null) {
+          isOnlineMode = true;
+          return CurrentWeather.fromJson(cur);
+        }
+      }
+    } catch (_) {}
+
+    if (useMockFallback) {
+      return MockDataService.getFallbackWeatherData(division).current;
+    }
+    return null;
+  }
+
+  // 11. Fetch Crop Weather Suitability (GET /api/v1/weather/crop-suitability/:cropId)
+  static Future<Map<String, dynamic>?> getCropWeatherSuitability(String cropId) async {
+    try {
+      final cleanId = cropId.replaceFirst(RegExp(r'^crop_'), '');
+      final uri = Uri.parse('$baseUrl/weather/crop-suitability/$cleanId');
+      final response = await http.get(uri).timeout(const Duration(seconds: 4));
+
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        return body['data'] as Map<String, dynamic>?;
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  // 12. Sync pending offline queue when online
   static Future<int> syncPendingOfflineQueue() async {
     final queue = await OfflineStorageService.getOfflineQueue();
     if (queue.isEmpty) return 0;
