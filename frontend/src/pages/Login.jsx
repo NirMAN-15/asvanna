@@ -2,7 +2,7 @@ import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { LanguageContext } from '../context/LanguageContext';
-import { validateLoginIdentifier } from '../utils/validation';
+import { validateNIC } from '../utils/validation';
 import farmerBg from '../assets/login-farmer-bg.jpg';
 import buyerBg from '../assets/login-buyer-bg.jpg';
 import officerBg from '../assets/login-officer-bg.jpg';
@@ -47,34 +47,31 @@ export default function Login() {
   const location = useLocation();
 
   const [role, setRole] = useState('FARMER'); // 'FARMER', 'BUYER', 'OFFICER'
-  const [identifier, setIdentifier] = useState('0712345678');
-  const [identifierError, setIdentifierError] = useState('');
+  const [nic, setNic] = useState('197823456789');
+  const [nicError, setNicError] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberSession, setRememberSession] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showOtpModal, setShowOtpModal] = useState(false);
-  const [otpCode, setOtpCode] = useState('');
-  const [otpSuccess, setOtpSuccess] = useState(false);
 
   const handleRoleSelect = (newRole) => {
     setRole(newRole);
     setError('');
-    setIdentifierError('');
+    setNicError('');
     if (newRole === 'OFFICER') {
-      setIdentifier('0771234567');
+      setNic('198512345678');
     } else if (newRole === 'FARMER') {
-      setIdentifier('0712345678');
+      setNic('197823456789');
     } else if (newRole === 'BUYER') {
-      setIdentifier('0572222222');
+      setNic('200134567890');
     }
   };
 
-  const handleIdentifierBlur = () => {
-    if (identifier) {
-      const res = validateLoginIdentifier(identifier);
-      setIdentifierError(res.isValid ? '' : res.message);
+  const handleNicBlur = () => {
+    if (nic) {
+      const res = validateNIC(nic);
+      setNicError(res.isValid ? '' : res.message);
     }
   };
 
@@ -88,38 +85,21 @@ export default function Login() {
     e?.preventDefault();
     setError('');
 
-    const identRes = validateLoginIdentifier(identifier);
-    if (!identRes.isValid) {
-      setIdentifierError(identRes.message);
-      setError(identRes.message);
+    const nicRes = validateNIC(nic);
+    if (!nicRes.isValid) {
+      setNicError(nicRes.message);
+      setError(nicRes.message);
       return;
     }
 
     setLoading(true);
-    const res = await login(identRes.clean || identifier, password, role);
+    const res = await login(nicRes.clean || nic.trim().toUpperCase(), password, role);
     setLoading(false);
 
     if (res.success) {
       navigate('/dashboard');
     } else {
       setError(res.message || 'Login failed. Please check your credentials.');
-    }
-  };
-
-  const handleOtpLogin = async (e) => {
-    e.preventDefault();
-    if (otpCode.length < 4) {
-      setError('Please enter a valid 4-digit verification code.');
-      return;
-    }
-    setLoading(true);
-    const res = await login(identifier, password, role, otpCode);
-    setLoading(false);
-    if (res.success) {
-      setShowOtpModal(false);
-      navigate('/dashboard');
-    } else {
-      setError(res.message || 'OTP verification failed.');
     }
   };
 
@@ -318,36 +298,38 @@ export default function Login() {
 
             {/* Login Form */}
             <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-              {/* Identification Field */}
+              {/* National Identity Card (NIC) Field */}
               <div className="flex flex-col gap-1.5">
                 <div className="flex items-center justify-between px-1">
-                  <label className="font-label-md text-sm sm:text-base text-primary font-semibold" htmlFor="identifier">
-                    Phone Number or NIC
+                  <label className="font-label-md text-sm sm:text-base text-primary font-semibold" htmlFor="nic">
+                    {lang === 'si' ? 'ජාතික හැඳුනුම්පත් අංකය (NIC)' : lang === 'ta' ? 'தேசிய அடையாள அட்டை எண் (NIC)' : 'National Identity Card (NIC)'}
                   </label>
-                  <span className="text-xs text-on-surface-variant">Phone (07XXXXXXXX) or NIC</span>
+                  <span className="text-xs text-on-surface-variant">
+                    {lang === 'si' ? 'අංක 9+V හෝ අංක 12' : lang === 'ta' ? '9 இலக்கங்கள்+V அல்லது 12 இலக்கங்கள்' : '9 digits + V or 12 digits'}
+                  </span>
                 </div>
                 <div className="relative group">
                   <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-xl sm:text-2xl">
-                    smartphone
+                    badge
                   </span>
                   <input
-                    id="identifier"
+                    id="nic"
                     type="text"
                     required
-                    value={identifier}
+                    value={nic}
                     onChange={(e) => {
-                      setIdentifier(e.target.value);
-                      if (identifierError) setIdentifierError('');
+                      setNic(e.target.value.toUpperCase());
+                      if (nicError) setNicError('');
                     }}
-                    onBlur={handleIdentifierBlur}
-                    placeholder="e.g. 0712345678 or 199012345678"
+                    onBlur={handleNicBlur}
+                    placeholder="e.g. 198512345678 or 851234567V"
                     className={`w-full h-[54px] sm:h-[58px] pl-12 pr-4 bg-surface-bright/50 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none font-body-md text-base text-on-surface ${
-                      identifierError ? 'border-error ring-1 ring-error' : 'border-outline-variant/60'
+                      nicError ? 'border-error ring-1 ring-error' : 'border-outline-variant/60'
                     }`}
                   />
                 </div>
-                {identifierError && (
-                  <span className="text-xs text-error font-medium px-1">{identifierError}</span>
+                {nicError && (
+                  <span className="text-xs text-error font-medium px-1">{nicError}</span>
                 )}
               </div>
 
@@ -380,7 +362,7 @@ export default function Login() {
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface focus:outline-none"
                   >
                     <span className="material-symbols-outlined text-xl sm:text-2xl">
-                      {showPassword ? 'visibility_off' : 'visibility'}
+                       {showPassword ? 'visibility_off' : 'visibility'}
                     </span>
                   </button>
                 </div>
@@ -400,7 +382,7 @@ export default function Login() {
                 </label>
               </div>
 
-              {/* Primary Action Buttons */}
+              {/* Primary Action Button */}
               <div className="flex flex-col gap-3 mt-1">
                 <button
                   type="submit"
@@ -415,23 +397,6 @@ export default function Login() {
                       <span className="material-symbols-outlined text-xl sm:text-2xl">login</span>
                     </>
                   )}
-                </button>
-
-                <div className="flex items-center gap-3 py-1">
-                  <div className="h-px bg-outline-variant/40 flex-1" />
-                  <span className="font-label-sm text-label-sm text-outline uppercase tracking-widest text-[11px] sm:text-xs font-semibold">
-                    Secure Access
-                  </span>
-                  <div className="h-px bg-outline-variant/40 flex-1" />
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setShowOtpModal(true)}
-                  className="w-full h-[54px] sm:h-[58px] bg-secondary-container text-on-secondary-container rounded-xl font-label-md text-base sm:text-lg font-bold scale-98 transition-all hover:bg-secondary-fixed flex items-center justify-center gap-2 border border-secondary-container/50 cursor-pointer"
-                >
-                  <span className="material-symbols-outlined icon-fill text-xl sm:text-2xl">security</span>
-                  <span>Login with OTP</span>
                 </button>
               </div>
             </form>
@@ -462,57 +427,6 @@ export default function Login() {
           </a>
         </footer>
       </section>
-
-      {/* OTP Login Modal */}
-      {showOtpModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-outline-variant/30 animate-fadeIn">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-headline text-headline-sm text-primary flex items-center gap-2">
-                <span className="material-symbols-outlined text-secondary">sms</span>
-                OTP Verification
-              </h3>
-              <button
-                onClick={() => setShowOtpModal(false)}
-                className="text-on-surface-variant hover:text-on-surface"
-              >
-                <span className="material-symbols-outlined">close</span>
-              </button>
-            </div>
-            <p className="text-body-sm text-on-surface-variant mb-4">
-              A 4-digit verification code has been sent via SMS to <span className="font-bold text-on-surface">{identifier}</span>.
-            </p>
-            <form onSubmit={handleOtpLogin} className="flex flex-col gap-4">
-              <input
-                type="text"
-                maxLength={4}
-                autoFocus
-                value={otpCode}
-                onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
-                placeholder="• • • •"
-                className="w-full text-center text-3xl font-bold tracking-widest py-3 border border-outline-variant rounded-xl focus:border-primary outline-none"
-              />
-              <p className="text-xs text-secondary font-medium text-center">Demo OTP: Enter any 4 digits (e.g. 1234)</p>
-              <div className="flex gap-2 mt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowOtpModal(false)}
-                  className="flex-1 py-2.5 rounded-lg border border-outline-variant font-label-md text-on-surface-variant hover:bg-surface-container"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="flex-1 py-2.5 rounded-lg bg-primary text-white font-label-md font-bold hover:bg-primary-container"
-                >
-                  {loading ? 'Verifying...' : 'Verify & Enter'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </main>
   );
 }

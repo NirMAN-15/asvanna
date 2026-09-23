@@ -42,7 +42,9 @@ class AuthController {
         resolvedMiddle = resolvedMiddle !== null ? resolvedMiddle : nameParts.middle_name;
         resolvedLast = resolvedLast || nameParts.last_name;
       }
-      if (!resolvedFull && resolvedFirst) {
+      if (resolvedFirst && resolvedLast) {
+        resolvedFull = formatFullName(resolvedFirst, resolvedMiddle, resolvedLast);
+      } else if (!resolvedFull && resolvedFirst) {
         resolvedFull = formatFullName(resolvedFirst, resolvedMiddle, resolvedLast);
       }
       if (!resolvedFull) {
@@ -63,7 +65,9 @@ class AuthController {
         resolvedCity = addrParts.city;
         resolvedPostal = addrParts.postal_code;
       }
-      if (!resolvedAddr && resolvedAddr1) {
+      if (resolvedAddr1) {
+        resolvedAddr = formatAddress(resolvedAddr1, resolvedAddr2, resolvedCity, resolvedPostal);
+      } else if (!resolvedAddr && resolvedAddr1) {
         resolvedAddr = formatAddress(resolvedAddr1, resolvedAddr2, resolvedCity, resolvedPostal);
       }
 
@@ -135,11 +139,15 @@ class AuthController {
 
   static async login(req, res, next) {
     try {
-      const { phone, password, role } = req.body;
+      const { nic, phone, identifier, password, role } = req.body;
+      const userIdent = (nic || identifier || phone || '').trim();
 
-      const result = await db.query('SELECT * FROM users WHERE phone = $1', [phone]);
+      const result = await db.query(
+        'SELECT * FROM users WHERE (nic IS NOT NULL AND LOWER(nic) = LOWER($1)) OR phone = $1',
+        [userIdent]
+      );
       if (!result || !result.rows || result.rows.length === 0) {
-        return ApiResponse.error(res, 'Invalid phone number or password.', 401);
+        return ApiResponse.error(res, 'Invalid NIC number or password.', 401);
       }
 
       const user = result.rows[0];
@@ -158,7 +166,7 @@ class AuthController {
 
       const isMatch = await bcrypt.compare(password, user.password_hash);
       if (!isMatch) {
-        return ApiResponse.error(res, 'Invalid phone number or password.', 401);
+        return ApiResponse.error(res, 'Invalid NIC number or password.', 401);
       }
 
       // Check verification status
