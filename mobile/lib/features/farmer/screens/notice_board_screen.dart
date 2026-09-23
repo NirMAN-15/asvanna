@@ -7,7 +7,6 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/app_state_provider.dart';
 import '../../../core/models/notice_model.dart';
 import '../../../core/localization/app_translations.dart';
-import '../../../core/services/push_notification_service.dart';
 
 class NoticeBoardScreen extends StatefulWidget {
   const NoticeBoardScreen({super.key});
@@ -91,9 +90,11 @@ class _NoticeBoardScreenState extends State<NoticeBoardScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.verified,
-                          size: 13,
-                          color: isDark ? const Color(0xFF4ADE80) : AppColors.primary),
+                      Icon(
+                        Icons.verified,
+                        size: 13,
+                        color: isDark ? const Color(0xFF4ADE80) : AppColors.primary,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         'Verified Circular',
@@ -197,256 +198,6 @@ class _NoticeBoardScreenState extends State<NoticeBoardScreen> {
     );
   }
 
-  void _openPushAlertComposer(BuildContext context) {
-    final titleController = TextEditingController(text: 'Emergency Market Advisory: Leeks Sowing Halt');
-    final descController = TextEditingController(
-        text: 'Bandarawela Agrarian Services Centre urges farmers to pause sowing Leeks immediately due to 125% market saturation.');
-    String category = 'Crop Directive';
-    NoticePriority priority = NoticePriority.urgent;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: context.cardBg,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) => StatefulBuilder(
-        builder: (modalCtx, setModalState) {
-          final isDark = modalCtx.isDarkMode;
-
-          return Padding(
-            padding: EdgeInsets.only(
-              left: 20,
-              right: 20,
-              top: 20,
-              bottom: MediaQuery.of(modalCtx).viewInsets.bottom + 20,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFEE2E2),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(Icons.campaign_rounded, color: Color(0xFFDC2626), size: 22),
-                        ),
-                        const SizedBox(width: 10),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Push Agrarian Alert',
-                              style: GoogleFonts.poppins(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: modalCtx.titleText,
-                              ),
-                            ),
-                            Text(
-                              'Broadcast live push notice to regional farmers',
-                              style: GoogleFonts.inter(
-                                fontSize: 11,
-                                color: modalCtx.subText,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close_rounded),
-                      onPressed: () => Navigator.pop(modalCtx),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // Category selector
-                Text(
-                  'Category',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: modalCtx.titleText,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Wrap(
-                  spacing: 8,
-                  children: ['Crop Directive', 'Weather Warning', 'Disease Alert', 'Subsidy'].map((cat) {
-                    final isSel = category == cat;
-                    return ChoiceChip(
-                      label: Text(cat),
-                      selected: isSel,
-                      selectedColor: AppColors.primarySoft,
-                      labelStyle: TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
-                        color: isSel ? AppColors.primary : modalCtx.subText,
-                      ),
-                      onSelected: (_) => setModalState(() => category = cat),
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 12),
-
-                // Priority selector
-                Text(
-                  'Priority Level',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: modalCtx.titleText,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ChoiceChip(
-                        label: const Center(child: Text('Urgent')),
-                        selected: priority == NoticePriority.urgent,
-                        selectedColor: const Color(0xFFFEE2E2),
-                        labelStyle: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: priority == NoticePriority.urgent
-                              ? const Color(0xFFDC2626)
-                              : modalCtx.subText,
-                        ),
-                        onSelected: (_) => setModalState(() => priority = NoticePriority.urgent),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: ChoiceChip(
-                        label: const Center(child: Text('High')),
-                        selected: priority == NoticePriority.high,
-                        selectedColor: const Color(0xFFFEF3C7),
-                        labelStyle: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: priority == NoticePriority.high
-                              ? const Color(0xFFD97706)
-                              : modalCtx.subText,
-                        ),
-                        onSelected: (_) => setModalState(() => priority = NoticePriority.high),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: ChoiceChip(
-                        label: const Center(child: Text('Medium')),
-                        selected: priority == NoticePriority.medium,
-                        selectedColor: const Color(0xFFDCFCE7),
-                        labelStyle: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: priority == NoticePriority.medium
-                              ? const Color(0xFF16A34A)
-                              : modalCtx.subText,
-                        ),
-                        onSelected: (_) => setModalState(() => priority = NoticePriority.medium),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-
-                // Title field
-                TextField(
-                  controller: titleController,
-                  decoration: InputDecoration(
-                    labelText: 'Notice Headline',
-                    filled: true,
-                    fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-                const SizedBox(height: 10),
-
-                // Description field
-                TextField(
-                  controller: descController,
-                  maxLines: 3,
-                  decoration: InputDecoration(
-                    labelText: 'Notice Details / Directive',
-                    filled: true,
-                    fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Dispatch button
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFDC2626),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    icon: const Icon(Icons.send_rounded, size: 18),
-                    label: Text(
-                      'Dispatch Push Broadcast',
-                      style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold),
-                    ),
-                    onPressed: () async {
-                      final title = titleController.text.trim();
-                      final desc = descController.text.trim();
-                      if (title.isEmpty || desc.isEmpty) return;
-
-                      Navigator.pop(modalCtx);
-
-                      final appState = Provider.of<AppStateProvider>(context, listen: false);
-                      await appState.sendPushNotificationAlert(
-                        title: title,
-                        description: desc,
-                        category: category,
-                        priority: priority,
-                      );
-
-                      if (context.mounted) {
-                        PushNotificationService.showPushAlertBanner(
-                          context,
-                          title: title,
-                          message: desc,
-                          priority: priority,
-                          category: category,
-                        );
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            backgroundColor: const Color(0xFF16A34A),
-                            content: Text(
-                              'Alert dispatched to backend & pushed to registered devices.',
-                              style: GoogleFonts.inter(color: Colors.white),
-                            ),
-                          ),
-                        );
-                      }
-                    },
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppStateProvider>(context);
@@ -478,33 +229,11 @@ class _NoticeBoardScreenState extends State<NoticeBoardScreen> {
         ),
         actions: [
           IconButton(
-            tooltip: 'Push Test Alert',
-            icon: Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: const Color(0xFFDC2626).withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(Icons.campaign_rounded, color: Color(0xFFDC2626), size: 20),
-            ),
-            onPressed: () => _openPushAlertComposer(context),
-          ),
-          IconButton(
             tooltip: 'Refresh Notices',
             icon: const Icon(Icons.refresh_rounded),
             onPressed: () => appState.fetchLiveNotices(),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: const Color(0xFFDC2626),
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.add_alert_rounded, size: 20),
-        label: Text(
-          'Push Alert',
-          style: GoogleFonts.inter(fontWeight: FontWeight.bold),
-        ),
-        onPressed: () => _openPushAlertComposer(context),
       ),
       body: RefreshIndicator(
         color: AppColors.primary,
@@ -635,7 +364,7 @@ class _NoticeBoardScreenState extends State<NoticeBoardScreen> {
               )
             else
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 80),
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate(
                     (context, i) {
@@ -751,7 +480,7 @@ class _NoticeBoardScreenState extends State<NoticeBoardScreen> {
                                 children: [
                                   Expanded(
                                     child: Text(
-                                      'Issued by: ${n.issuedBy}',
+                                      'Issued by: ${noticeDepartmentSignature(n)}',
                                       style: GoogleFonts.inter(
                                         fontSize: 11,
                                         fontStyle: FontStyle.italic,
@@ -782,5 +511,10 @@ class _NoticeBoardScreenState extends State<NoticeBoardScreen> {
         ),
       ),
     );
+  }
+
+  String noticeDepartmentSignature(AgrarianNotice n) {
+    if (n.issuedBy.isNotEmpty) return n.issuedBy;
+    return n.department;
   }
 }
