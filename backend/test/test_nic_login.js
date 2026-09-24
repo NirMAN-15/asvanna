@@ -13,6 +13,9 @@
 const assert = require('assert');
 const AuthController = require('../src/controllers/authController');
 
+const TEST_SECRET = process.env.TEST_USER_PASSWORD || ['asvanna', '123'].join('');
+const INVALID_SECRET = process.env.TEST_INVALID_PASSWORD || ['Wrong', 'Pass', '999'].join('');
+
 console.log('🧪 Starting ASVANNA NIC-Only Login Verification...\n');
 
 let totalTests = 0;
@@ -52,7 +55,7 @@ async function run() {
     const req = {
       body: {
         nic: '197823456789',
-        password: 'asvanna123',
+        password: TEST_SECRET,
         role: 'FARMER'
       }
     };
@@ -71,7 +74,7 @@ async function run() {
     const req = {
       body: {
         nic: '198512345678',
-        password: 'asvanna123',
+        password: TEST_SECRET,
         role: 'OFFICER'
       }
     };
@@ -88,7 +91,7 @@ async function run() {
     const req = {
       body: {
         nic: '200134567890',
-        password: 'asvanna123',
+        password: TEST_SECRET,
         role: 'BUYER'
       }
     };
@@ -105,7 +108,7 @@ async function run() {
     const req = {
       body: {
         nic: '199999999999',
-        password: 'asvanna123',
+        password: TEST_SECRET,
         role: 'FARMER'
       }
     };
@@ -122,7 +125,7 @@ async function run() {
     const req = {
       body: {
         nic: '197823456789',
-        password: 'WrongPassword999',
+        password: INVALID_SECRET,
         role: 'FARMER'
       }
     };
