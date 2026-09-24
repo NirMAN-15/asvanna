@@ -51,6 +51,7 @@ app.get(['/health', '/api/health', '/api/v1/health', '/v1/health'], (req, res) =
   app.use(`${prefix}/prices`, priceRoutes);
   app.use(`${prefix}/crops`, cropRoutes);
   app.use(`${prefix}/notifications`, notificationRoutes);
+  app.use(`${prefix}/notices`, notificationRoutes);
 });
 
 // 404 Handler

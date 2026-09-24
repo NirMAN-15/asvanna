@@ -5,9 +5,11 @@ import '../models/farmer_model.dart';
 import '../models/buyer_model.dart';
 import '../models/surplus_listing_model.dart';
 import '../models/notice_model.dart';
+import '../models/weather_model.dart';
 import '../services/mock_data_service.dart';
 import '../services/offline_storage_service.dart';
 import '../services/api_service.dart';
+import '../services/push_notification_service.dart';
 
 enum UserRole { unauthenticated, farmer, buyer }
 
@@ -24,6 +26,11 @@ class AppStateProvider with ChangeNotifier {
   Map<String, CropRiskAnalysis> _riskAnalyses = {};
   List<SurplusListing> _surplusListings = [];
   List<AgrarianNotice> _notices = [];
+  List<AppNotification> _userNotifications = [];
+  bool _isLoadingNotices = false;
+  WeatherData? _currentWeather;
+  bool _isLoadingWeather = false;
+  String _selectedWeatherDivision = 'Bandarawela';
 
   // Selected crop for risk analysis preview
   Crop? _selectedCropForRisk;
@@ -44,6 +51,8 @@ class AppStateProvider with ChangeNotifier {
     _farmerProfile = MockDataService.getInitialFarmerProfile();
     _surplusListings = MockDataService.getNearbySurplusListings();
     _notices = MockDataService.getAgrarianNotices();
+    _selectedWeatherDivision = _farmerProfile.agrarianDivision;
+    _currentWeather = MockDataService.getFallbackWeatherData(_selectedWeatherDivision);
     
     // Default selected crop for risk check
     _selectedCropForRisk = _availableCrops.first;
@@ -66,6 +75,7 @@ class AppStateProvider with ChangeNotifier {
       final cachedProfile = await OfflineStorageService.loadFarmerProfile();
       if (cachedProfile != null) {
         _farmerProfile = cachedProfile;
+        _selectedWeatherDivision = cachedProfile.agrarianDivision;
       }
       final cachedLang = await OfflineStorageService.loadLanguage();
       if (cachedLang != null) {
@@ -82,8 +92,16 @@ class AppStateProvider with ChangeNotifier {
       notifyListeners();
     } catch (_) {}
 
+    // Initialize push notifications & register device token with backend
+    PushNotificationService.initialize();
+
     // Synchronize live data from backend
-    await fetchLiveRiskData();
+    await Future.wait([
+      fetchLiveRiskData(),
+      fetchWeatherData(division: _selectedWeatherDivision),
+      fetchLiveNotices(division: _selectedWeatherDivision),
+      fetchUserNotifications(),
+    ]);
   }
 
   // Getters
@@ -95,13 +113,55 @@ class AppStateProvider with ChangeNotifier {
   List<Crop> get availableCrops => _availableCrops;
   List<SurplusListing> get surplusListings => _surplusListings;
   List<AgrarianNotice> get notices => _notices;
+  List<AppNotification> get userNotifications => _userNotifications;
+  int get unreadNoticesCount => _notices
+      .where((n) => n.priority == NoticePriority.urgent || n.priority == NoticePriority.high)
+      .length;
   Crop? get selectedCropForRisk => _selectedCropForRisk;
   double get selectedRadiusKm => _selectedRadiusKm;
   bool get isOnline => _isOnline;
   bool get isBackendConnected => _isBackendConnected;
   bool get isLoadingRisk => _isLoadingRisk;
+  bool get isLoadingWeather => _isLoadingWeather;
+  bool get isLoadingNotices => _isLoadingNotices;
   String? get riskErrorMessage => _riskErrorMessage;
   int get pendingOfflineSyncs => _pendingOfflineSyncs;
+  WeatherData? get currentWeather => _currentWeather;
+  String get selectedWeatherDivision => _selectedWeatherDivision;
+
+  // Fetch live weather data for division
+  Future<void> fetchWeatherData({String? division}) async {
+    if (division != null && division.isNotEmpty) {
+      _selectedWeatherDivision = division;
+    }
+    _isLoadingWeather = true;
+    notifyListeners();
+
+    try {
+      final liveWeather = await ApiService.getWeatherForecast(
+        division: _selectedWeatherDivision,
+        days: 14,
+      );
+      if (liveWeather != null) {
+        _currentWeather = liveWeather;
+        _isBackendConnected = true;
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Live weather fetch failed for $_selectedWeatherDivision: $e');
+      }
+    } finally {
+      _isLoadingWeather = false;
+      notifyListeners();
+    }
+  }
+
+  void setWeatherDivision(String division) {
+    if (_selectedWeatherDivision != division) {
+      _selectedWeatherDivision = division;
+      fetchWeatherData(division: division);
+    }
+  }
 
   CropRiskAnalysis? getRiskForCrop(String cropId) {
     if (_riskAnalyses.containsKey(cropId)) {
@@ -216,6 +276,7 @@ class AppStateProvider with ChangeNotifier {
     final code = lang == AppLanguage.sinhala ? 'si' : (lang == AppLanguage.tamil ? 'ta' : 'en');
     OfflineStorageService.saveLanguage(code);
     fetchLiveRiskData();
+    fetchLiveNotices();
     notifyListeners();
   }
 
@@ -398,9 +459,101 @@ class AppStateProvider with ChangeNotifier {
   }
 
   Future<void> syncOfflineQueue() async {
-    final count = await ApiService.syncPendingOfflineQueue();
+    await ApiService.syncPendingOfflineQueue();
     final queue = await OfflineStorageService.getOfflineQueue();
     _pendingOfflineSyncs = queue.length;
     notifyListeners();
+  }
+
+  // Fetch live notices from backend
+  Future<void> fetchLiveNotices({String? division}) async {
+    _isLoadingNotices = true;
+    notifyListeners();
+
+    try {
+      final langCode = _currentLanguage == AppLanguage.sinhala
+          ? 'si'
+          : (_currentLanguage == AppLanguage.tamil ? 'ta' : 'en');
+      final liveNotices = await ApiService.getNotices(
+        district: 'Badulla',
+        division: division ?? _farmerProfile.agrarianDivision,
+        lang: langCode,
+      );
+      if (liveNotices.isNotEmpty) {
+        _notices = liveNotices;
+        _isBackendConnected = true;
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Live notices fetch failed: $e');
+      }
+    } finally {
+      _isLoadingNotices = false;
+      notifyListeners();
+    }
+  }
+
+  // Fetch in-app notifications
+  Future<void> fetchUserNotifications() async {
+    try {
+      final notifs = await ApiService.getNotifications();
+      if (notifs.isNotEmpty) {
+        _userNotifications = notifs;
+        notifyListeners();
+      }
+    } catch (_) {}
+  }
+
+  // Dispatch push alert and broadcast notice
+  Future<AgrarianNotice?> sendPushNotificationAlert({
+    required String title,
+    required String description,
+    String? titleSi,
+    String? titleTa,
+    String? descriptionSi,
+    String? descriptionTa,
+    String category = 'Crop Directive',
+    NoticePriority priority = NoticePriority.urgent,
+    String? division,
+  }) async {
+    final notice = await ApiService.pushBroadcastAlert(
+      title: title,
+      description: description,
+      titleSi: titleSi,
+      titleTa: titleTa,
+      descriptionSi: descriptionSi,
+      descriptionTa: descriptionTa,
+      category: category,
+      priority: priority,
+      district: 'Badulla',
+      division: division ?? _farmerProfile.agrarianDivision,
+      department: 'Department of Agrarian Development',
+      issuedBy: '${division ?? _farmerProfile.agrarianDivision} Agrarian Services Centre',
+    );
+
+    if (notice != null) {
+      _notices.insert(0, notice);
+      fetchUserNotifications();
+      notifyListeners();
+    }
+    return notice;
+  }
+
+  // Mark in-app notification as read
+  Future<void> markNotificationRead(String id) async {
+    await ApiService.markNotificationAsRead(id);
+    final idx = _userNotifications.indexWhere((n) => n.id == id);
+    if (idx != -1) {
+      final cur = _userNotifications[idx];
+      _userNotifications[idx] = AppNotification(
+        id: cur.id,
+        title: cur.title,
+        body: cur.body,
+        type: cur.type,
+        status: 'READ',
+        timestamp: cur.timestamp,
+      );
+      notifyListeners();
+    }
   }
 }

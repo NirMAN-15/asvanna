@@ -4,48 +4,69 @@ const ApiResponse = require('../utils/apiResponse');
 
 class WeatherController {
   /**
-   * GET /api/v1/weather/current
+   * GET /api/v1/weather/current?division=Bandarawela&lat=6.83&lng=80.98
    */
   static async getCurrent(req, res, next) {
     try {
-      const data = await WeatherService.getForecast();
+      const { division, lat, lng } = req.query;
+      const data = await WeatherService.getForecast(
+        lat ? parseFloat(lat) : null,
+        lng ? parseFloat(lng) : null,
+        division
+      );
       return ApiResponse.success(res, {
         location: data.location,
         current: data.current,
+        hourly: data.hourly || [],
+        diseases: data.diseases || [],
         fetchedAt: data.fetchedAt,
         source: data.source || 'OPEN_METEO_LIVE'
-      }, 'Current Bandarawela weather retrieved');
+      }, `Current ${data.location.name} weather retrieved`);
     } catch (err) {
       next(err);
     }
   }
 
   /**
-   * GET /api/v1/weather/forecast?days=7|14
+   * GET /api/v1/weather/forecast?days=7|14&division=Bandarawela&lat=6.83&lng=80.98
    */
   static async getForecast(req, res, next) {
     try {
+      const { division, lat, lng } = req.query;
       const days = parseInt(req.query.days, 10) || 14;
-      const data = await WeatherService.getForecast();
-      const limitedForecast = data.forecast.slice(0, days);
+      const data = await WeatherService.getForecast(
+        lat ? parseFloat(lat) : null,
+        lng ? parseFloat(lng) : null,
+        division
+      );
+      const limitedForecast = data.forecast ? data.forecast.slice(0, days) : [];
 
       return ApiResponse.success(res, {
         location: data.location,
+        current: data.current,
+        hourly: data.hourly || [],
         forecast: limitedForecast,
+        diseases: data.diseases || [],
         daysCount: limitedForecast.length,
-        fetchedAt: data.fetchedAt
-      }, `${days}-day Bandarawela agricultural forecast retrieved`);
+        fetchedAt: data.fetchedAt,
+        source: data.source || 'OPEN_METEO_LIVE'
+      }, `${days}-day ${data.location.name} agricultural forecast retrieved`);
     } catch (err) {
       next(err);
     }
   }
 
   /**
-   * GET /api/v1/weather/agricultural-score
+   * GET /api/v1/weather/agricultural-score?division=Bandarawela
    */
   static async getAgScores(req, res, next) {
     try {
-      const data = await WeatherService.getForecast();
+      const { division, lat, lng } = req.query;
+      const data = await WeatherService.getForecast(
+        lat ? parseFloat(lat) : null,
+        lng ? parseFloat(lng) : null,
+        division
+      );
       const currentScores = data.current ? data.current.agriculturalScores : null;
 
       return ApiResponse.success(res, {
@@ -57,7 +78,7 @@ class WeatherController {
           weatherRiskScore: '0 = Safe, 100 = Critical Hazard',
           suitabilityScore: '100 = Optimal Growth, 0 = Inhospitable'
         }
-      }, 'Bandarawela agricultural climate scores');
+      }, `${data.location.name} agricultural climate scores`);
     } catch (err) {
       next(err);
     }
