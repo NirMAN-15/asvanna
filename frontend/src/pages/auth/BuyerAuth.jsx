@@ -16,10 +16,16 @@ export default function BuyerAuth() {
   const [formData, setFormData] = useState({
     business_name: '',
     business_type: 'Wholesaler',
-    full_name: '',
+    first_name: '',
+    middle_name: '',
+    last_name: '',
     phone: '',
     nic: '',
     district: 'Badulla',
+    address_line1: '',
+    address_line2: '',
+    city: 'Bandarawela',
+    postal_code: '90100',
     password: '',
     confirm_password: '',
   });
@@ -69,12 +75,18 @@ export default function BuyerAuth() {
 
     setLoading(true);
     const payload = {
-      full_name: formData.full_name || formData.business_name,
+      first_name: formData.first_name.trim(),
+      middle_name: formData.middle_name.trim() || null,
+      last_name: formData.last_name.trim(),
       business_name: formData.business_name,
       business_type: formData.business_type,
       phone: phoneRes.clean,
       nic: nicRes.clean,
       district: formData.district,
+      address_line1: formData.address_line1.trim(),
+      address_line2: formData.address_line2.trim() || null,
+      city: formData.city.trim() || 'Bandarawela',
+      postal_code: formData.postal_code.trim() || '90100',
       password: formData.password,
     };
 
@@ -230,19 +242,52 @@ export default function BuyerAuth() {
               </select>
             </div>
 
-            {/* Contact Person Name */}
+            {/* First Name */}
             <div className="flex flex-col gap-1">
-              <label className="font-label-md text-label-md text-on-surface-variant font-semibold" htmlFor="full_name">
-                Contact Person Name
+              <label className="font-label-md text-label-md text-on-surface-variant font-semibold" htmlFor="first_name">
+                {lang === 'si' ? 'First Name (මුල් නම)' : lang === 'ta' ? 'First Name (முதல் பெயர்)' : 'First Name'} <span className="text-error">*</span>
               </label>
               <input
-                id="full_name"
-                name="full_name"
+                id="first_name"
+                name="first_name"
                 type="text"
                 required
-                value={formData.full_name}
+                value={formData.first_name}
                 onChange={handleChange}
-                placeholder="e.g. Samantha Gunaratne"
+                placeholder={lang === 'si' ? 'උදා. සමන්ත' : 'e.g. Samantha'}
+                className="w-full h-12 px-4 font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition outline-none"
+              />
+            </div>
+
+            {/* Middle Name (Optional) */}
+            <div className="flex flex-col gap-1">
+              <label className="font-label-md text-label-md text-on-surface-variant font-semibold" htmlFor="middle_name">
+                {lang === 'si' ? 'Middle Name (මැද නම - අත්‍යවශ්‍ය නොවේ)' : lang === 'ta' ? 'Middle Name (இடைப் பெயர் - விருப்பமானது)' : 'Middle Name (Optional)'}
+              </label>
+              <input
+                id="middle_name"
+                name="middle_name"
+                type="text"
+                value={formData.middle_name}
+                onChange={handleChange}
+                placeholder={lang === 'si' ? 'උදා. කුමාර' : 'e.g. Kumara'}
+                className="w-full h-12 px-4 font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition outline-none"
+              />
+            </div>
+
+            {/* Last Name */}
+            <div className="flex flex-col gap-1">
+              <label className="font-label-md text-label-md text-on-surface-variant font-semibold" htmlFor="last_name">
+                {lang === 'si' ? 'Last Name (වාසගම / අවසාන නම)' : lang === 'ta' ? 'Last Name (கடைසිப் பெயர்)' : 'Last Name'} <span className="text-error">*</span>
+              </label>
+              <input
+                id="last_name"
+                name="last_name"
+                type="text"
+                required
+                value={formData.last_name}
+                onChange={handleChange}
+                placeholder={lang === 'si' ? 'උදා. ගුණරත්න' : 'e.g. Gunaratne'}
                 className="w-full h-12 px-4 font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition outline-none"
               />
             </div>
@@ -316,6 +361,74 @@ export default function BuyerAuth() {
                 <option value="Kandy">Kandy</option>
                 <option value="Colombo">Colombo (Western Distribution)</option>
               </select>
+            </div>
+
+            {/* Address Line 1 */}
+            <div className="flex flex-col gap-1">
+              <label className="font-label-md text-label-md text-on-surface-variant font-semibold" htmlFor="address_line1">
+                {lang === 'si' ? 'ලිපිනය - 1 වන පේළිය (Address Line 1)' : lang === 'ta' ? 'முகவரி வரி 1 (Address Line 1)' : 'Address Line 1'} <span className="text-error">*</span>
+              </label>
+              <input
+                id="address_line1"
+                name="address_line1"
+                type="text"
+                required
+                value={formData.address_line1}
+                onChange={handleChange}
+                placeholder={lang === 'si' ? 'උදා. අංක 8, වැලිමඩ පාර' : 'e.g. No. 8, Welimada Road'}
+                className="w-full h-12 px-4 font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition outline-none"
+              />
+            </div>
+
+            {/* Address Line 2 */}
+            <div className="flex flex-col gap-1">
+              <label className="font-label-md text-label-md text-on-surface-variant font-semibold" htmlFor="address_line2">
+                {lang === 'si' ? 'ලිපිනය - 2 වන පේළිය (Address Line 2 - අත්‍යවශ්‍ය නොවේ)' : lang === 'ta' ? 'முகவரி வரி 2 (விருப்பமானது)' : 'Address Line 2 (Optional)'}
+              </label>
+              <input
+                id="address_line2"
+                name="address_line2"
+                type="text"
+                value={formData.address_line2}
+                onChange={handleChange}
+                placeholder={lang === 'si' ? 'උදා. නගර මධ්‍යය' : 'e.g. Town Centre'}
+                className="w-full h-12 px-4 font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition outline-none"
+              />
+            </div>
+
+            {/* Two-col: City & Postal Code */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1">
+                <label className="font-label-md text-label-md text-on-surface-variant font-semibold" htmlFor="city">
+                  {lang === 'si' ? 'නගරය (City)' : lang === 'ta' ? 'நகரம் (City)' : 'City'} <span className="text-error">*</span>
+                </label>
+                <input
+                  id="city"
+                  name="city"
+                  type="text"
+                  required
+                  value={formData.city}
+                  onChange={handleChange}
+                  placeholder={lang === 'si' ? 'උදා. බණ්ඩාරවෙල' : 'e.g. Bandarawela'}
+                  className="w-full h-12 px-4 font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition outline-none"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-label-md text-label-md text-on-surface-variant font-semibold" htmlFor="postal_code">
+                  {lang === 'si' ? 'තැපැල් අංකය (Postal Code)' : lang === 'ta' ? 'அஞ்சல் குறியீடு (Postal Code)' : 'Postal Code'} <span className="text-error">*</span>
+                </label>
+                <input
+                  id="postal_code"
+                  name="postal_code"
+                  type="text"
+                  required
+                  value={formData.postal_code}
+                  onChange={handleChange}
+                  placeholder="90100"
+                  className="w-full h-12 px-4 font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition outline-none"
+                />
+              </div>
             </div>
 
             {/* Password */}

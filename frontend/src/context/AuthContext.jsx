@@ -23,11 +23,10 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = async (phone, password, role, otp) => {
+  const login = async (identifier, password, role) => {
     try {
-      const payload = { phone, role };
+      const payload = { nic: identifier, phone: identifier, identifier, role };
       if (password) payload.password = password;
-      if (otp) payload.otp = otp;
       const response = await API.post('/auth/login', payload);
       const { user: returnedUser, token: returnedToken } = response.data.data;
 

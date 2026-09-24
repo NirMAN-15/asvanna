@@ -1,664 +1,4 @@
-{
-  "users": [
-    {
-      "id": 1,
-      "first_name": "W.",
-      "middle_name": "M.",
-      "last_name": "Bandara",
-      "full_name": "W. M. Bandara (DO Officer)",
-      "phone": "0771234567",
-      "nic": "851234567V",
-      "password_hash": "$2a$10$wN1aP0/zB00vA5zLz.vV/uE221122334455",
-      "role": "OFFICER",
-      "district": "Badulla",
-      "division": "Bandarawela",
-      "gnd_division": "Bandarawela Central",
-      "address_line1": "DoA Agrarian Services Complex",
-      "address_line2": "Badulla Road",
-      "city": "Bandarawela",
-      "postal_code": "90100",
-      "address": "DoA Agrarian Services Complex, Badulla Road, Bandarawela, 90100",
-      "language_preference": "si",
-      "verification_status": "APPROVED",
-      "is_verified": true
-    },
-    {
-      "id": 2,
-      "first_name": "Kapila",
-      "middle_name": null,
-      "last_name": "Bandara",
-      "full_name": "Kapila Bandara (Farmer)",
-      "phone": "0712345678",
-      "nic": "782345678V",
-      "password_hash": "$2a$10$wN1aP0/zB00vA5zLz.vV/uE221122334455",
-      "role": "FARMER",
-      "district": "Badulla",
-      "division": "Bandarawela",
-      "gnd_division": "Bindunuwewa",
-      "address_line1": "No. 42",
-      "address_line2": "Bindunuwewa Valley, Dowa Temple Road",
-      "city": "Bandarawela",
-      "postal_code": "90100",
-      "address": "No. 42, Bindunuwewa Valley, Dowa Temple Road, Bandarawela, 90100",
-      "total_land_size": 2.5,
-      "language_preference": "si",
-      "verification_status": "APPROVED",
-      "is_verified": true
-    },
-    {
-      "id": 3,
-      "first_name": "Bandarawela",
-      "middle_name": null,
-      "last_name": "Traders",
-      "full_name": "Bandarawela Traders",
-      "phone": "0572222222",
-      "nic": "903456789V",
-      "password_hash": "$2a$10$wN1aP0/zB00vA5zLz.vV/uE221122334455",
-      "role": "BUYER",
-      "district": "Badulla",
-      "division": "Bandarawela",
-      "gnd_division": "Bandarawela Town",
-      "address_line1": "No. 8",
-      "address_line2": "Welimada Road, Town Centre",
-      "city": "Bandarawela",
-      "postal_code": "90100",
-      "address": "No. 8, Welimada Road, Town Centre, Bandarawela, 90100",
-      "language_preference": "en",
-      "verification_status": "APPROVED",
-      "is_verified": true
-    },
-    {
-      "id": 4,
-      "first_name": "Nirman",
-      "middle_name": "Achintha",
-      "last_name": "Wedikkara",
-      "full_name": "Nirman Achintha Wedikkara (Super Admin)",
-      "phone": "0770000000",
-      "nic": "990000000V",
-      "password_hash": "$2a$10$wN1aP0/zB00vA5zLz.vV/uE221122334455",
-      "role": "ADMIN",
-      "district": "Badulla",
-      "division": "Bandarawela",
-      "gnd_division": "Bandarawela Central",
-      "address_line1": "No. 15",
-      "address_line2": "Station Road, Central Hill",
-      "city": "Bandarawela",
-      "postal_code": "90100",
-      "address": "No. 15, Station Road, Central Hill, Bandarawela, 90100",
-      "language_preference": "en",
-      "verification_status": "APPROVED",
-      "is_verified": true
-    }
-  ],
-  "crops": [
-    {
-      "id": 1,
-      "crop_code": "LEEKS",
-      "name_en": "Leeks",
-      "name_si": "ලීක්ස්",
-      "name_ta": "லீக்ஸ்",
-      "category": "Upcountry Vegetable",
-      "growth_duration_days": 90,
-      "avg_yield_per_acre_kg": 8500,
-      "standard_price_per_kg": 280,
-      "optimal_temp_min": 12,
-      "optimal_temp_max": 22,
-      "waterlog_sensitive": false,
-      "disease_susceptibility": "MODERATE",
-      "standard_demand_kg": 95000
-    },
-    {
-      "id": 2,
-      "crop_code": "CABBAGE",
-      "name_en": "Cabbage",
-      "name_si": "ගෝවා",
-      "name_ta": "முட்டைக்கோஸ்",
-      "category": "Upcountry Vegetable",
-      "growth_duration_days": 75,
-      "avg_yield_per_acre_kg": 12000,
-      "standard_price_per_kg": 190,
-      "optimal_temp_min": 14,
-      "optimal_temp_max": 24,
-      "waterlog_sensitive": false,
-      "disease_susceptibility": "MODERATE",
-      "standard_demand_kg": 120000
-    },
-    {
-      "id": 3,
-      "crop_code": "CARROT",
-      "name_en": "Carrot",
-      "name_si": "කැරට්",
-      "name_ta": "கேரட்",
-      "category": "Upcountry Vegetable",
-      "growth_duration_days": 85,
-      "avg_yield_per_acre_kg": 7500,
-      "standard_price_per_kg": 340,
-      "optimal_temp_min": 13,
-      "optimal_temp_max": 22,
-      "waterlog_sensitive": true,
-      "disease_susceptibility": "LOW",
-      "standard_demand_kg": 110000
-    },
-    {
-      "id": 4,
-      "crop_code": "BEETROOT",
-      "name_en": "Beetroot",
-      "name_si": "බීට්රූට්",
-      "name_ta": "பீட்ரூட்",
-      "category": "Upcountry Vegetable",
-      "growth_duration_days": 70,
-      "avg_yield_per_acre_kg": 8000,
-      "standard_price_per_kg": 260,
-      "optimal_temp_min": 14,
-      "optimal_temp_max": 25,
-      "waterlog_sensitive": false,
-      "disease_susceptibility": "LOW",
-      "standard_demand_kg": 75000
-    },
-    {
-      "id": 5,
-      "crop_code": "POTATO",
-      "name_en": "Upcountry Potato",
-      "name_si": "අර්තාපල්",
-      "name_ta": "உருளைக்கிழங்கு",
-      "category": "Upcountry Vegetable",
-      "growth_duration_days": 100,
-      "avg_yield_per_acre_kg": 8000,
-      "standard_price_per_kg": 390,
-      "optimal_temp_min": 12,
-      "optimal_temp_max": 20,
-      "waterlog_sensitive": true,
-      "disease_susceptibility": "HIGH",
-      "standard_demand_kg": 150000
-    },
-    {
-      "id": 6,
-      "crop_code": "BEANS",
-      "name_en": "Green Beans",
-      "name_si": "බෝංචි",
-      "name_ta": "போஞ்சி",
-      "category": "Upcountry Vegetable",
-      "growth_duration_days": 60,
-      "avg_yield_per_acre_kg": 5000,
-      "standard_price_per_kg": 320,
-      "optimal_temp_min": 15,
-      "optimal_temp_max": 26,
-      "waterlog_sensitive": false,
-      "disease_susceptibility": "MODERATE",
-      "standard_demand_kg": 80000
-    },
-    {
-      "id": 7,
-      "crop_code": "TOMATO",
-      "name_en": "Tomato",
-      "name_si": "තක්කාලි",
-      "name_ta": "தக்காளி",
-      "category": "Upcountry Vegetable",
-      "growth_duration_days": 75,
-      "avg_yield_per_acre_kg": 11000,
-      "standard_price_per_kg": 220,
-      "optimal_temp_min": 16,
-      "optimal_temp_max": 27,
-      "waterlog_sensitive": true,
-      "disease_susceptibility": "HIGH",
-      "standard_demand_kg": 115000
-    },
-    {
-      "id": 8,
-      "crop_code": "CAPSICUM",
-      "name_en": "Capsicum",
-      "name_si": "මාළු මිරිස්",
-      "name_ta": "குடை மிளகாய்",
-      "category": "Upcountry Vegetable",
-      "growth_duration_days": 80,
-      "avg_yield_per_acre_kg": 5500,
-      "standard_price_per_kg": 460,
-      "optimal_temp_min": 16,
-      "optimal_temp_max": 26,
-      "waterlog_sensitive": true,
-      "disease_susceptibility": "MODERATE",
-      "standard_demand_kg": 65000
-    },
-    {
-      "id": 9,
-      "crop_code": "RADISH",
-      "name_en": "Radish",
-      "name_si": "රාබු",
-      "name_ta": "முள்ளங்கி",
-      "category": "Upcountry Vegetable",
-      "growth_duration_days": 45,
-      "avg_yield_per_acre_kg": 9000,
-      "standard_price_per_kg": 140,
-      "optimal_temp_min": 13,
-      "optimal_temp_max": 25,
-      "waterlog_sensitive": false,
-      "disease_susceptibility": "LOW",
-      "standard_demand_kg": 50000
-    },
-    {
-      "id": 10,
-      "crop_code": "KNOLKHOL",
-      "name_en": "Knol-Khol",
-      "name_si": "නෝකෝල්",
-      "name_ta": "நூல்கோல்",
-      "category": "Upcountry Vegetable",
-      "growth_duration_days": 65,
-      "avg_yield_per_acre_kg": 7500,
-      "standard_price_per_kg": 180,
-      "optimal_temp_min": 14,
-      "optimal_temp_max": 24,
-      "waterlog_sensitive": false,
-      "disease_susceptibility": "LOW",
-      "standard_demand_kg": 45000
-    },
-    {
-      "id": 11,
-      "crop_code": "SPRING_ONION",
-      "name_en": "Spring Onion",
-      "name_si": "ළූණු කොළ",
-      "name_ta": "வெங்காய இலை",
-      "category": "Upcountry Vegetable",
-      "growth_duration_days": 50,
-      "avg_yield_per_acre_kg": 6000,
-      "standard_price_per_kg": 280,
-      "optimal_temp_min": 14,
-      "optimal_temp_max": 25,
-      "waterlog_sensitive": false,
-      "disease_susceptibility": "LOW",
-      "standard_demand_kg": 35000
-    },
-    {
-      "id": 12,
-      "crop_code": "LETTUCE",
-      "name_en": "Lettuce",
-      "name_si": "සලාද කොළ",
-      "name_ta": "லெட்யூஸ்",
-      "category": "Upcountry Vegetable",
-      "growth_duration_days": 50,
-      "avg_yield_per_acre_kg": 5500,
-      "standard_price_per_kg": 320,
-      "optimal_temp_min": 13,
-      "optimal_temp_max": 22,
-      "waterlog_sensitive": true,
-      "disease_susceptibility": "MODERATE",
-      "standard_demand_kg": 30000
-    },
-    {
-      "id": 13,
-      "crop_code": "CELERY",
-      "name_en": "Celery",
-      "name_si": "සැල්දිරි",
-      "name_ta": "செலரி",
-      "category": "Upcountry Vegetable",
-      "growth_duration_days": 85,
-      "avg_yield_per_acre_kg": 4800,
-      "standard_price_per_kg": 420,
-      "optimal_temp_min": 13,
-      "optimal_temp_max": 21,
-      "waterlog_sensitive": false,
-      "disease_susceptibility": "MODERATE",
-      "standard_demand_kg": 25000
-    },
-    {
-      "id": 14,
-      "crop_code": "BROCCOLI",
-      "name_en": "Broccoli",
-      "name_si": "බ්‍රොකොලි",
-      "name_ta": "ப்ரோக்கோலி",
-      "category": "Upcountry Vegetable",
-      "growth_duration_days": 75,
-      "avg_yield_per_acre_kg": 4000,
-      "standard_price_per_kg": 680,
-      "optimal_temp_min": 12,
-      "optimal_temp_max": 20,
-      "waterlog_sensitive": false,
-      "disease_susceptibility": "MODERATE",
-      "standard_demand_kg": 20000
-    },
-    {
-      "id": 15,
-      "crop_code": "CAULIFLOWER",
-      "name_en": "Cauliflower",
-      "name_si": "මල්ගෝවා",
-      "name_ta": "காலிஃபிளவர்",
-      "category": "Upcountry Vegetable",
-      "growth_duration_days": 80,
-      "avg_yield_per_acre_kg": 6500,
-      "standard_price_per_kg": 380,
-      "optimal_temp_min": 14,
-      "optimal_temp_max": 22,
-      "waterlog_sensitive": false,
-      "disease_susceptibility": "MODERATE",
-      "standard_demand_kg": 40000
-    },
-    {
-      "id": 16,
-      "crop_code": "PUMPKIN",
-      "name_en": "Pumpkin",
-      "name_si": "වට්ටක්කා",
-      "name_ta": "பூசணி",
-      "category": "Adaptable Vegetable",
-      "growth_duration_days": 100,
-      "avg_yield_per_acre_kg": 10000,
-      "standard_price_per_kg": 160,
-      "optimal_temp_min": 17,
-      "optimal_temp_max": 28,
-      "waterlog_sensitive": false,
-      "disease_susceptibility": "LOW",
-      "standard_demand_kg": 90000
-    },
-    {
-      "id": 17,
-      "crop_code": "BITTER_GOURD",
-      "name_en": "Bitter Gourd",
-      "name_si": "කරවිල",
-      "name_ta": "பாகற்காய்",
-      "category": "Adaptable Vegetable",
-      "growth_duration_days": 60,
-      "avg_yield_per_acre_kg": 6000,
-      "standard_price_per_kg": 340,
-      "optimal_temp_min": 18,
-      "optimal_temp_max": 28,
-      "waterlog_sensitive": false,
-      "disease_susceptibility": "LOW",
-      "standard_demand_kg": 45000
-    },
-    {
-      "id": 18,
-      "crop_code": "SNAKE_GOURD",
-      "name_en": "Snake Gourd",
-      "name_si": "පතෝල",
-      "name_ta": "புடலங்காய்",
-      "category": "Adaptable Vegetable",
-      "growth_duration_days": 55,
-      "avg_yield_per_acre_kg": 7500,
-      "standard_price_per_kg": 210,
-      "optimal_temp_min": 18,
-      "optimal_temp_max": 28,
-      "waterlog_sensitive": false,
-      "disease_susceptibility": "LOW",
-      "standard_demand_kg": 40000
-    },
-    {
-      "id": 19,
-      "crop_code": "CUCUMBER",
-      "name_en": "Cucumber",
-      "name_si": "පිපිඤ්ඤා",
-      "name_ta": "வெள்ளரிக்காய்",
-      "category": "Adaptable Vegetable",
-      "growth_duration_days": 50,
-      "avg_yield_per_acre_kg": 9500,
-      "standard_price_per_kg": 160,
-      "optimal_temp_min": 17,
-      "optimal_temp_max": 28,
-      "waterlog_sensitive": false,
-      "disease_susceptibility": "MODERATE",
-      "standard_demand_kg": 55000
-    },
-    {
-      "id": 20,
-      "crop_code": "GREEN_CHILI",
-      "name_en": "Green Chili",
-      "name_si": "අමු මිරිස්",
-      "name_ta": "பச்சை மிளகாய்",
-      "category": "Upcountry Vegetable",
-      "growth_duration_days": 70,
-      "avg_yield_per_acre_kg": 4200,
-      "standard_price_per_kg": 540,
-      "optimal_temp_min": 17,
-      "optimal_temp_max": 28,
-      "waterlog_sensitive": true,
-      "disease_susceptibility": "HIGH",
-      "standard_demand_kg": 50000
-    },
-    {
-      "id": 21,
-      "crop_code": "RED_ONION",
-      "name_en": "Red Onion",
-      "name_si": "රතු ළූණු",
-      "name_ta": "சிவப்பு வெங்காயம்",
-      "category": "Upcountry Vegetable",
-      "growth_duration_days": 90,
-      "avg_yield_per_acre_kg": 5200,
-      "standard_price_per_kg": 390,
-      "optimal_temp_min": 16,
-      "optimal_temp_max": 27,
-      "waterlog_sensitive": true,
-      "disease_susceptibility": "MODERATE",
-      "standard_demand_kg": 85000
-    },
-    {
-      "id": 22,
-      "crop_code": "GOTUKOLA",
-      "name_en": "Centella (Gotukola)",
-      "name_si": "ගොටුකොළ",
-      "name_ta": "வல்லாரை",
-      "category": "Leafy Green",
-      "growth_duration_days": 30,
-      "avg_yield_per_acre_kg": 3500,
-      "standard_price_per_kg": 260,
-      "optimal_temp_min": 16,
-      "optimal_temp_max": 28,
-      "waterlog_sensitive": false,
-      "disease_susceptibility": "LOW",
-      "standard_demand_kg": 28000
-    },
-    {
-      "id": 23,
-      "crop_code": "KANGKUNG",
-      "name_en": "Water Spinach",
-      "name_si": "කංකුං",
-      "name_ta": "வள்ளல் கீரை",
-      "category": "Leafy Green",
-      "growth_duration_days": 25,
-      "avg_yield_per_acre_kg": 6000,
-      "standard_price_per_kg": 140,
-      "optimal_temp_min": 18,
-      "optimal_temp_max": 29,
-      "waterlog_sensitive": false,
-      "disease_susceptibility": "LOW",
-      "standard_demand_kg": 35000
-    },
-    {
-      "id": 24,
-      "crop_code": "MUKUNUWENNA",
-      "name_en": "Mukunuwenna",
-      "name_si": "මුකුණුවැන්න",
-      "name_ta": "முக்குனுவென்ன",
-      "category": "Leafy Green",
-      "growth_duration_days": 30,
-      "avg_yield_per_acre_kg": 4200,
-      "standard_price_per_kg": 210,
-      "optimal_temp_min": 16,
-      "optimal_temp_max": 28,
-      "waterlog_sensitive": false,
-      "disease_susceptibility": "LOW",
-      "standard_demand_kg": 30000
-    },
-    {
-      "id": 25,
-      "crop_code": "SPINACH",
-      "name_en": "Spinach",
-      "name_si": "නිවිති",
-      "name_ta": "பசலைக் கீரை",
-      "category": "Leafy Green",
-      "growth_duration_days": 35,
-      "avg_yield_per_acre_kg": 5000,
-      "standard_price_per_kg": 220,
-      "optimal_temp_min": 16,
-      "optimal_temp_max": 27,
-      "waterlog_sensitive": false,
-      "disease_susceptibility": "LOW",
-      "standard_demand_kg": 25000
-    }
-  ],
-  "planting_records": [
-    {
-      "id": 1,
-      "farmer_id": 2,
-      "farmer_name": "Kapila Bandara",
-      "crop_id": 1,
-      "name_en": "Leeks",
-      "name_si": "ලීක්ස්",
-      "land_size_acres": 2,
-      "expected_yield_kg": 17000,
-      "planting_date": "2026-08-01",
-      "expected_harvest_date": "2026-11-01",
-      "latitude": 6.8322,
-      "longitude": 80.998,
-      "district": "Badulla",
-      "division": "Bandarawela",
-      "status": "PLANTED",
-      "entered_by_type": "FARMER"
-    },
-    {
-      "id": 2,
-      "farmer_id": 2,
-      "farmer_name": "Kapila Bandara",
-      "crop_id": 2,
-      "name_en": "Cabbage",
-      "name_si": "ගෝවා",
-      "land_size_acres": 3.5,
-      "expected_yield_kg": 42000,
-      "planting_date": "2026-08-10",
-      "expected_harvest_date": "2026-10-25",
-      "latitude": 6.835,
-      "longitude": 80.9995,
-      "district": "Badulla",
-      "division": "Bandarawela",
-      "status": "PLANTED",
-      "entered_by_type": "FARMER"
-    }
-  ],
-  "crop_seasons": [
-    {
-      "id": 1,
-      "crop_id": 1,
-      "season_name": "MAHA",
-      "optimal_start_month": 10,
-      "optimal_end_month": 3,
-      "suitability": "BEST",
-      "suitability_score": 95
-    },
-    {
-      "id": 2,
-      "crop_id": 1,
-      "season_name": "YALA",
-      "optimal_start_month": 5,
-      "optimal_end_month": 8,
-      "suitability": "MODERATE",
-      "suitability_score": 65
-    },
-    {
-      "id": 3,
-      "crop_id": 2,
-      "season_name": "MAHA",
-      "optimal_start_month": 10,
-      "optimal_end_month": 2,
-      "suitability": "BEST",
-      "suitability_score": 92
-    },
-    {
-      "id": 4,
-      "crop_id": 3,
-      "season_name": "MAHA",
-      "optimal_start_month": 9,
-      "optimal_end_month": 1,
-      "suitability": "BEST",
-      "suitability_score": 94
-    },
-    {
-      "id": 5,
-      "crop_id": 4,
-      "season_name": "MAHA",
-      "optimal_start_month": 9,
-      "optimal_end_month": 3,
-      "suitability": "BEST",
-      "suitability_score": 90
-    },
-    {
-      "id": 6,
-      "crop_id": 5,
-      "season_name": "MAHA",
-      "optimal_start_month": 10,
-      "optimal_end_month": 2,
-      "suitability": "BEST",
-      "suitability_score": 95
-    },
-    {
-      "id": 7,
-      "crop_id": 6,
-      "season_name": "YALA",
-      "optimal_start_month": 5,
-      "optimal_end_month": 8,
-      "suitability": "BEST",
-      "suitability_score": 92
-    },
-    {
-      "id": 8,
-      "crop_id": 7,
-      "season_name": "YALA",
-      "optimal_start_month": 5,
-      "optimal_end_month": 8,
-      "suitability": "BEST",
-      "suitability_score": 90
-    }
-  ],
-  "price_history": [
-    {
-      "crop_id": 1,
-      "market_name": "Keppetipola Economic Centre",
-      "price_per_kg": 280,
-      "price_date": "2026-09-23"
-    },
-    {
-      "crop_id": 2,
-      "market_name": "Keppetipola Economic Centre",
-      "price_per_kg": 190,
-      "price_date": "2026-09-23"
-    },
-    {
-      "crop_id": 3,
-      "market_name": "Keppetipola Economic Centre",
-      "price_per_kg": 340,
-      "price_date": "2026-09-23"
-    },
-    {
-      "crop_id": 4,
-      "market_name": "Keppetipola Economic Centre",
-      "price_per_kg": 260,
-      "price_date": "2026-09-23"
-    },
-    {
-      "crop_id": 5,
-      "market_name": "Keppetipola Economic Centre",
-      "price_per_kg": 390,
-      "price_date": "2026-09-23"
-    }
-  ],
-  "cropix_demand_benchmarks": [
-    {
-      "id": 1,
-      "crop_id": 1,
-      "district": "Badulla",
-      "target_month": 9,
-      "target_year": 2026,
-      "national_demand_kg": 450000,
-      "regional_quota_kg": 95000,
-      "current_market_gap_kg": 15000
-    },
-    {
-      "id": 2,
-      "crop_id": 2,
-      "district": "Badulla",
-      "target_month": 9,
-      "target_year": 2026,
-      "national_demand_kg": 600000,
-      "regional_quota_kg": 120000,
-      "current_market_gap_kg": 8000
-    }
-  ],
-  "marketplace_listings": [],
+"marketplace_listings": [],
   "marketplace_orders": [],
   "broadcast_warnings": [
     {
@@ -681,6 +21,382 @@
       "created_at": "2026-09-23T20:04:16.508Z"
     }
   ],
-  "farmer_verifications": [],
+  "farmer_verifications": [
+    {
+      "farmer_id": 1790097674293,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-22T17:21:14.305Z"
+    },
+    {
+      "farmer_id": 1790097674315,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-22T17:21:14.324Z"
+    },
+    {
+      "farmer_id": 1790097674334,
+      "verification_status": "APPROVED",
+      "verified_by": "PENDING",
+      "verified_at": "2026-09-22T17:21:14.345Z"
+    },
+    {
+      "farmer_id": 1790097842053,
+      "verification_status": "APPROVED",
+      "verified_at": "2026-09-22T17:24:02.066Z"
+    },
+    {
+      "farmer_id": 1790098871720,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-22T17:41:11.736Z"
+    },
+    {
+      "farmer_id": 1790098871751,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-22T17:41:11.764Z"
+    },
+    {
+      "farmer_id": 1790098871778,
+      "verification_status": "APPROVED",
+      "verified_by": "PENDING",
+      "verified_at": "2026-09-22T17:41:11.793Z"
+    },
+    {
+      "farmer_id": 1790099206146,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-22T17:46:46.163Z"
+    },
+    {
+      "farmer_id": 1790099206179,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-22T17:46:46.194Z"
+    },
+    {
+      "farmer_id": 1790099206208,
+      "verification_status": "APPROVED",
+      "verified_by": "PENDING",
+      "verified_at": "2026-09-22T17:46:46.224Z"
+    },
+    {
+      "farmer_id": 1790099259726,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-22T17:47:39.737Z"
+    },
+    {
+      "farmer_id": 1790099259748,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-22T17:47:39.760Z"
+    },
+    {
+      "farmer_id": 1790099259773,
+      "verification_status": "APPROVED",
+      "verified_by": "PENDING",
+      "verified_at": "2026-09-22T17:47:39.785Z"
+    },
+    {
+      "farmer_id": 1790099382000,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-22T17:49:42.012Z"
+    },
+    {
+      "farmer_id": 1790099382026,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-22T17:49:42.040Z"
+    },
+    {
+      "farmer_id": 1790099382052,
+      "verification_status": "APPROVED",
+      "verified_by": "PENDING",
+      "verified_at": "2026-09-22T17:49:42.063Z"
+    },
+    {
+      "farmer_id": 1790099657654,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-22T17:54:17.678Z"
+    },
+    {
+      "farmer_id": 1790099657704,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-22T17:54:17.721Z"
+    },
+    {
+      "farmer_id": 1790099657743,
+      "verification_status": "APPROVED",
+      "verified_by": "PENDING",
+      "verified_at": "2026-09-22T17:54:17.763Z"
+    },
+    {
+      "farmer_id": 1790100478510,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-22T18:07:58.531Z"
+    },
+    {
+      "farmer_id": 1790100478547,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-22T18:07:58.568Z"
+    },
+    {
+      "farmer_id": 1790100478586,
+      "verification_status": "APPROVED",
+      "verified_by": "PENDING",
+      "verified_at": "2026-09-22T18:07:58.608Z"
+    },
+    {
+      "farmer_id": 1790100581982,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-22T18:09:42.003Z"
+    },
+    {
+      "farmer_id": 1790100582023,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-22T18:09:42.043Z"
+    },
+    {
+      "farmer_id": 1790100582062,
+      "verification_status": "APPROVED",
+      "verified_by": "PENDING",
+      "verified_at": "2026-09-22T18:09:42.079Z"
+    },
+    {
+      "farmer_id": 1790100820617,
+      "verification_status": "APPROVED",
+      "verified_at": "2026-09-22T18:13:40.642Z"
+    },
+    {
+      "farmer_id": 1790101224976,
+      "verification_status": "APPROVED",
+      "verified_at": "2026-09-22T18:20:25.002Z"
+    },
+    {
+      "farmer_id": 1790159956965,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-23T10:39:16.988Z"
+    },
+    {
+      "farmer_id": 1790159957007,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-23T10:39:17.027Z"
+    },
+    {
+      "farmer_id": 1790159957047,
+      "verification_status": "APPROVED",
+      "verified_by": "PENDING",
+      "verified_at": "2026-09-23T10:39:17.065Z"
+    },
+    {
+      "farmer_id": 1790187433920,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-23T18:17:13.939Z"
+    },
+    {
+      "farmer_id": 1790187433955,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-23T18:17:13.972Z"
+    },
+    {
+      "farmer_id": 1790187433985,
+      "verification_status": "APPROVED",
+      "verified_by": "PENDING",
+      "verified_at": "2026-09-23T18:17:14.000Z"
+    },
+    {
+      "farmer_id": 1790187490635,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-23T18:18:10.653Z"
+    },
+    {
+      "farmer_id": 1790187490669,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-23T18:18:10.687Z"
+    },
+    {
+      "farmer_id": 1790187490706,
+      "verification_status": "APPROVED",
+      "verified_by": "PENDING",
+      "verified_at": "2026-09-23T18:18:10.728Z"
+    },
+    {
+      "farmer_id": 1790187583152,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-23T18:19:43.164Z"
+    },
+    {
+      "farmer_id": 1790187583177,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-23T18:19:43.188Z"
+    },
+    {
+      "farmer_id": 1790187583200,
+      "verification_status": "APPROVED",
+      "verified_by": "PENDING",
+      "verified_at": "2026-09-23T18:19:43.212Z"
+    },
+    {
+      "farmer_id": 1790187962210,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-23T18:26:02.230Z"
+    },
+    {
+      "farmer_id": 1790187962251,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-23T18:26:02.275Z"
+    },
+    {
+      "farmer_id": 1790187962292,
+      "verification_status": "APPROVED",
+      "verified_by": "PENDING",
+      "verified_at": "2026-09-23T18:26:02.308Z"
+    },
+    {
+      "farmer_id": 1790188023505,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-23T18:27:03.519Z"
+    },
+    {
+      "farmer_id": 1790188023533,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-23T18:27:03.548Z"
+    },
+    {
+      "farmer_id": 1790188023562,
+      "verification_status": "APPROVED",
+      "verified_by": "PENDING",
+      "verified_at": "2026-09-23T18:27:03.575Z"
+    },
+    {
+      "farmer_id": 1790189253559,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-23T18:47:33.577Z"
+    },
+    {
+      "farmer_id": 1790189253591,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-23T18:47:33.604Z"
+    },
+    {
+      "farmer_id": 1790189253617,
+      "verification_status": "APPROVED",
+      "verified_by": "PENDING",
+      "verified_at": "2026-09-23T18:47:33.629Z"
+    },
+    {
+      "farmer_id": 1790189282944,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-23T18:48:02.962Z"
+    },
+    {
+      "farmer_id": 1790189282978,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-23T18:48:02.994Z"
+    },
+    {
+      "farmer_id": 1790189283013,
+      "verification_status": "APPROVED",
+      "verified_by": "PENDING",
+      "verified_at": "2026-09-23T18:48:03.030Z"
+    },
+    {
+      "farmer_id": 1790189395106,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-23T18:49:55.126Z"
+    },
+    {
+      "farmer_id": 1790189395145,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-23T18:49:55.163Z"
+    },
+    {
+      "farmer_id": 1790189395180,
+      "verification_status": "APPROVED",
+      "verified_by": "PENDING",
+      "verified_at": "2026-09-23T18:49:55.195Z"
+    },
+    {
+      "farmer_id": 1790189952509,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-23T18:59:12.530Z"
+    },
+    {
+      "farmer_id": 1790189952549,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-23T18:59:12.563Z"
+    },
+    {
+      "farmer_id": 1790189952580,
+      "verification_status": "APPROVED",
+      "verified_by": "PENDING",
+      "verified_at": "2026-09-23T18:59:12.594Z"
+    },
+    {
+      "farmer_id": 1790189994623,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-23T18:59:54.642Z"
+    },
+    {
+      "farmer_id": 1790189994662,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-23T18:59:54.683Z"
+    },
+    {
+      "farmer_id": 1790189994702,
+      "verification_status": "APPROVED",
+      "verified_by": "PENDING",
+      "verified_at": "2026-09-23T18:59:54.716Z"
+    },
+    {
+      "farmer_id": 1790190134443,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-23T19:02:14.460Z"
+    },
+    {
+      "farmer_id": 1790190134476,
+      "verification_status": "APPROVED",
+      "verified_by": "APPROVED",
+      "verified_at": "2026-09-23T19:02:14.489Z"
+    },
+    {
+      "farmer_id": 1790190134502,
+      "verification_status": "APPROVED",
+      "verified_by": "PENDING",
+      "verified_at": "2026-09-23T19:02:14.515Z"
+    }
+  ],
   "notification_logs": []
 }

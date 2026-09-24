@@ -225,9 +225,14 @@ module.exports = {
     const lower = text.toLowerCase();
 
     // SELECT Queries
-    if (lower.includes('from users where phone')) {
-      const phoneVal = params[0];
-      return { rows: fileDb.users.filter(u => u.phone === phoneVal) };
+    if (lower.includes('from users where') && (lower.includes('phone') || lower.includes('nic'))) {
+      const val = (params[0] || '').trim().toLowerCase();
+      return {
+        rows: fileDb.users.filter(u =>
+          (u.nic && u.nic.toLowerCase() === val) ||
+          (u.phone && u.phone === val)
+        )
+      };
     }
     if (lower.includes('from users where id =')) {
       const idVal = Number(params[0]);
@@ -505,6 +510,8 @@ module.exports = {
         newUser.first_name = split.first_name;
         newUser.middle_name = split.middle_name;
         newUser.last_name = split.last_name;
+      } else if (newUser.first_name && newUser.last_name) {
+        newUser.full_name = formatFullName(newUser.first_name, newUser.middle_name, newUser.last_name);
       } else if (newUser.first_name && !newUser.full_name) {
         newUser.full_name = formatFullName(newUser.first_name, newUser.middle_name, newUser.last_name);
       }
@@ -516,8 +523,8 @@ module.exports = {
         newUser.address_line2 = addrSplit.address_line2;
         newUser.city = addrSplit.city;
         newUser.postal_code = addrSplit.postal_code;
-      } else if (newUser.address_line1 && !newUser.address) {
-        newUser.address = formatAddress(newUser.address_line1, newUser.address_line2, newUser.city, newUser.postal_code);
+      } else if (newUser.address_line1) {
+        newUser.address = formatAddress(newUser.address_line1, newUser.address_line2, newUser.city || newUser.division || 'Bandarawela', newUser.postal_code || '90100');
       }
 
       // Fallback defaults

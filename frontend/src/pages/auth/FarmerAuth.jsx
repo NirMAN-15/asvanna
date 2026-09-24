@@ -15,13 +15,19 @@ export default function FarmerAuth() {
   const [fieldErrors, setFieldErrors] = useState({});
 
   const [formData, setFormData] = useState({
-    full_name: '',
+    first_name: '',
+    middle_name: '',
+    last_name: '',
     nic: '',
     phone: '',
     district: 'Badulla',
     division: 'Bandarawela',
     gnd_division: 'Wewathenna',
     land_size_acres: '2.5',
+    address_line1: '',
+    address_line2: '',
+    city: 'Bandarawela',
+    postal_code: '90100',
     password: '',
     confirm_password: '',
   });
@@ -71,13 +77,19 @@ export default function FarmerAuth() {
 
     setLoading(true);
     const payload = {
-      full_name: formData.full_name,
+      first_name: formData.first_name.trim(),
+      middle_name: formData.middle_name.trim() || null,
+      last_name: formData.last_name.trim(),
       nic: nicRes.clean,
       phone: phoneRes.clean,
       district: formData.district,
       division: formData.division,
       gnd_division: formData.gnd_division,
       land_size_acres: parseFloat(formData.land_size_acres) || 2.0,
+      address_line1: formData.address_line1.trim(),
+      address_line2: formData.address_line2.trim() || null,
+      city: formData.city.trim() || formData.division || 'Bandarawela',
+      postal_code: formData.postal_code.trim() || '90100',
       password: formData.password,
     };
 
@@ -208,19 +220,52 @@ export default function FarmerAuth() {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Full Name */}
+            {/* First Name */}
             <div className="flex flex-col gap-1">
-              <label className="font-label-md text-label-md text-on-surface-variant font-semibold" htmlFor="full_name">
-                Full Name (සම්පූර්ණ නම)
+              <label className="font-label-md text-label-md text-on-surface-variant font-semibold" htmlFor="first_name">
+                {lang === 'si' ? 'First Name (මුල් නම)' : lang === 'ta' ? 'First Name (முதல் பெயர்)' : 'First Name'} <span className="text-error">*</span>
               </label>
               <input
-                id="full_name"
-                name="full_name"
+                id="first_name"
+                name="first_name"
                 type="text"
                 required
-                value={formData.full_name}
+                value={formData.first_name}
                 onChange={handleChange}
-                placeholder="e.g. Ramesh Bandara"
+                placeholder={lang === 'si' ? 'උදා. රමේෂ්' : 'e.g. Ramesh'}
+                className="w-full h-11 px-4 font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition outline-none"
+              />
+            </div>
+
+            {/* Middle Name (Optional) */}
+            <div className="flex flex-col gap-1">
+              <label className="font-label-md text-label-md text-on-surface-variant font-semibold" htmlFor="middle_name">
+                {lang === 'si' ? 'Middle Name (මැද නම - අත්‍යවශ්‍ය නොවේ)' : lang === 'ta' ? 'Middle Name (இடைப் பெயர் - விருப்பமானது)' : 'Middle Name (Optional)'}
+              </label>
+              <input
+                id="middle_name"
+                name="middle_name"
+                type="text"
+                value={formData.middle_name}
+                onChange={handleChange}
+                placeholder={lang === 'si' ? 'උදා. කුමාර' : 'e.g. Kumara'}
+                className="w-full h-11 px-4 font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition outline-none"
+              />
+            </div>
+
+            {/* Last Name */}
+            <div className="flex flex-col gap-1">
+              <label className="font-label-md text-label-md text-on-surface-variant font-semibold" htmlFor="last_name">
+                {lang === 'si' ? 'Last Name (වාසගම / අවසාන නම)' : lang === 'ta' ? 'Last Name (கடைசிப் பெயர்)' : 'Last Name'} <span className="text-error">*</span>
+              </label>
+              <input
+                id="last_name"
+                name="last_name"
+                type="text"
+                required
+                value={formData.last_name}
+                onChange={handleChange}
+                placeholder={lang === 'si' ? 'උදා. බණ්ඩාර' : 'e.g. Bandara'}
                 className="w-full h-11 px-4 font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition outline-none"
               />
             </div>
@@ -355,6 +400,74 @@ export default function FarmerAuth() {
                   value={formData.land_size_acres}
                   onChange={handleChange}
                   placeholder="2.5"
+                  className="w-full h-11 px-4 font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Address Line 1 */}
+            <div className="flex flex-col gap-1">
+              <label className="font-label-md text-label-md text-on-surface-variant font-semibold" htmlFor="address_line1">
+                {lang === 'si' ? 'ලිපිනය - 1 වන පේළිය (Address Line 1)' : lang === 'ta' ? 'முகவரி வரி 1 (Address Line 1)' : 'Address Line 1'} <span className="text-error">*</span>
+              </label>
+              <input
+                id="address_line1"
+                name="address_line1"
+                type="text"
+                required
+                value={formData.address_line1}
+                onChange={handleChange}
+                placeholder={lang === 'si' ? 'උදා. අංක 42, පන්සල පාර' : 'e.g. No. 42, Temple Road'}
+                className="w-full h-11 px-4 font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition outline-none"
+              />
+            </div>
+
+            {/* Address Line 2 */}
+            <div className="flex flex-col gap-1">
+              <label className="font-label-md text-label-md text-on-surface-variant font-semibold" htmlFor="address_line2">
+                {lang === 'si' ? 'ලිපිනය - 2 වන පේළිය (Address Line 2 - අත්‍යවශ්‍ය නොවේ)' : lang === 'ta' ? 'முகவரி வரி 2 (விருப்பமானது)' : 'Address Line 2 (Optional)'}
+              </label>
+              <input
+                id="address_line2"
+                name="address_line2"
+                type="text"
+                value={formData.address_line2}
+                onChange={handleChange}
+                placeholder={lang === 'si' ? 'උදා. බිඳුනුවැව' : 'e.g. Bindunuwewa'}
+                className="w-full h-11 px-4 font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition outline-none"
+              />
+            </div>
+
+            {/* Two-col: City & Postal Code */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1">
+                <label className="font-label-md text-label-md text-on-surface-variant font-semibold" htmlFor="city">
+                  {lang === 'si' ? 'නගරය (City)' : lang === 'ta' ? 'நகரம் (City)' : 'City'} <span className="text-error">*</span>
+                </label>
+                <input
+                  id="city"
+                  name="city"
+                  type="text"
+                  required
+                  value={formData.city}
+                  onChange={handleChange}
+                  placeholder={lang === 'si' ? 'උදා. බණ්ඩාරවෙල' : 'e.g. Bandarawela'}
+                  className="w-full h-11 px-4 font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition outline-none"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-label-md text-label-md text-on-surface-variant font-semibold" htmlFor="postal_code">
+                  {lang === 'si' ? 'තැපැල් අංකය (Postal Code)' : lang === 'ta' ? 'அஞ்சல் குறியீடு (Postal Code)' : 'Postal Code'} <span className="text-error">*</span>
+                </label>
+                <input
+                  id="postal_code"
+                  name="postal_code"
+                  type="text"
+                  required
+                  value={formData.postal_code}
+                  onChange={handleChange}
+                  placeholder="90100"
                   className="w-full h-11 px-4 font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition outline-none"
                 />
               </div>
