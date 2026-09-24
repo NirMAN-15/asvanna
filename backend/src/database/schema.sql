@@ -10,7 +10,10 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- 1. Users Table
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
-    full_name VARCHAR(150) NOT NULL,
+    first_name VARCHAR(100),
+    middle_name VARCHAR(100),
+    last_name VARCHAR(100),
+    full_name VARCHAR(255) NOT NULL,
     phone VARCHAR(20) UNIQUE NOT NULL,
     nic VARCHAR(20) UNIQUE,
     email VARCHAR(100) UNIQUE,
@@ -20,6 +23,10 @@ CREATE TABLE IF NOT EXISTS users (
     district VARCHAR(100) DEFAULT 'Badulla',
     division VARCHAR(100) DEFAULT 'Bandarawela',
     gnd_division VARCHAR(100),
+    address_line1 VARCHAR(255),
+    address_line2 VARCHAR(255),
+    city VARCHAR(100) DEFAULT 'Bandarawela',
+    postal_code VARCHAR(20) DEFAULT '90100',
     address TEXT,
     latitude DECIMAL(10, 8),
     longitude DECIMAL(11, 8),

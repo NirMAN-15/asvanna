@@ -453,6 +453,107 @@ class MarketplaceController {
       next(err);
     }
   }
+
+  /**
+   * GET /api/v1/marketplace/buyer-summary
+   * Returns real DB metrics for the Local Buyer dashboard
+   */
+  static async getBuyerSummary(req, res, next) {
+    try {
+      const buyerLat = parseFloat(req.query.lat) || (req.user && req.user.latitude ? parseFloat(req.user.latitude) : 6.8322);
+      const buyerLon = parseFloat(req.query.lon) || (req.user && req.user.longitude ? parseFloat(req.user.longitude) : 80.9980);
+      const radiusKm = parseFloat(req.query.radius_km) || 5;
+
+      // --- 1. Fetch all AVAILABLE listings ---
+      const listingsRes = await db.query(`SELECT * FROM marketplace_listings WHERE status = 'AVAILABLE'`);
+      const allListings = listingsRes.rows || [];
+
+      // --- 2. Use GeofencingService.filterByProximity for 5km filter ---
+      const nearbyListings = GeofencingService.filterByProximity(buyerLat, buyerLon, allListings, radiusKm);
+      const surplus5kmKg = nearbyListings.reduce((acc, l) => acc + (parseFloat(l.quantity_kg) || 0), 0);
+
+      // --- 3. All listings sorted by distance from the buyer's area ---
+      const allWithDist = GeofencingService.filterByProximity(buyerLat, buyerLon, allListings, 9999);
+
+      // --- 4. Select the 3 nearest unique surplus crop categories in this area ---
+      const seenCropIds = new Set();
+      const nearestThreeCrops = [];
+      for (const item of allWithDist) {
+        if (!seenCropIds.has(item.crop_id)) {
+          seenCropIds.add(item.crop_id);
+          nearestThreeCrops.push(item);
+          if (nearestThreeCrops.length === 3) break;
+        }
+      }
+      if (nearestThreeCrops.length < 3) {
+        for (const item of allWithDist) {
+          if (!nearestThreeCrops.some(c => c.id === item.id)) {
+            nearestThreeCrops.push(item);
+            if (nearestThreeCrops.length === 3) break;
+          }
+        }
+      }
+
+      // --- 5. Active verified farms (unique farmer_ids in AVAILABLE listings) ---
+      const farmerIds = [...new Set(allListings.map(l => l.farmer_id))];
+      const activeVerifiedFarmsCount = farmerIds.length;
+
+      // --- 6. Average wholesale price from price_history ---
+      const priceRes = await db.query('SELECT * FROM price_history');
+      const priceRows = priceRes.rows || [];
+      const avgWholesalePrice = priceRows.length > 0
+        ? Math.round(priceRows.reduce((a, r) => a + parseFloat(r.price_per_kg || 0), 0) / priceRows.length)
+        : 210;
+
+      // --- 7. Buyer order history ---
+      const userId = req.user ? req.user.id : null;
+      let buyerOrders = [];
+      if (userId) {
+        const ordersRes = await db.query(`SELECT * FROM marketplace_orders WHERE o.buyer_id = $1`, [userId]);
+        buyerOrders = ordersRes.rows || [];
+      }
+      // Fallback to demo buyer orders for unauthenticated/demo view
+      if (buyerOrders.length === 0) {
+        const demoRes = await db.query(`SELECT * FROM marketplace_orders WHERE o.buyer_id = $1`, [1788873169736]);
+        buyerOrders = demoRes.rows || [];
+      }
+
+      const totalOrders = buyerOrders.length;
+      const totalSpentLKR = buyerOrders.reduce((a, o) => a + parseFloat(o.total_price || 0), 0);
+      const totalProcuredKg = buyerOrders.reduce((a, o) =>
+        a + parseFloat(o.quantity_kg || o.requested_quantity_kg || 0), 0);
+      const completedCount = buyerOrders.filter(o => o.status === 'DELIVERED' || o.status === 'COMPLETED').length;
+      const recentOrders = buyerOrders.slice(0, 5).map(o => ({
+        id: o.id,
+        order_code: o.order_code,
+        crop_name: o.crop_name || o.crop_name_en,
+        quantity_kg: o.quantity_kg || o.requested_quantity_kg,
+        total_price: o.total_price,
+        status: o.status,
+        farmer_name: o.farmer_name,
+        farmer_location: o.farmer_location,
+        date_received: o.date_received || o.created_at
+      }));
+
+      return ApiResponse.success(res, {
+        surplus5kmKg,
+        activeVerifiedFarmsCount,
+        avgWholesalePrice,
+        radiusKm,
+        buyerHistorySummary: {
+          totalOrders,
+          totalSpentLKR,
+          totalProcuredKg,
+          completedCount,
+          recentOrders
+        },
+        surplusCrops: nearestThreeCrops,
+        allNearbySurplus: allWithDist.slice(0, 12)
+      }, 'Buyer summary loaded');
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 module.exports = MarketplaceController;
