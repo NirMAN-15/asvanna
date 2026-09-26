@@ -17,6 +17,9 @@ class AppTranslations {
       'notices': 'Notices',
       'officer_link': 'Officer Link',
       'greeting': 'Good morning',
+      'greeting_morning': 'Good morning',
+      'greeting_afternoon': 'Good afternoon',
+      'greeting_evening': 'Good evening',
       'land_usage': 'Land Usage',
       'utilized': 'Utilized',
       'total_land': 'Total Land',
@@ -62,11 +65,23 @@ class AppTranslations {
       'sell_surplus_btn': 'Sell Surplus',
       'market_prices_btn': 'Market Prices',
 
+      // Dashboard Action Cards
+      'crop_status': 'Crop status',
+      'crop_status_desc': 'Active crops & harvest progress',
+      'plant_new_crop': 'Plant new crop',
+      'plant_new_crop_desc': 'Check risk & register new crop',
+      'sell_surplus': 'Sell surplus',
+      'sell_surplus_desc': '5km zero-waste marketplace',
+      'market_price': 'Market price',
+      'market_price_desc': 'Manning & HARTI daily rates',
+
       // Navigation
       'nav_home': 'Home',
+      'nav_my_crops': 'My crops',
+      'nav_notification': 'Notification',
+      'nav_profile': 'Profile',
       'nav_search': 'Search',
       'nav_market': 'Market',
-      'nav_profile': 'Profile',
 
       // Dashboard
       'acreage_planted': 'Acreage Planted',
@@ -85,6 +100,7 @@ class AppTranslations {
       'humidity_label': 'Humidity 82%',
       'cultivated_label': 'Cultivated',
       'acre_unit': 'Acre',
+      'perch_unit': 'Perches',
       'at_risk_crops_banner_title': 'Market Risk on Your Crops',
       'at_risk_crops_banner_desc': 'Regional over-planting or price drop risk detected for your active crops:',
       'filter_all': 'All Crops',
@@ -103,6 +119,14 @@ class AppTranslations {
 
       // Risk Engine & Crop Advice
       'crop_advice_title': 'Crop Planting Advice',
+      'safe_crops_cat': 'Safe to Plant',
+      'medium_risk_cat': 'Medium Risk',
+      'high_risk_cat': 'High Risk Alert',
+      'safe_crops_sub': 'High market demand, regional quota < 55%',
+      'medium_risk_sub': 'Quota 85%-92%, stagger sowing in smaller plots',
+      'high_risk_sub': 'Over-supplied (>150%), severe harvest price crash projected',
+      'quota_label': 'Regional Planting Quota:',
+      'view_risk_analysis': 'View Risk Analysis',
       'good_to_plant_now': 'GOOD TO PLANT NOW',
       'do_not_plant_now': 'DO NOT PLANT NOW',
       'caution_plant_state': 'PLANT WITH CAUTION',
@@ -226,6 +250,9 @@ class AppTranslations {
       'notices': 'නිල නිවේදන',
       'officer_link': 'කෘෂිකර්ම නිලධාරී',
       'greeting': 'සුබ උදෑසනක්',
+      'greeting_morning': 'සුබ උදෑසනක්',
+      'greeting_afternoon': 'සුබ දහවලක්',
+      'greeting_evening': 'සුබ සැන්දෑවක්',
       'land_usage': 'ඉඩම් භාවිතය',
       'utilized': 'වගා කර ඇත',
       'total_land': 'මුළු ඉඩම',
@@ -271,11 +298,23 @@ class AppTranslations {
       'sell_surplus_btn': 'අතිරික්ත අලෙවිය',
       'market_prices_btn': 'වෙළඳපොළ මිල',
 
+      // Dashboard Action Cards
+      'crop_status': 'වගා තත්ත්වය',
+      'crop_status_desc': 'ක්‍රියාකාරී බෝග සහ අස්වනු ප්‍රගතිය',
+      'plant_new_crop': 'නව බෝගයක් වගා කිරීම',
+      'plant_new_crop_desc': 'අවදානම පරීක්ෂා කර වගාව සටහන් කරන්න',
+      'sell_surplus': 'අතිරික්ත අස්වැන්න විකිණීම',
+      'sell_surplus_desc': 'කි.මී. 5 ශුන්‍ය නාස්ති වෙළඳපොළ',
+      'market_price': 'වෙළඳපොළ මිල ගණන්',
+      'market_price_desc': 'මැනිං සහ HARTI දෛනික තොග මිල',
+
       // Navigation
       'nav_home': 'මුල් පිටුව',
+      'nav_my_crops': 'මගේ වගාවන්',
+      'nav_notification': 'නිවේදන',
+      'nav_profile': 'පැතිකඩ',
       'nav_search': 'සොයන්න',
       'nav_market': 'වෙළඳපොළ',
-      'nav_profile': 'පැතිකඩ',
 
       // Dashboard
       'acreage_planted': 'වගා කළ බිම් ප්‍රමාණය',
@@ -294,6 +333,7 @@ class AppTranslations {
       'humidity_label': 'ආර්ද්‍රතාවය 82%',
       'cultivated_label': 'වගා කළ ඉඩම',
       'acre_unit': 'අක්කර',
+      'perch_unit': 'පර්චස්',
       'at_risk_crops_banner_title': 'ඔබගේ වගාවන්හි වෙළඳපොළ අවදානම්',
       'at_risk_crops_banner_desc': 'ප්‍රාදේශීය අධික වගාව නිසා මිල පහත වැටීමේ අවදානමක් ඇති ඔබේ වගාවන්:',
       'filter_all': 'සියලු බෝග',
@@ -312,6 +352,14 @@ class AppTranslations {
 
       // Risk Engine
       'crop_advice_title': 'බෝග වගා උපදෙස්',
+      'safe_crops_cat': 'ආරක්ෂිත බෝග',
+      'medium_risk_cat': 'මධ්‍යස්ථ අවදානම්',
+      'high_risk_cat': 'අධික අවදානම්',
+      'safe_crops_sub': 'වෙළඳපොළ ඉහළ ඉල්ලුම, ප්‍රාදේශීය වගා කෝටාව < 55%',
+      'medium_risk_sub': 'කෝටාව 85%-92%, කුඩා බිම්වල වාර වශයෙන් වගා කරන්න',
+      'high_risk_sub': 'අධික අතිරික්තය (>150%), අස්වැන්න නෙළන විට මිල කඩා වැටේ',
+      'quota_label': 'ප්‍රාදේශීය වගා ඉලක්කය:',
+      'view_risk_analysis': 'අවදානම් විස්තර බලන්න',
       'good_to_plant_now': 'දැන් වගා කරන්න සුදුසුයි',
       'do_not_plant_now': 'අවදානම් - වගා කරන්න එපා',
       'caution_plant_state': 'අවධානයෙන් වගා කරන්න',
@@ -437,6 +485,9 @@ class AppTranslations {
       'notices': 'அறிவிப்புகள்',
       'officer_link': 'விவசாய அதிகாரி',
       'greeting': 'காலை வணக்கம்',
+      'greeting_morning': 'காலை வணக்கம்',
+      'greeting_afternoon': 'மதிய வணக்கம்',
+      'greeting_evening': 'மாலை வணக்கம்',
       'land_usage': 'நில பயன்பாடு',
       'utilized': 'பயன்படுத்தப்பட்டது',
       'total_land': 'மொத்த நிலம்',
@@ -482,11 +533,23 @@ class AppTranslations {
       'sell_surplus_btn': 'உபரி விற்பனை',
       'market_prices_btn': 'சந்தை விலைகள்',
 
+      // Dashboard Action Cards
+      'crop_status': 'பயிர் நிலை',
+      'crop_status_desc': 'செயலில் உள்ள பயிர்கள் & அறுவடை நிலை',
+      'plant_new_crop': 'புதிய பயிர் நடவு',
+      'plant_new_crop_desc': 'அபாயத்தை சரிபார்த்து பதிவு செய்யவும்',
+      'sell_surplus': 'உபரி விற்பனை',
+      'sell_surplus_desc': '5 கி.மீ பூஜ்ஜிய விரய சந்தை',
+      'market_price': 'சந்தை விலை',
+      'market_price_desc': 'Manning & HARTI தினசரி விலைகள்',
+
       // Navigation
       'nav_home': 'முகப்பு',
+      'nav_my_crops': 'எனது பயிர்கள்',
+      'nav_notification': 'அறிவிப்புகள்',
+      'nav_profile': 'சுயவிவரம்',
       'nav_search': 'தேடல்',
       'nav_market': 'சந்தை',
-      'nav_profile': 'சுயவிவரம்',
 
       // Dashboard
       'acreage_planted': 'பயிரிடப்பட்ட நிலப்பரப்பு',
@@ -505,6 +568,7 @@ class AppTranslations {
       'humidity_label': 'ஈரப்பதம் 82%',
       'cultivated_label': 'பயிரிடப்பட்டது',
       'acre_unit': 'ஏக்கர்',
+      'perch_unit': 'பேர்ச்',
       'at_risk_crops_banner_title': 'உங்கள் பயிர்களின் சந்தை அபாயம்',
       'at_risk_crops_banner_desc': 'பிராந்திய அதிக நடவு காரணமாக விலை வீழ்ச்சி அபாயம் உள்ள உங்கள் பயிர்கள்:',
       'filter_all': 'அனைத்து பயிர்கள்',
@@ -523,6 +587,14 @@ class AppTranslations {
 
       // Risk Engine
       'crop_advice_title': 'பயிர் நடவு ஆலோசனை',
+      'safe_crops_cat': 'பாதுகாப்பான பயிர்கள்',
+      'medium_risk_cat': 'நடுத்தர ஆபத்து',
+      'high_risk_cat': 'அதிக ஆபத்து',
+      'safe_crops_sub': 'அதிக சந்தை தேவை, ஒதுக்கீடு < 55%',
+      'medium_risk_sub': 'ஒதுக்கீடு 85%-92%, சிறிய பரப்பில் நடவும்',
+      'high_risk_sub': 'அதிக வழங்கல் (>150%), விலை வீழ்ச்சி அபாயம்',
+      'quota_label': 'பிராந்திய ஒதுக்கீடு:',
+      'view_risk_analysis': 'ஆய்வைக் காண்க',
       'good_to_plant_now': 'இப்போது நடவு செய்யலாம்',
       'do_not_plant_now': 'அபாயம் - இப்போது நடவு செய்ய வேண்டாம்',
       'caution_plant_state': 'எச்சரிக்கையுடன் நடவு செய்யுங்கள்',

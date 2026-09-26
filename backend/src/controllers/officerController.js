@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const db = require('../config/database');
 const ValidationService = require('../services/validationService');
 const ApiResponse = require('../utils/apiResponse');
+const { splitFullName, formatFullName, splitAddress, formatAddress } = require('../utils/nameAddressUtils');
 
 class OfficerController {
   /**
@@ -13,8 +14,10 @@ class OfficerController {
       const { status } = req.query;
       let query = `
         SELECT
-          id, full_name, phone, nic, email, district, division, gnd_division,
-          address, latitude, longitude, total_land_size, business_name,
+          id, first_name, middle_name, last_name, full_name, phone, nic, email,
+          district, division, gnd_division,
+          address_line1, address_line2, city, postal_code, address,
+          latitude, longitude, total_land_size, business_name,
           verification_status, is_verified, is_active, created_at
         FROM users
         WHERE role = 'FARMER'
@@ -51,23 +54,37 @@ class OfficerController {
 
   /**
    * POST /api/v1/officer/verifications/:farmerId
-   * Approve or reject a farmer's registration with verification checklist
+   * Verify and approve or reject farmer registration
    */
   static async reviewFarmer(req, res, next) {
     try {
       const { farmerId } = req.params;
-      const { approved, nicVerified, landGpsVerified, landSizeVerified, rejectionReason } = req.body;
+      const {
+        approved,
+        nicVerified = true,
+        landGpsVerified = true,
+        landSizeVerified = true,
+        rejectionReason
+      } = req.body;
       const officerId = req.user ? req.user.id : 1;
 
-      const result = await ValidationService.reviewFarmer(farmerId, officerId, {
-        approved: Boolean(approved),
-        nicVerified: Boolean(nicVerified),
-        landGpsVerified: Boolean(landGpsVerified),
-        landSizeVerified: Boolean(landSizeVerified),
-        rejectionReason
-      });
+      const result = await ValidationService.reviewFarmer(
+        farmerId,
+        officerId,
+        {
+          approved: Boolean(approved),
+          nicVerified: Boolean(nicVerified),
+          landGpsVerified: Boolean(landGpsVerified),
+          landSizeVerified: Boolean(landSizeVerified),
+          rejectionReason
+        }
+      );
 
-      return ApiResponse.success(res, result, `Farmer account ${approved ? 'approved' : 'rejected'} successfully`);
+      return ApiResponse.success(
+        res,
+        result,
+        approved ? 'Farmer account verified and approved' : 'Farmer registration rejected'
+      );
     } catch (err) {
       next(err);
     }
@@ -80,25 +97,70 @@ class OfficerController {
   static async registerFarmerProxy(req, res, next) {
     try {
       const {
-        full_name, phone, nic, district = 'Badulla', division = 'Bandarawela',
-        gnd_division, address, total_land_size, latitude, longitude
+        first_name, middle_name, last_name, full_name,
+        phone, nic, district = 'Badulla', division = 'Bandarawela',
+        gnd_division, address_line1, address_line2, city, postal_code, address,
+        total_land_size, latitude, longitude
       } = req.body;
       const officerId = req.user ? req.user.id : 1;
+
+      let resolvedFirst = first_name || null;
+      let resolvedMiddle = middle_name !== undefined ? middle_name : null;
+      let resolvedLast = last_name || null;
+      let resolvedFull = full_name || null;
+
+      if ((!resolvedFirst || !resolvedLast) && resolvedFull) {
+        const nameParts = splitFullName(resolvedFull);
+        resolvedFirst = resolvedFirst || nameParts.first_name;
+        resolvedMiddle = resolvedMiddle !== null ? resolvedMiddle : nameParts.middle_name;
+        resolvedLast = resolvedLast || nameParts.last_name;
+      }
+      if (!resolvedFull && resolvedFirst) {
+        resolvedFull = formatFullName(resolvedFirst, resolvedMiddle, resolvedLast);
+      }
+      if (!resolvedFull) {
+        resolvedFull = 'Farmer';
+      }
+
+      let resolvedCity = city || division || 'Bandarawela';
+      let resolvedPostal = postal_code || '90100';
+      let resolvedAddr1 = address_line1 || null;
+      let resolvedAddr2 = address_line2 !== undefined ? address_line2 : null;
+      let resolvedAddr = address || null;
+
+      if (!resolvedAddr1 && resolvedAddr) {
+        const addrParts = splitAddress(resolvedAddr, resolvedCity, resolvedPostal);
+        resolvedAddr1 = addrParts.address_line1;
+        resolvedAddr2 = addrParts.address_line2;
+        resolvedCity = addrParts.city;
+        resolvedPostal = addrParts.postal_code;
+      }
+      if (!resolvedAddr && resolvedAddr1) {
+        resolvedAddr = formatAddress(resolvedAddr1, resolvedAddr2, resolvedCity, resolvedPostal);
+      }
 
       const salt = await bcrypt.genSalt(10);
       const defaultPassword = await bcrypt.hash('asvanna123', salt);
 
       const result = await db.query(
         `INSERT INTO users (
-          full_name, phone, nic, password_hash, role,
-          district, division, gnd_division, address,
+          first_name, middle_name, last_name, full_name,
+          phone, nic, password_hash, role,
+          district, division, gnd_division,
+          address_line1, address_line2, city, postal_code, address,
           total_land_size, latitude, longitude,
           verification_status, is_verified
-        ) VALUES ($1, $2, $3, $4, 'FARMER', $5, $6, $7, $8, $9, $10, $11, 'APPROVED', TRUE)
-        RETURNING id, full_name, phone, nic, district, division, gnd_division, address, total_land_size, is_verified, created_at`,
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'FARMER', $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, 'APPROVED', TRUE)
+        RETURNING id, first_name, middle_name, last_name, full_name, phone, nic,
+                  district, division, gnd_division,
+                  address_line1, address_line2, city, postal_code, address,
+                  total_land_size, is_verified, created_at`,
         [
-          full_name, phone, nic, defaultPassword, district, division,
-          gnd_division, address, total_land_size || 1.0,
+          resolvedFirst, resolvedMiddle, resolvedLast, resolvedFull,
+          phone, nic, defaultPassword,
+          district, division, gnd_division || null,
+          resolvedAddr1, resolvedAddr2, resolvedCity, resolvedPostal, resolvedAddr,
+          total_land_size || 1.0,
           latitude || 6.8304, longitude || 80.9878
         ]
       );

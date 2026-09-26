@@ -1,4 +1,9 @@
-const admin = require('firebase-admin');
+let admin = null;
+try {
+  admin = require('firebase-admin');
+} catch (e) {
+  // firebase-admin not installed, running in local fallback mode
+}
 const config = require('./config');
 
 let firebaseApp = null;

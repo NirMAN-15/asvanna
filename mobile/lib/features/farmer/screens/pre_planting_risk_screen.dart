@@ -9,6 +9,8 @@ import '../../../core/providers/app_state_provider.dart';
 import '../../../core/localization/app_translations.dart';
 import 'planting_entry_screen.dart';
 
+enum RiskCategoryFilter { safe, medium, high }
+
 class PrePlantingRiskScreen extends StatefulWidget {
   final Crop? initialCrop;
 
@@ -19,22 +21,53 @@ class PrePlantingRiskScreen extends StatefulWidget {
 }
 
 class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
-  late Crop _selectedCrop;
   final _searchController = TextEditingController();
   String _searchQuery = '';
-  double _simulatedAcreage = 1.0;
+  RiskCategoryFilter _activeFilter = RiskCategoryFilter.safe;
+  double _modalSimulatedAcreage = 1.0;
 
   @override
   void initState() {
     super.initState();
-    final appState = Provider.of<AppStateProvider>(context, listen: false);
-    _selectedCrop = widget.initialCrop ?? appState.selectedCropForRisk ?? appState.availableCrops.first;
+    if (widget.initialCrop != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final appState = Provider.of<AppStateProvider>(context, listen: false);
+        final level = _getCropRiskLevel(widget.initialCrop!, appState);
+        if (mounted) {
+          setState(() {
+            switch (level) {
+              case CropRiskLevel.safe:
+                _activeFilter = RiskCategoryFilter.safe;
+                break;
+              case CropRiskLevel.moderate:
+                _activeFilter = RiskCategoryFilter.medium;
+                break;
+              case CropRiskLevel.critical:
+                _activeFilter = RiskCategoryFilter.high;
+                break;
+            }
+          });
+        }
+      });
+    }
   }
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  CropRiskLevel _getCropRiskLevel(Crop crop, AppStateProvider appState) {
+    final cropId = crop.id;
+    final risk = appState.getRiskForCrop(cropId);
+    if (risk != null) return risk.riskLevel;
+    final nameLower = crop.name.toLowerCase();
+    if (nameLower.contains('leek')) return CropRiskLevel.critical;
+    if (nameLower.contains('cabbage') || nameLower.contains('carrot') || nameLower.contains('tomato')) {
+      return CropRiskLevel.moderate;
+    }
+    return CropRiskLevel.safe;
   }
 
   @override
@@ -44,12 +77,53 @@ class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
     final lang = appState.currentLanguage;
     String tr(String key) => AppTranslations.tr(lang, key);
 
-    final risk = appState.getRiskForCrop(_selectedCrop.id);
+    // Group crops into 3 categories
+    final allCrops = appState.availableCrops;
+    final safeCrops = <Crop>[];
+    final mediumCrops = <Crop>[];
+    final highCrops = <Crop>[];
 
-    final filteredCrops = appState.availableCrops.where((c) {
-      final query = _searchQuery.toLowerCase();
-      return c.name.toLowerCase().contains(query) || c.sinhalaName.contains(query);
-    }).toList();
+    final query = _searchQuery.trim().toLowerCase();
+
+    for (final crop in allCrops) {
+      final nameLower = crop.name.toLowerCase();
+      final sinhalaLower = crop.sinhalaName.toLowerCase();
+      final matchesSearch = query.isEmpty ||
+          nameLower.contains(query) ||
+          sinhalaLower.contains(query);
+
+      if (!matchesSearch) continue;
+
+      final riskLevel = _getCropRiskLevel(crop, appState);
+      switch (riskLevel) {
+        case CropRiskLevel.safe:
+          safeCrops.add(crop);
+          break;
+        case CropRiskLevel.moderate:
+          mediumCrops.add(crop);
+          break;
+        case CropRiskLevel.critical:
+          highCrops.add(crop);
+          break;
+      }
+    }
+
+    final totalSafeCount = allCrops.where((c) => _getCropRiskLevel(c, appState) == CropRiskLevel.safe).length;
+    final totalMedCount = allCrops.where((c) => _getCropRiskLevel(c, appState) == CropRiskLevel.moderate).length;
+    final totalHighCount = allCrops.where((c) => _getCropRiskLevel(c, appState) == CropRiskLevel.critical).length;
+
+    List<Crop> displayedCrops;
+    switch (_activeFilter) {
+      case RiskCategoryFilter.safe:
+        displayedCrops = safeCrops;
+        break;
+      case RiskCategoryFilter.medium:
+        displayedCrops = mediumCrops;
+        break;
+      case RiskCategoryFilter.high:
+        displayedCrops = highCrops;
+        break;
+    }
 
     return Scaffold(
       backgroundColor: context.scaffoldBg,
@@ -58,7 +132,7 @@ class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              tr('crop_advice_title'),
+              tr('crop_status'),
               style: GoogleFonts.poppins(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -71,13 +145,13 @@ class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
                   width: 7,
                   height: 7,
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF4ADE80) : AppColors.riskSafe,
+                    color: isDark ? const Color(0xFF4ADE80) : const Color(0xFF16A34A),
                     shape: BoxShape.circle,
                   ),
                 ),
                 const SizedBox(width: 5),
                 Text(
-                  'Bandarawela • Live Advisory',
+                  'Bandarawela Agrarian Division • Live',
                   style: GoogleFonts.inter(
                     fontSize: 11,
                     color: context.subText,
@@ -109,14 +183,14 @@ class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Search Bar (Simple & Clean)
+              // 1. Search Bar
               TextField(
                 controller: _searchController,
                 onChanged: (val) => setState(() => _searchQuery = val),
                 style: GoogleFonts.inter(fontSize: 14, color: context.titleText),
                 decoration: InputDecoration(
                   hintText: tr('search_crop'),
-                  hintStyle: GoogleFonts.inter(fontSize: 14, color: context.mutedText),
+                  hintStyle: GoogleFonts.inter(fontSize: 13.5, color: context.mutedText),
                   prefixIcon: Icon(
                     Icons.search,
                     color: isDark ? const Color(0xFF4ADE80) : AppColors.primary,
@@ -150,48 +224,51 @@ class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
                       : null,
                 ),
               ),
+              const SizedBox(height: 14),
+
+              // 2. 3-Part Category Tabs (Safe, Medium Risk, High Risk)
+              _build3CategoryTabs(
+                context: context,
+                safeCount: totalSafeCount,
+                medCount: totalMedCount,
+                highCount: totalHighCount,
+                tr: tr,
+              ),
               const SizedBox(height: 16),
 
-              // 1. Big Visual Crop Selector Cards (High-Contrast & Farmer Friendly)
-              Text(
-                tr('select_crop_label'),
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: context.subText,
-                ),
-              ),
-              const SizedBox(height: 10),
-              _buildBigCropSelector(appState, filteredCrops, lang),
-              const SizedBox(height: 18),
-
-              if (risk == null)
+              // 3. Crops List for the Selected Category (No redundant category banner)
+              if (displayedCrops.isNotEmpty) ...[
+                ...displayedCrops.map((crop) => _buildCropCard(
+                      context: context,
+                      crop: crop,
+                      appState: appState,
+                      tr: tr,
+                      lang: lang,
+                    )),
+              ] else
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 30),
+                  padding: const EdgeInsets.symmetric(vertical: 40),
                   child: Center(
-                    child: Text(
-                      'No risk analysis data available for this crop.',
-                      style: GoogleFonts.inter(color: context.subText),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.search_off_rounded,
+                          size: 40,
+                          color: context.mutedText,
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          _searchQuery.isNotEmpty
+                              ? 'No crops found matching "$_searchQuery"'
+                              : 'No crops in this category',
+                          style: GoogleFonts.inter(fontSize: 13.5, color: context.subText),
+                        ),
+                      ],
                     ),
                   ),
-                )
-              else ...[
-                // 2. ONE Giant Traffic-Light Status Card
-                _buildTrafficLightStatusCard(risk, tr, lang),
-                const SizedBox(height: 16),
-
-                // 3. 3 Simple Key Facts (Price, Weather, Market)
-                _buildSimpleKeyFactsCard(risk, tr, lang),
-                const SizedBox(height: 16),
-
-                // 4. Simple Acreage Profit Estimator
-                _buildSimpleAcreageEstimator(risk, tr, lang),
-                const SizedBox(height: 20),
-
-                // 5. Giant Single Action Button (Proceed or Switch to Safe Alternative)
-                _buildGiantActionButton(context, risk, appState, tr, lang),
-                const SizedBox(height: 24),
-              ],
+                ),
+              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -199,557 +276,926 @@ class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
     );
   }
 
-  // 1. Big Visual Crop Selector Cards (Zero-Overflow & Localized)
-  Widget _buildBigCropSelector(AppStateProvider appState, List<Crop> crops, AppLanguage lang) {
+  // 3-Part Category Tabs
+  Widget _build3CategoryTabs({
+    required BuildContext context,
+    required int safeCount,
+    required int medCount,
+    required int highCount,
+    required String Function(String) tr,
+  }) {
     final isDark = context.isDarkMode;
-    return SizedBox(
-      height: 104,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: crops.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
-        itemBuilder: (context, index) {
-          final crop = crops[index];
-          final isSelected = crop.id == _selectedCrop.id;
-          final cropRisk = appState.getRiskForCrop(crop.id);
-          final isCritical = cropRisk?.riskLevel == CropRiskLevel.critical ||
-              (cropRisk == null && crop.name.toLowerCase().contains('leek'));
 
-          Color borderColor = context.cardBorder;
-          Color bgColor = context.cardBg;
-
-          if (isSelected) {
-            borderColor = isCritical
-                ? AppColors.riskCritical
-                : (isDark ? const Color(0xFF4ADE80) : AppColors.primary);
-            bgColor = isCritical
-                ? (isDark ? const Color(0xFF450A0A) : const Color(0xFFFFEBEE))
-                : (isDark ? const Color(0xFF143E23) : const Color(0xFFE8F5E9));
-          }
-
-          final primaryName = lang == AppLanguage.sinhala ? crop.sinhalaName : crop.name;
-          final secondaryName = lang == AppLanguage.sinhala ? crop.name : crop.sinhalaName;
-
-          return GestureDetector(
-            onTap: () {
-              setState(() => _selectedCrop = crop);
-              appState.selectCropForRisk(crop);
-            },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
-              width: 88,
-              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-              decoration: BoxDecoration(
-                color: bgColor,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: borderColor,
-                  width: isSelected ? 2.2 : 1.2,
-                ),
-                boxShadow: isSelected
-                    ? [
-                        BoxShadow(
-                          color: (isCritical ? AppColors.riskCritical : AppColors.primary).withValues(alpha: 0.2),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        )
-                      ]
-                    : [],
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(crop.iconEmoji, style: const TextStyle(fontSize: 26)),
-                  const SizedBox(height: 3),
-                  Text(
-                    primaryName,
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                      color: isSelected
-                          ? (isCritical
-                              ? (isDark ? const Color(0xFFFCA5A5) : AppColors.riskCritical)
-                              : (isDark ? const Color(0xFF86EFAC) : AppColors.primaryDark))
-                          : context.titleText,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    secondaryName,
-                    style: GoogleFonts.inter(
-                      fontSize: 9.5,
-                      color: isSelected
-                          ? (isCritical
-                              ? (isDark ? const Color(0xFFFCA5A5) : AppColors.riskCritical)
-                              : (isDark ? const Color(0xFF86EFAC) : AppColors.primaryDark))
-                          : context.mutedText,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.cardBorder.withValues(alpha: 0.6)),
+      ),
+      padding: const EdgeInsets.all(4),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildCategoryTabItem(
+              context: context,
+              title: tr('safe_crops_cat'),
+              count: safeCount,
+              isSelected: _activeFilter == RiskCategoryFilter.safe,
+              activeColor: isDark ? const Color(0xFF4ADE80) : const Color(0xFF16A34A),
+              activeBg: isDark ? const Color(0xFF052E16) : Colors.white,
+              icon: Icons.check_circle_rounded,
+              onTap: () => setState(() => _activeFilter = RiskCategoryFilter.safe),
             ),
-          );
-        },
+          ),
+          const SizedBox(width: 4),
+          Expanded(
+            child: _buildCategoryTabItem(
+              context: context,
+              title: tr('medium_risk_cat'),
+              count: medCount,
+              isSelected: _activeFilter == RiskCategoryFilter.medium,
+              activeColor: isDark ? const Color(0xFFFBBF24) : const Color(0xFFD97706),
+              activeBg: isDark ? const Color(0xFF451A03) : Colors.white,
+              icon: Icons.warning_amber_rounded,
+              onTap: () => setState(() => _activeFilter = RiskCategoryFilter.medium),
+            ),
+          ),
+          const SizedBox(width: 4),
+          Expanded(
+            child: _buildCategoryTabItem(
+              context: context,
+              title: tr('high_risk_cat'),
+              count: highCount,
+              isSelected: _activeFilter == RiskCategoryFilter.high,
+              activeColor: isDark ? const Color(0xFFF87171) : const Color(0xFFDC2626),
+              activeBg: isDark ? const Color(0xFF450A0A) : Colors.white,
+              icon: Icons.error_outline_rounded,
+              onTap: () => setState(() => _activeFilter = RiskCategoryFilter.high),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  // 2. Single Giant Traffic-Light Status Card (Fully Localized)
-  Widget _buildTrafficLightStatusCard(CropRiskAnalysis risk, String Function(String) tr, AppLanguage lang) {
+  Widget _buildCategoryTabItem({
+    required BuildContext context,
+    required String title,
+    required int count,
+    required bool isSelected,
+    required Color activeColor,
+    required Color activeBg,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
     final isDark = context.isDarkMode;
-    Color cardBg;
-    Color borderColor;
-    Color textColor;
-    IconData statusIcon;
-    String statusTitle;
-    String simpleAdvice;
 
-    final cropDisplayName = lang == AppLanguage.sinhala ? _selectedCrop.sinhalaName : _selectedCrop.name;
-
-    switch (risk.riskLevel) {
-      case CropRiskLevel.critical:
-        cardBg = isDark ? const Color(0xFF3B1212) : const Color(0xFFFFEBEE);
-        borderColor = isDark ? const Color(0xFFF87171) : AppColors.riskCritical;
-        textColor = isDark ? const Color(0xFFFCA5A5) : const Color(0xFFC62828);
-        statusIcon = Icons.cancel_rounded;
-        statusTitle = tr('do_not_plant_now');
-        simpleAdvice = lang == AppLanguage.english
-            ? 'Too many farmers in Bandarawela have already planted $cropDisplayName. Harvest prices are projected to drop by ~57%.'
-            : lang == AppLanguage.tamil
-                ? 'පண்டාරවளையில் ஏற்கனவே அதிகமான விவசாயிகள் $cropDisplayName நட்டுள்ளனர். அறுவடையின் போது விலை ~57% குறையும்.'
-                : 'බණ්ඩාරවෙල ප්‍රදේශයේ දැනටමත් $cropDisplayName ඕනෑවට වඩා වගා කර ඇත. අස්වැන්න නෙළන විට මිල 57% කින් පමණ පහත වැටී පාඩු විය හැක.';
-        break;
-      case CropRiskLevel.moderate:
-        cardBg = isDark ? const Color(0xFF38230B) : const Color(0xFFFFF8E1);
-        borderColor = isDark ? const Color(0xFFFBBF24) : const Color(0xFFFFA000);
-        textColor = isDark ? const Color(0xFFFDE68A) : const Color(0xFFE65100);
-        statusIcon = Icons.warning_amber_rounded;
-        statusTitle = tr('caution_plant_state');
-        simpleAdvice = lang == AppLanguage.english
-            ? 'Regional target is 75% saturated. Sowing smaller acreage is recommended.'
-            : lang == AppLanguage.tamil
-                ? 'பிராந்திய இலக்கில் 75% நிறைவடைந்துள்ளது. குறைந்த பரப்பளவில் நடவு செய்யவும்.'
-                : 'ප්‍රාදේශීය වගා ඉලක්කයෙන් 75% ක් දැනටමත් සම්පූර්ණ වී ඇත. සුළු බිම් ප්‍රමාණයක පමණක් වගා කිරීම සුදුසුය.';
-        break;
-      case CropRiskLevel.safe:
-        cardBg = isDark ? const Color(0xFF0F311C) : const Color(0xFFE8F5E9);
-        borderColor = isDark ? const Color(0xFF4ADE80) : AppColors.primary;
-        textColor = isDark ? const Color(0xFF86EFAC) : const Color(0xFF1B5E20);
-        statusIcon = Icons.check_circle_rounded;
-        statusTitle = tr('good_to_plant_now');
-        simpleAdvice = lang == AppLanguage.english
-            ? 'High market demand in Bandarawela. Weather and price outlook are optimal for $cropDisplayName.'
-            : lang == AppLanguage.tamil
-                ? 'பண்டාරවளையில் அதிக சந்தை தேவை. வானிலை மற்றும் விலைகள் $cropDisplayName பயிருக்கு உகந்ததாக உள்ளன.'
-                : 'වෙළඳපොළේ ඉහළ ඉල්ලුමක් පවතී. ඉදිරි කාලගුණය සහ මිල ගණන් $cropDisplayName සඳහා ඉතා යෝග්‍ය වේ.';
-        break;
-    }
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: borderColor, width: 2.0),
-        boxShadow: [
-          BoxShadow(
-            color: borderColor.withValues(alpha: 0.12),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Big Status Icon
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 4),
+        decoration: BoxDecoration(
+          color: isSelected ? activeBg : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          border: isSelected
+              ? Border.all(color: activeColor.withValues(alpha: isDark ? 0.7 : 0.35), width: 1.5)
+              : null,
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: activeColor.withValues(alpha: 0.12),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : [],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  icon,
+                  size: 14,
+                  color: isSelected ? activeColor : context.subText,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  '$count',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: isSelected ? activeColor : context.titleText,
+                  ),
                 ),
               ],
             ),
-            child: Icon(statusIcon, color: borderColor, size: 42),
-          ),
-          const SizedBox(height: 12),
-
-          // Status Title
-          Text(
-            statusTitle,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
-              fontSize: 19,
-              fontWeight: FontWeight.w800,
-              color: textColor,
-              letterSpacing: 0.5,
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // Friendly explanation
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : Colors.white.withValues(alpha: 0.85),
-              borderRadius: BorderRadius.circular(12),
-              border: isDark ? Border.all(color: context.cardBorder) : null,
-            ),
-            child: Text(
-              simpleAdvice,
-              textAlign: TextAlign.center,
+            const SizedBox(height: 2),
+            Text(
+              title,
               style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: isDark ? const Color(0xFFE2E8F0) : AppColors.textPrimary,
-                height: 1.4,
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: isSelected
+                    ? (isDark ? Colors.white : const Color(0xFF0F172A))
+                    : context.subText,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  // 3. 3 Simple Key Facts Cards (Fully Localized)
-  Widget _buildSimpleKeyFactsCard(CropRiskAnalysis risk, String Function(String) tr, AppLanguage lang) {
+  // Simplified Crop Card without AI clutter
+  Widget _buildCropCard({
+    required BuildContext context,
+    required Crop crop,
+    required AppStateProvider appState,
+    required String Function(String) tr,
+    required AppLanguage lang,
+  }) {
     final isDark = context.isDarkMode;
-    final isCritical = risk.riskLevel == CropRiskLevel.critical;
-    final isModerate = risk.riskLevel == CropRiskLevel.moderate;
+    final risk = appState.getRiskForCrop(crop.id);
+    final riskLevel = _getCropRiskLevel(crop, appState);
 
-    final String priceUnit = lang == AppLanguage.sinhala ? 'රු.' : (lang == AppLanguage.tamil ? 'ரூ.' : 'Rs.');
-    final String priceText = isCritical
-        ? '$priceUnit ${risk.predictedHarvestPriceLkr.toStringAsFixed(0)} / Kg (-57% ${tr('price_loss_label')})'
-        : '$priceUnit ${risk.currentMarketPriceLkr.toStringAsFixed(0)} / Kg (${tr('price_stable_label')})';
+    // Saturation percentage
+    final double saturation = risk?.saturationPercentage ??
+        (riskLevel == CropRiskLevel.critical
+            ? 163.0
+            : (riskLevel == CropRiskLevel.moderate ? 88.0 : 42.0));
 
-    final Color priceColor = isCritical
-        ? (isDark ? const Color(0xFFFCA5A5) : AppColors.riskCritical)
-        : (isDark ? const Color(0xFF86EFAC) : AppColors.primaryDark);
+    Color statusColor;
+    String statusLabel;
+    String saturationStatus;
 
-    final String marketText = isCritical
-        ? tr('market_demand_glut')
-        : isModerate
-            ? tr('market_demand_filling')
-            : tr('market_demand_high');
+    switch (riskLevel) {
+      case CropRiskLevel.safe:
+        statusColor = isDark ? const Color(0xFF4ADE80) : const Color(0xFF16A34A);
+        statusLabel = lang == AppLanguage.sinhala ? 'ආරක්ෂිතයි' : 'Safe to Plant';
+        saturationStatus = lang == AppLanguage.sinhala ? 'ඉහළ ඉල්ලුම' : 'High Demand';
+        break;
+      case CropRiskLevel.moderate:
+        statusColor = isDark ? const Color(0xFFFBBF24) : const Color(0xFFD97706);
+        statusLabel = lang == AppLanguage.sinhala ? 'සැලකිලිමත් වන්න' : 'Medium Risk';
+        saturationStatus = lang == AppLanguage.sinhala ? 'කෝටාව පිරෙමින්' : 'Near Saturation';
+        break;
+      case CropRiskLevel.critical:
+        statusColor = isDark ? const Color(0xFFF87171) : const Color(0xFFDC2626);
+        statusLabel = lang == AppLanguage.sinhala ? 'වගාවෙන් වළකින්න' : 'DO NOT PLANT';
+        saturationStatus = lang == AppLanguage.sinhala ? 'අධික අතිරික්තය' : 'Severe Glut';
+        break;
+    }
 
-    final Color marketColor = isCritical
-        ? (isDark ? const Color(0xFFFCA5A5) : AppColors.riskCritical)
-        : (isModerate
-            ? (isDark ? const Color(0xFFFCD34D) : AppColors.riskModerate)
-            : (isDark ? const Color(0xFF86EFAC) : AppColors.riskSafe));
+    final dynamic rawPrimary = lang == AppLanguage.sinhala ? crop.sinhalaName : crop.name;
+    final String primaryName = (rawPrimary is String && rawPrimary.isNotEmpty)
+        ? rawPrimary
+        : (crop.name.isNotEmpty ? crop.name : 'Crop');
+
+    final dynamic rawSecondary = lang == AppLanguage.sinhala ? crop.name : crop.sinhalaName;
+    final String secondaryName = (rawSecondary is String && rawSecondary.isNotEmpty)
+        ? rawSecondary
+        : (crop.sinhalaName.isNotEmpty ? crop.sinhalaName : '');
+
+    final currencySymbol = lang == AppLanguage.sinhala ? 'රු.' : (lang == AppLanguage.tamil ? 'ரூ.' : 'Rs.');
+
+    final dynamic rawUrl = crop.imageUrl;
+    final String imageUrl = (rawUrl is String && rawUrl.isNotEmpty)
+        ? rawUrl
+        : 'https://images.unsplash.com/photo-1592417817098-8f3d6eb22509?w=600&auto=format&fit=crop&q=80';
+
+    final dynamic rawEmoji = crop.iconEmoji;
+    final String emoji = (rawEmoji is String && rawEmoji.isNotEmpty) ? rawEmoji : '🌱';
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
         color: context.cardBg,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: context.cardBorder),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: riskLevel == CropRiskLevel.critical
+              ? (isDark ? const Color(0xFF991B1B) : const Color(0xFFFCA5A5))
+              : context.cardBorder,
+          width: riskLevel == CropRiskLevel.critical ? 1.5 : 1.0,
+        ),
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.black.withValues(alpha: 0.2) : Colors.black.withValues(alpha: 0.03),
+            color: isDark ? Colors.black.withValues(alpha: 0.25) : Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: Column(
-        children: [
-          // Fact 1: Price
-          _buildFactRow(
-            icon: '💰',
-            label: tr('expected_price_label'),
-            value: priceText,
-            valueColor: priceColor,
-          ),
-          Divider(height: 18, color: context.dividerColor),
-
-          // Fact 2: Weather
-          _buildFactRow(
-            icon: '🌧️',
-            label: tr('weather_condition_label'),
-            value: tr('weather_summary_text'),
-            valueColor: isDark ? const Color(0xFF86EFAC) : AppColors.primaryDark,
-          ),
-          Divider(height: 18, color: context.dividerColor),
-
-          // Fact 3: Market Demand
-          _buildFactRow(
-            icon: '🛒',
-            label: tr('market_demand_label'),
-            value: marketText,
-            valueColor: marketColor,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFactRow({
-    required String icon,
-    required String label,
-    required String value,
-    required Color valueColor,
-  }) {
-    return Row(
-      children: [
-        Text(icon, style: const TextStyle(fontSize: 22)),
-        const SizedBox(width: 12),
-        Expanded(
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: () => _showCropDetailBottomSheet(context, crop, risk, riskLevel, appState, tr, lang),
+          borderRadius: BorderRadius.circular(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                label,
-                style: GoogleFonts.inter(fontSize: 11, color: context.mutedText, fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                value,
-                style: GoogleFonts.poppins(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.bold,
-                  color: valueColor,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  // 4. Simple Acreage Profit Estimator (Fully Localized)
-  Widget _buildSimpleAcreageEstimator(CropRiskAnalysis risk, String Function(String) tr, AppLanguage lang) {
-    final isDark = context.isDarkMode;
-    final simulatedYieldKg = _simulatedAcreage * _selectedCrop.expectedYieldKgPerAcre;
-    final projectedHarvestPrice = risk.predictedHarvestPriceLkr;
-    final simulatedRevenue = simulatedYieldKg * projectedHarvestPrice;
-    final String currencyUnit = lang == AppLanguage.sinhala ? 'රු.' : (lang == AppLanguage.tamil ? 'ரூ.' : 'Rs.');
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: context.cardBg,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.cardBorder),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  const Text('🧮', style: TextStyle(fontSize: 18)),
-                  const SizedBox(width: 8),
-                  Text(
-                    tr('simulator_title'),
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: context.titleText,
-                    ),
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: context.softGreenBg,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  '${_simulatedAcreage.toStringAsFixed(1)} ${tr('acre_unit')}',
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? const Color(0xFF86EFAC) : AppColors.primaryDark,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              activeTrackColor: isDark ? const Color(0xFF4ADE80) : AppColors.primary,
-              thumbColor: isDark ? const Color(0xFF4ADE80) : AppColors.primary,
-              inactiveTrackColor: isDark ? const Color(0xFF334155) : const Color(0xFFD6E2D6),
-            ),
-            child: Slider(
-              value: _simulatedAcreage,
-              min: 0.25,
-              max: 3.0,
-              divisions: 11,
-              label: '${_simulatedAcreage.toStringAsFixed(2)} ${tr('acre_unit')}',
-              onChanged: (val) => setState(() => _simulatedAcreage = val),
-            ),
-          ),
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF0F172A) : Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: context.cardBorder),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+              // 1. Photo Header
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+                child: SizedBox(
+                  height: 120,
+                  width: double.infinity,
+                  child: Stack(
+                    fit: StackFit.expand,
                     children: [
-                      Text(tr('est_harvest_label'), style: GoogleFonts.inter(fontSize: 11, color: context.mutedText)),
-                      Text(
-                        '~${simulatedYieldKg.toStringAsFixed(0)} Kg',
-                        style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold, color: context.titleText),
+                      Image.network(
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          color: const Color(0xFF1E293B),
+                          child: Center(
+                            child: Text(emoji, style: const TextStyle(fontSize: 44)),
+                          ),
+                        ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF0F172A) : Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: context.cardBorder),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(tr('est_revenue_label'), style: GoogleFonts.inter(fontSize: 11, color: context.mutedText)),
-                      Text(
-                        '$currencyUnit ${simulatedRevenue.toStringAsFixed(0)}',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: risk.riskLevel == CropRiskLevel.critical
-                              ? (isDark ? const Color(0xFFFCA5A5) : AppColors.riskCritical)
-                              : (isDark ? const Color(0xFF86EFAC) : AppColors.primaryDark),
+                      // Subtle gradient for contrast
+                      Positioned.fill(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.black.withValues(alpha: 0.15),
+                                Colors.black.withValues(alpha: 0.72),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Status Badge (Top-Left)
+                      Positioned(
+                        top: 10,
+                        left: 10,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: statusColor.withValues(alpha: 0.95),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 6,
+                                height: 6,
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 5),
+                              Text(
+                                statusLabel,
+                                style: GoogleFonts.inter(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      // Bottom Row: Crop Names & Market Price
+                      Positioned(
+                        left: 12,
+                        right: 12,
+                        bottom: 10,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    primaryName,
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  Text(
+                                    secondaryName,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 11.5,
+                                      color: const Color(0xFFE2E8F0),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4.5),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                '$currencySymbol ${crop.currentMarketPricePerKg.toStringAsFixed(0)} / kg',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w800,
+                                  color: const Color(0xFF0F172A),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
+
+              // 2. Card Body: Simple Key Metrics & Quota
+              Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Stat Metrics Row
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: context.cardBorder.withValues(alpha: 0.6)),
+                            ),
+                            child: Row(
+                              children: [
+                                const Text('⏱️', style: TextStyle(fontSize: 13)),
+                                const SizedBox(width: 6),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${crop.maturityDays} Days',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        color: context.titleText,
+                                      ),
+                                    ),
+                                    Text(
+                                      tr('days_to_harvest'),
+                                      style: GoogleFonts.inter(
+                                        fontSize: 9.5,
+                                        color: context.mutedText,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: context.cardBorder.withValues(alpha: 0.6)),
+                            ),
+                            child: Row(
+                              children: [
+                                const Text('⚖️', style: TextStyle(fontSize: 13)),
+                                const SizedBox(width: 6),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${crop.expectedYieldKgPerAcre.toInt()} kg',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        color: context.titleText,
+                                      ),
+                                    ),
+                                    Text(
+                                      lang == AppLanguage.sinhala ? 'අක්කරයකට' : 'Per acre yield',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 9.5,
+                                        color: context.mutedText,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Regional Planting Quota Progress
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          tr('quota_label'),
+                          style: GoogleFonts.inter(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w500,
+                            color: context.subText,
+                          ),
+                        ),
+                        Text(
+                          '${saturation.toStringAsFixed(0)}% ($saturationStatus)',
+                          style: GoogleFonts.inter(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w700,
+                            color: statusColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: LinearProgressIndicator(
+                        value: (saturation / 100).clamp(0.0, 1.0),
+                        minHeight: 6,
+                        backgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                        valueColor: AlwaysStoppedAnimation<Color>(statusColor),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Action Link
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Text(
+                          riskLevel == CropRiskLevel.critical
+                              ? (lang == AppLanguage.sinhala ? 'විකල්ප සහ විස්තර බලන්න' : 'View Alternatives')
+                              : tr('view_risk_analysis'),
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: statusColor,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 14,
+                          color: statusColor,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 5. Interactive Risk Detail Bottom Sheet Modal
+  void _showCropDetailBottomSheet(
+    BuildContext context,
+    Crop crop,
+    CropRiskAnalysis? risk,
+    CropRiskLevel riskLevel,
+    AppStateProvider appState,
+    String Function(String) tr,
+    AppLanguage lang,
+  ) {
+    final isDark = context.isDarkMode;
+    final dynamic rawPrimary = lang == AppLanguage.sinhala ? crop.sinhalaName : crop.name;
+    final String primaryName = (rawPrimary is String && rawPrimary.isNotEmpty)
+        ? rawPrimary
+        : (crop.name.isNotEmpty ? crop.name : 'Crop');
+
+    final dynamic rawSecondary = lang == AppLanguage.sinhala ? crop.name : crop.sinhalaName;
+    final String secondaryName = (rawSecondary is String && rawSecondary.isNotEmpty)
+        ? rawSecondary
+        : (crop.sinhalaName.isNotEmpty ? crop.sinhalaName : '');
+
+    final currencySymbol = lang == AppLanguage.sinhala ? 'රු.' : (lang == AppLanguage.tamil ? 'ரூ.' : 'Rs.');
+    final dynamic rawEmoji = crop.iconEmoji;
+    final String emoji = (rawEmoji is String && rawEmoji.isNotEmpty) ? rawEmoji : '🌱';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (modalContext) {
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            final simulatedYield = _modalSimulatedAcreage * crop.expectedYieldKgPerAcre;
+            final projectedHarvestPrice = risk?.predictedHarvestPriceLkr ?? crop.currentMarketPricePerKg;
+            final simulatedRevenue = simulatedYield * projectedHarvestPrice;
+
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              decoration: BoxDecoration(
+                color: context.cardBg,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                boxShadow: const [
+                  BoxShadow(color: Colors.black38, blurRadius: 20, offset: Offset(0, -4)),
+                ],
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Handle bar
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: context.dividerColor,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Modal Header (Crop Name & Close)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Text(emoji, style: const TextStyle(fontSize: 26)),
+                            const SizedBox(width: 8),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  primaryName,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: context.titleText,
+                                  ),
+                                ),
+                                Text(
+                                  secondaryName,
+                                  style: GoogleFonts.inter(fontSize: 12, color: context.subText),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.close_rounded, color: context.subText),
+                          onPressed: () => Navigator.pop(modalContext),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Traffic Light Risk Banner
+                    _buildModalRiskBanner(riskLevel, primaryName, tr, isDark),
+                    const SizedBox(height: 14),
+
+                    // 4 Stat Grid Cards
+                    GridView.count(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
+                      childAspectRatio: 2.2,
+                      children: [
+                        _buildModalStatCard(
+                          label: tr('expected_price_label'),
+                          value: '$currencySymbol ${crop.currentMarketPricePerKg.toStringAsFixed(0)}/kg',
+                          isDark: isDark,
+                        ),
+                        _buildModalStatCard(
+                          label: 'Projected Harvest Price',
+                          value: '$currencySymbol ${projectedHarvestPrice.toStringAsFixed(0)}/kg',
+                          isDark: isDark,
+                          isHighlight: riskLevel != CropRiskLevel.safe,
+                        ),
+                        _buildModalStatCard(
+                          label: 'Growth Duration',
+                          value: '${crop.maturityDays} Days',
+                          isDark: isDark,
+                        ),
+                        _buildModalStatCard(
+                          label: 'Expected Yield/Acre',
+                          value: '${crop.expectedYieldKgPerAcre.toStringAsFixed(0)} kg',
+                          isDark: isDark,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Agronomic Advice Quote
+                    if (risk != null && risk.agronomicAdvice.isNotEmpty) ...[
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: context.softGreenBg,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('🌱', style: TextStyle(fontSize: 16)),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                risk.agronomicAdvice,
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  height: 1.4,
+                                  color: isDark ? const Color(0xFF86EFAC) : AppColors.primaryDark,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                    ],
+
+                    // Interactive Sowing Simulator
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: context.cardBorder),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                tr('simulator_title'),
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: context.titleText,
+                                ),
+                              ),
+                              Text(
+                                '${_modalSimulatedAcreage.toStringAsFixed(1)} ${tr('acre_unit')}',
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? const Color(0xFF4ADE80) : AppColors.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Slider(
+                            value: _modalSimulatedAcreage,
+                            min: 0.25,
+                            max: 3.0,
+                            divisions: 11,
+                            activeColor: isDark ? const Color(0xFF4ADE80) : AppColors.primary,
+                            onChanged: (val) {
+                              setModalState(() => _modalSimulatedAcreage = val);
+                            },
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '~${simulatedYield.toStringAsFixed(0)} Kg Est. Yield',
+                                style: GoogleFonts.inter(fontSize: 11, color: context.subText),
+                              ),
+                              Text(
+                                'Est. Rev: $currencySymbol ${simulatedRevenue.toStringAsFixed(0)}',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: riskLevel == CropRiskLevel.critical
+                                      ? (isDark ? const Color(0xFFFCA5A5) : AppColors.riskCritical)
+                                      : (isDark ? const Color(0xFF86EFAC) : AppColors.primaryDark),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Action Button
+                    if (riskLevel == CropRiskLevel.critical) ...[
+                      // Switch to safe alternative or plant anyway
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          icon: const Text('🔄', style: TextStyle(fontSize: 18)),
+                          label: Text(
+                            '${tr('switch_to_safe_crop')} (Beetroot / Pepper)',
+                            style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: isDark ? const Color(0xFF16A34A) : AppColors.primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
+                          onPressed: () {
+                            Navigator.pop(modalContext);
+                            setState(() => _activeFilter = RiskCategoryFilter.safe);
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Center(
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.pop(modalContext);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => PlantingEntryScreen(preSelectedCrop: crop),
+                              ),
+                            );
+                          },
+                          child: Text(
+                            tr('plant_anyway_btn'),
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              color: context.mutedText,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ] else ...[
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          icon: const Text('🌱', style: TextStyle(fontSize: 18)),
+                          label: Text(
+                            '${tr('start_planting_btn')} $primaryName',
+                            style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: isDark ? const Color(0xFF16A34A) : AppColors.primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
+                          onPressed: () {
+                            Navigator.pop(modalContext);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => PlantingEntryScreen(preSelectedCrop: crop),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 10),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildModalRiskBanner(CropRiskLevel level, String cropName, String Function(String) tr, bool isDark) {
+    Color bg;
+    Color border;
+    Color text;
+    String title;
+    IconData icon;
+
+    switch (level) {
+      case CropRiskLevel.safe:
+        bg = isDark ? const Color(0xFF052E16) : const Color(0xFFDCFCE7);
+        border = isDark ? const Color(0xFF15803D) : const Color(0xFF86EFAC);
+        text = isDark ? const Color(0xFF4ADE80) : const Color(0xFF16A34A);
+        title = tr('good_to_plant_now');
+        icon = Icons.check_circle_rounded;
+        break;
+      case CropRiskLevel.moderate:
+        bg = isDark ? const Color(0xFF451A03) : const Color(0xFFFEF3C7);
+        border = isDark ? const Color(0xFFB45309) : const Color(0xFFFDE68A);
+        text = isDark ? const Color(0xFFFBBF24) : const Color(0xFFD97706);
+        title = tr('caution_plant_state');
+        icon = Icons.warning_amber_rounded;
+        break;
+      case CropRiskLevel.critical:
+        bg = isDark ? const Color(0xFF450A0A) : const Color(0xFFFEE2E2);
+        border = isDark ? const Color(0xFF991B1B) : const Color(0xFFFCA5A5);
+        text = isDark ? const Color(0xFFF87171) : const Color(0xFFDC2626);
+        title = tr('do_not_plant_now');
+        icon = Icons.cancel_rounded;
+        break;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: border),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: text, size: 22),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              title,
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: text,
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  // 5. Giant Single Action Button (Fully Localized)
-  Widget _buildGiantActionButton(
-    BuildContext context,
-    CropRiskAnalysis risk,
-    AppStateProvider appState,
-    String Function(String) tr,
-    AppLanguage lang,
-  ) {
-    final isDark = context.isDarkMode;
-    final isCritical = risk.riskLevel == CropRiskLevel.critical;
-
-    // Find recommended safe crop if available
-    final Crop alternativeCrop = (risk.alternativeRecommendations.isNotEmpty
-            ? appState.availableCrops.cast<Crop?>().firstWhere(
-                (c) => c?.id == risk.alternativeRecommendations.first.cropId,
-                orElse: () => null,
-              )
-            : null) ??
-        appState.availableCrops.firstWhere(
-          (c) => c.id != _selectedCrop.id,
-          orElse: () => _selectedCrop,
-        );
-
-    final altCropName = lang == AppLanguage.sinhala ? alternativeCrop.sinhalaName : alternativeCrop.name;
-    final currentCropName = lang == AppLanguage.sinhala ? _selectedCrop.sinhalaName : _selectedCrop.name;
-
-    if (isCritical) {
-      return Column(
+  Widget _buildModalStatCard({
+    required String label,
+    required String value,
+    required bool isDark,
+    bool isHighlight = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAF9),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isHighlight
+              ? (isDark ? const Color(0xFFF87171) : const Color(0xFFFCA5A5))
+              : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              icon: const Text('👉', style: TextStyle(fontSize: 18)),
-              label: Text(
-                '${tr('switch_to_safe_crop')}: $altCropName',
-                style: GoogleFonts.poppins(fontSize: 14.5, fontWeight: FontWeight.bold),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: isDark ? const Color(0xFF16A34A) : AppColors.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                elevation: 3,
-              ),
-              onPressed: () {
-                setState(() {
-                  _selectedCrop = alternativeCrop;
-                });
-                appState.selectCropForRisk(alternativeCrop);
-              },
+          Text(
+            value,
+            style: GoogleFonts.poppins(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: isHighlight
+                  ? (isDark ? const Color(0xFFFCA5A5) : AppColors.riskCritical)
+                  : context.titleText,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 8),
-          TextButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => PlantingEntryScreen(preSelectedCrop: _selectedCrop),
-                ),
-              );
-            },
-            child: Text(
-              tr('plant_anyway_btn'),
-              style: GoogleFonts.inter(
-                fontSize: 12.5,
-                color: context.mutedText,
-                decoration: TextDecoration.underline,
-              ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 9.5,
+              fontWeight: FontWeight.w500,
+              color: context.mutedText,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
-      );
-    }
-
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        icon: const Text('🌱', style: TextStyle(fontSize: 20)),
-        label: Text(
-          '${tr('start_planting_btn')} $currentCropName',
-          style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: isDark ? const Color(0xFF16A34A) : AppColors.primary,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          elevation: 3,
-        ),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => PlantingEntryScreen(preSelectedCrop: _selectedCrop),
-            ),
-          );
-        },
       ),
     );
   }
@@ -759,10 +1205,12 @@ class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: context.cardBg,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         title: Text(
           tr('how_asvanna_calc_title'),
           style: GoogleFonts.poppins(
             fontWeight: FontWeight.bold,
+            fontSize: 16,
             color: context.titleText,
           ),
         ),

@@ -99,9 +99,33 @@ class _CropComparisonModalState extends State<CropComparisonModal> {
                       items: appState.availableCrops.map((c) {
                         return DropdownMenuItem(
                           value: c,
-                          child: Text(
-                            '${c.iconEmoji} ${c.name}',
-                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: context.titleText),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 24,
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  color: context.softGreenBg,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                clipBehavior: Clip.antiAlias,
+                                child: c.imageUrl.isNotEmpty
+                                    ? Image.network(
+                                        c.imageUrl,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => Center(child: Text(c.iconEmoji, style: const TextStyle(fontSize: 14))),
+                                      )
+                                    : Center(child: Text(c.iconEmoji, style: const TextStyle(fontSize: 14))),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  c.name,
+                                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: context.titleText),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
                           ),
                         );
                       }).toList(),
@@ -123,7 +147,7 @@ class _CropComparisonModalState extends State<CropComparisonModal> {
                   decoration: BoxDecoration(
                     color: context.softGreenBg,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<Crop>(
@@ -133,13 +157,37 @@ class _CropComparisonModalState extends State<CropComparisonModal> {
                       items: appState.availableCrops.map((c) {
                         return DropdownMenuItem(
                           value: c,
-                          child: Text(
-                            '${c.iconEmoji} ${c.name}',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: context.isDarkMode ? const Color(0xFF86EFAC) : AppColors.primaryDark,
-                            ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 24,
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  color: context.softGreenBg,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                clipBehavior: Clip.antiAlias,
+                                child: c.imageUrl.isNotEmpty
+                                    ? Image.network(
+                                        c.imageUrl,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => Center(child: Text(c.iconEmoji, style: const TextStyle(fontSize: 14))),
+                                      )
+                                    : Center(child: Text(c.iconEmoji, style: const TextStyle(fontSize: 14))),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  c.name,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: context.isDarkMode ? const Color(0xFF86EFAC) : AppColors.primaryDark,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
                           ),
                         );
                       }).toList(),
@@ -217,7 +265,7 @@ class _CropComparisonModalState extends State<CropComparisonModal> {
                     decoration: BoxDecoration(
                       color: context.softGreenBg,
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+                      border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,

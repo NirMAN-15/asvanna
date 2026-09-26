@@ -277,8 +277,9 @@ class CropRiskAnalysis {
     }
 
     // Dynamic agronomic advice incorporating weather & seasonal factors
-    String advice = parsedFactors.weatherAdvisory.isNotEmpty
-        ? parsedFactors.weatherAdvisory
+    final advisory = parsedFactors.weatherAdvisory;
+    String advice = advisory.isNotEmpty
+        ? advisory
         : 'Agrarian Services recommend monitoring local economic centre price trends before harvest.';
     if (parsedFactors.seasonStatus == 'IN_SEASON') {
       advice += ' Optimal cultivation window for ${parsedFactors.currentSeason} season.';

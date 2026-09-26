@@ -27,8 +27,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
-// Health Check Endpoint
-app.get('/health', (req, res) => {
+// Health Check Endpoints
+app.get(['/health', '/api/health', '/api/v1/health', '/v1/health'], (req, res) => {
   return ApiResponse.success(res, {
     status: 'UP',
     service: 'ASVANNA Agricultural Intelligence Platform API',
