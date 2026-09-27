@@ -528,7 +528,7 @@ export default function FarmerAuth() {
           {/* Footer */}
           <p className="font-body-sm text-body-sm text-on-surface-variant text-center mt-6">
             Already registered?{' '}
-            <Link to="/login" className="text-primary font-bold hover:underline">
+            <Link to="/login?role=FARMER" state={{ role: 'FARMER' }} className="text-primary font-bold hover:underline">
               Sign In
             </Link>
           </p>

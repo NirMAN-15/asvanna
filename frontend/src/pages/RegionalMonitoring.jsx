@@ -5,12 +5,17 @@ import { LanguageContext } from '../context/LanguageContext';
 export default function RegionalMonitoring() {
   const { t, lang } = useContext(LanguageContext);
   const [selectedCrop, setSelectedCrop] = useState('');
-  const [plantings, setPlantings] = useState([]);
+  const [plantings, setPlantings] = useState([
+    { id: 84, farmer_name: "Chaminda Silva", crop_code: "POTATO", name_en: "Upcountry Potato", name_si: "අර්තාපල්", land_size_acres: "0.75", expected_yield_kg: "6000", division: "Bandarawela", status: "SAFE", lat: 6.816, lng: 80.986 },
+    { id: 82, farmer_name: "Kapila Bandara", crop_code: "CARROT", name_en: "Carrot", name_si: "කැරට්", land_size_acres: "0.50", expected_yield_kg: "3750", division: "Bandarawela", status: "WARNING", lat: 6.832, lng: 81.012 },
+    { id: 83, farmer_name: "Chaminda Silva", crop_code: "CABBAGE", name_en: "Cabbage", name_si: "ගෝවා", land_size_acres: "2.50", expected_yield_kg: "30000", division: "Bandarawela", status: "OVER_PLANTED", lat: 6.815, lng: 80.985 },
+    { id: 81, farmer_name: "Kapila Bandara", crop_code: "LEEKS", name_en: "Leeks", name_si: "ලීක්ස්", land_size_acres: "2.00", expected_yield_kg: "17000", division: "Bandarawela", status: "OVER_PLANTED", lat: 6.832, lng: 80.998 }
+  ]);
 
   React.useEffect(() => {
     // Attempt to fetch real planting data
     import('../services/api').then(({ default: API }) => {
-      API.get('/planting/logs?district=Badulla')
+      API.get('/planting/regional-map?district=Badulla')
         .then(res => {
           if (res.data?.data) {
             setPlantings(res.data.data);

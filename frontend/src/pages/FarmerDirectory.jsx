@@ -6,11 +6,15 @@ import { LanguageContext } from '../context/LanguageContext';
 
 export default function FarmerDirectory() {
   const { t } = useContext(LanguageContext);
-  const [activeTab, setActiveTab] = useState('VERIFIED'); // 'VERIFIED' or 'PENDING'
-  const [farmers, setFarmers] = useState([]);
+  const [activeTab, setActiveTab] = useState('VERIFIED');
+  const [farmers, setFarmers] = useState([
+    { id: 3, full_name: 'Kapila Bandara', phone: '0712345678', nic: '197823456789', total_land_size: '2.50', division: 'Bandarawela', gnd_division: 'Bindunuwewa', is_verified: true, active_crops: ['Carrot', 'Leeks'], active_plantings_count: 2 },
+    { id: 4, full_name: 'Chaminda Silva', phone: '0719876543', nic: '198234567890', total_land_size: '3.25', division: 'Bandarawela', gnd_division: 'Haputale North', is_verified: true, active_crops: ['Cabbage', 'Potato'], active_plantings_count: 2 },
+    { id: 5, full_name: 'sameera ayeshmantha', phone: '0711596479', nic: '199512345678', total_land_size: '1.50', division: 'Bandarawela', gnd_division: 'Bandarawela Central', is_verified: true, active_crops: ['Leeks', 'Carrot'], active_plantings_count: 2 }
+  ]);
   const [pendingVerifications, setPendingVerifications] = useState([]);
   const [search, setSearch] = useState('');
-  const [isProxyModalOpen, setIsProxyModalOpen] = useState(false);
+  const [isProxyModalOpen, setIsProxyModalOpen] = useState(() => new URLSearchParams(window.location.search).get('modal') === 'proxy_farmer');
   const [toast, setToast] = useState('');
   const [reviewModalFarmer, setReviewModalFarmer] = useState(null);
   const [nicCheck, setNicCheck] = useState(true);
@@ -18,10 +22,12 @@ export default function FarmerDirectory() {
   const [sizeCheck, setSizeCheck] = useState(true);
   const [rejectionReason, setRejectionReason] = useState('');
   const [processing, setProcessing] = useState(false);
+  const [pendingProfileUpdates, setPendingProfileUpdates] = useState([]);
 
   useEffect(() => {
     fetchDirectory();
     fetchPendingVerifications();
+    fetchPendingProfileUpdates();
   }, [search]);
 
   const fetchDirectory = async () => {
@@ -43,6 +49,36 @@ export default function FarmerDirectory() {
       }
     } catch (err) {
       console.warn('Error loading pending verifications:', err.message);
+    }
+  };
+
+  const fetchPendingProfileUpdates = async () => {
+    try {
+      const res = await API.get('/officer/farmer-updates/pending');
+      if (res.data && res.data.data) {
+        setPendingProfileUpdates(res.data.data);
+      }
+    } catch (err) {
+      console.warn('Error loading pending profile updates:', err.message);
+    }
+  };
+
+  const handleReviewProfileUpdate = async (farmerId, approved) => {
+    setProcessing(true);
+    try {
+      await API.post(`/officer/farmer-updates/${farmerId}/review`, { approved });
+      setToast(
+        approved
+          ? '✅ Farmer profile modifications approved and officially synchronized!'
+          : '❌ Farmer profile update request was rejected.'
+      );
+      setTimeout(() => setToast(''), 4000);
+      fetchDirectory();
+      fetchPendingProfileUpdates();
+    } catch (err) {
+      setToast('Error reviewing profile update: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setProcessing(false);
     }
   };
 
@@ -88,11 +124,11 @@ export default function FarmerDirectory() {
               <Users className="w-5 h-5 text-emerald-800" />
             </div>
             <h1 className="text-2xl font-black text-emerald-950 tracking-tight">
-              {t('farmer_directory_title')}
+              {t('farmer_directory_title', 'Bandarawela Agrarian Farmer Directory')}
             </h1>
           </div>
           <p className="text-sm font-semibold text-emerald-900 mt-2 max-w-2xl leading-relaxed">
-            Manage registered agriculturalists, review pending identity validations, and prevent fraudulent submissions.
+            {t('farmer_directory_subtitle', 'Manage registered agriculturalists, review pending identity validations, and prevent fraudulent submissions.')}
           </p>
         </div>
 
@@ -101,7 +137,7 @@ export default function FarmerDirectory() {
             <Search className="w-4 h-4 text-emerald-800 absolute left-3.5 top-3" />
             <input
               type="text"
-              placeholder={t('search_farmers_placeholder')}
+              placeholder={t('search_farmers_placeholder', 'Search by farmer name, NIC, phone, or GND...')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-10 pr-4 py-2 border border-outline-variant rounded-xl text-sm focus:outline-primary bg-surface-container-lowest text-on-surface"
@@ -113,7 +149,7 @@ export default function FarmerDirectory() {
             className="inline-flex items-center space-x-2 px-4 py-2 bg-emerald-800 text-white rounded-xl text-sm font-bold shadow hover:bg-emerald-900 transition"
           >
             <PlusCircle className="w-4 h-4" />
-            <span>Proxy Register</span>
+            <span>{t('register_proxy_farmer', '+ Register Farmer (Proxy)')}</span>
           </button>
         </div>
       </div>
@@ -125,32 +161,49 @@ export default function FarmerDirectory() {
       )}
 
       {/* Tabs */}
-      <div className="flex border-b border-outline-variant/30 gap-6">
+      <div className="flex flex-wrap border-b border-outline-variant/30 gap-6">
         <button
           onClick={() => setActiveTab('VERIFIED')}
-          className={`pb-3 font-bold text-sm flex items-center gap-2 border-b-2 transition ${
+          className={`pb-3 font-bold text-sm flex items-center gap-2 border-b-2 transition cursor-pointer ${
             activeTab === 'VERIFIED'
               ? 'border-emerald-800 text-emerald-900'
               : 'border-transparent text-on-surface-variant hover:text-on-surface'
           }`}
         >
           <ShieldCheck className="w-4 h-4" />
-          <span>Active Farmer Directory ({farmers.length})</span>
+          <span>{t('tab_verified_farmers', 'Active Farmer Directory')} ({farmers.length})</span>
         </button>
 
         <button
           onClick={() => setActiveTab('PENDING')}
-          className={`pb-3 font-bold text-sm flex items-center gap-2 border-b-2 transition ${
+          className={`pb-3 font-bold text-sm flex items-center gap-2 border-b-2 transition cursor-pointer ${
             activeTab === 'PENDING'
               ? 'border-amber-600 text-amber-900'
               : 'border-transparent text-on-surface-variant hover:text-on-surface'
           }`}
         >
           <AlertTriangle className="w-4 h-4 text-amber-600" />
-          <span>Pending Verifications ({pendingVerifications.length})</span>
+          <span>{t('tab_pending_verifications', 'Pending Verifications')} ({pendingVerifications.length})</span>
           {pendingVerifications.length > 0 && (
             <span className="px-2 py-0.5 text-xs bg-amber-200 text-amber-900 rounded-full font-extrabold">
               {pendingVerifications.length}
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={() => setActiveTab('PROFILE_UPDATES')}
+          className={`pb-3 font-bold text-sm flex items-center gap-2 border-b-2 transition cursor-pointer ${
+            activeTab === 'PROFILE_UPDATES'
+              ? 'border-blue-700 text-blue-900'
+              : 'border-transparent text-on-surface-variant hover:text-on-surface'
+          }`}
+        >
+          <span className="material-symbols-outlined text-base text-blue-700">edit_note</span>
+          <span>{t('tab_pending_updates', 'Profile Change Requests')} ({pendingProfileUpdates.length})</span>
+          {pendingProfileUpdates.length > 0 && (
+            <span className="px-2 py-0.5 text-xs bg-blue-100 text-blue-900 rounded-full font-extrabold">
+              {pendingProfileUpdates.length}
             </span>
           )}
         </button>
@@ -273,6 +326,126 @@ export default function FarmerDirectory() {
                 </div>
               </div>
             ))
+          )}
+        </div>
+      )}
+
+      {/* TAB 3: Farmer Profile Detail Change Requests */}
+      {activeTab === 'PROFILE_UPDATES' && (
+        <div className="space-y-4">
+          {pendingProfileUpdates.length === 0 ? (
+            <div className="py-16 text-center bg-surface-container-lowest rounded-2xl border border-outline-variant/30">
+              <CheckCircle className="w-10 h-10 text-emerald-600 mx-auto mb-2" />
+              <h3 className="font-bold text-base text-on-surface">No Pending Farmer Detail Modifications</h3>
+              <p className="text-xs text-on-surface-variant mt-1">
+                All farmer profile changes in Bandarawela Division are verified and up to date.
+              </p>
+            </div>
+          ) : (
+            pendingProfileUpdates.map((item) => {
+              let pending = item.pending_profile_updates;
+              if (typeof pending === 'string') {
+                try { pending = JSON.parse(pending); } catch (e) {}
+              }
+              pending = pending || {};
+
+              return (
+                <div
+                  key={item.id}
+                  className="bg-surface-container-lowest border-2 border-blue-200 rounded-3xl p-6 shadow-card space-y-4 hover:shadow-md transition"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <span className="px-2.5 py-1 text-xs font-black bg-blue-100 text-blue-900 rounded-lg uppercase tracking-wider flex items-center gap-1">
+                        <span className="material-symbols-outlined text-xs">edit_note</span>
+                        <span>Profile Change Request</span>
+                      </span>
+                      <h3 className="font-headline font-black text-lg text-slate-900">{item.full_name}</h3>
+                    </div>
+
+                    <div className="text-xs font-semibold text-slate-500">
+                      Requested on: {item.last_profile_update_at ? new Date(item.last_profile_update_at).toLocaleString() : 'Recent'}
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-slate-600 font-medium">
+                    This farmer submitted updated agrarian details under the 14-day policy. The updates are currently visible on their personal self-page. Please verify and approve to synchronize the official public registry:
+                  </p>
+
+                  {/* Diff comparison table */}
+                  <div className="border border-outline-variant/30 rounded-2xl overflow-hidden shadow-xs">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="bg-surface-container-low text-slate-700 font-bold border-b border-outline-variant/30">
+                          <th className="p-3">{t('field_col', 'Attribute / Field')}</th>
+                          <th className="p-3 text-slate-500">{t('current_registered_value', 'Current Official Value')}</th>
+                          <th className="p-3 text-blue-800">{t('proposed_new_value', 'Proposed New Value')}</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-outline-variant/20">
+                        {pending.full_name && pending.full_name !== item.full_name && (
+                          <tr className="hover:bg-surface-container-low/40 transition">
+                            <td className="p-3 font-bold text-slate-900">{t('farmer_full_name', 'Farmer Full Name')}</td>
+                            <td className="p-3 text-slate-600 line-through decoration-red-400">{item.full_name}</td>
+                            <td className="p-3 font-black text-blue-800 bg-blue-50/50">{pending.full_name}</td>
+                          </tr>
+                        )}
+                        {pending.gnd_division && pending.gnd_division !== item.gnd_division && (
+                          <tr className="hover:bg-surface-container-low/40 transition">
+                            <td className="p-3 font-bold text-slate-900">{t('gnd_division_label', 'Grama Niladhari (GN) Division')}</td>
+                            <td className="p-3 text-slate-600 line-through decoration-red-400">{item.gnd_division || 'Not set'}</td>
+                            <td className="p-3 font-black text-blue-800 bg-blue-50/50">{pending.gnd_division}</td>
+                          </tr>
+                        )}
+                        {pending.total_land_size !== undefined && String(pending.total_land_size) !== String(item.total_land_size) && (
+                          <tr className="hover:bg-surface-container-low/40 transition">
+                            <td className="p-3 font-bold text-slate-900">{t('cultivable_land_extent', 'Total Cultivated Extent')}</td>
+                            <td className="p-3 text-slate-600 line-through decoration-red-400">{item.total_land_size} Acres</td>
+                            <td className="p-3 font-black text-blue-800 bg-blue-50/50">{pending.total_land_size} Acres</td>
+                          </tr>
+                        )}
+                        {(!pending.full_name || pending.full_name === item.full_name) &&
+                         (!pending.gnd_division || pending.gnd_division === item.gnd_division) &&
+                         (pending.total_land_size === undefined || String(pending.total_land_size) === String(item.total_land_size)) && (
+                          <tr>
+                            <td colSpan="3" className="p-3 text-center text-slate-500 italic">
+                              Additional profile metadata (contact details / address) modified.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+                    <div className="text-xs text-slate-500 font-medium">
+                      NIC: <span className="font-mono font-bold text-slate-800">{item.nic}</span> • Phone: <span className="font-bold text-slate-800">{item.phone}</span>
+                    </div>
+
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                      <button
+                        type="button"
+                        disabled={processing}
+                        onClick={() => handleReviewProfileUpdate(item.id, false)}
+                        className="flex-1 sm:flex-none px-4 py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-300 rounded-xl text-xs font-bold transition cursor-pointer disabled:opacity-50"
+                      >
+                        Reject Updates
+                      </button>
+                      <button
+                        type="button"
+                        disabled={processing}
+                        onClick={() => handleReviewProfileUpdate(item.id, true)}
+                        className="flex-1 sm:flex-none px-5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
+                      >
+                        <CheckCircle className="w-3.5 h-3.5" />
+                        <span>Approve & Synchronize Official Data</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
           )}
         </div>
       )}

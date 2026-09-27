@@ -121,10 +121,10 @@ export default function ProxyFarmerRegisterModal({ isOpen, onClose, onFarmerRegi
           </div>
           <div>
             <h2 className="text-xl font-headline font-extrabold text-primary">
-              Proxy Farmer Registration
+              {t('proxy_farmer_reg_title', 'Proxy Farmer Registration')}
             </h2>
             <p className="text-xs text-on-surface-variant font-medium">
-              Official DoA Division onboarding for offline smallholder farmers
+              {t('proxy_farmer_reg_desc', 'Official DoA Division onboarding for offline smallholder farmers')}
             </p>
           </div>
         </div>
@@ -132,7 +132,7 @@ export default function ProxyFarmerRegisterModal({ isOpen, onClose, onFarmerRegi
         <div className="bg-secondary-container/50 border border-secondary-container rounded-xl p-3 my-4 flex items-center gap-2.5 text-xs text-on-secondary-container">
           <ShieldCheck className="w-4 h-4 text-secondary flex-shrink-0" />
           <span>
-            Registered farmers are immediately assigned <strong>APPROVED</strong> verification status and given standard access.
+            {t('proxy_approval_note', 'Registered farmers are immediately assigned APPROVED verification status.')}
           </span>
         </div>
 
@@ -155,7 +155,7 @@ export default function ProxyFarmerRegisterModal({ isOpen, onClose, onFarmerRegi
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div>
               <label className="block text-on-surface-variant font-semibold mb-1">
-                Farmer Full Name *
+                {t('farmer_full_name', 'Farmer Full Name')} *
               </label>
               <input
                 type="text"
@@ -169,7 +169,7 @@ export default function ProxyFarmerRegisterModal({ isOpen, onClose, onFarmerRegi
 
             <div>
               <label className="block text-on-surface-variant font-semibold mb-1">
-                Mobile Phone Number *
+                {t('phone_number_label', 'Mobile Phone Number')} *
               </label>
               <div className="relative">
                 <Phone className="w-4 h-4 text-outline absolute left-3 top-3" />
@@ -220,7 +220,7 @@ export default function ProxyFarmerRegisterModal({ isOpen, onClose, onFarmerRegi
           {/* Residential Address */}
           <div>
             <label className="block text-on-surface-variant font-semibold mb-1">
-              Farm / Residential Address
+              {t('residential_address', 'Farm / Residential Address')}
             </label>
             <input
               type="text"
@@ -235,7 +235,7 @@ export default function ProxyFarmerRegisterModal({ isOpen, onClose, onFarmerRegi
           <div className="grid grid-cols-3 gap-3">
             <div>
               <label className="block text-on-surface-variant font-semibold mb-1">
-                Acreage (Acres) *
+                {t('acreage_label', 'Acreage (Acres)')} *
               </label>
               <input
                 type="number"
@@ -287,7 +287,7 @@ export default function ProxyFarmerRegisterModal({ isOpen, onClose, onFarmerRegi
               onClick={onClose}
               className="px-4 py-2.5 rounded-xl border border-outline-variant text-on-surface font-bold text-xs hover:bg-surface-variant transition"
             >
-              Cancel
+              {t('btn_cancel', 'Cancel')}
             </button>
             <button
               type="submit"
@@ -295,7 +295,7 @@ export default function ProxyFarmerRegisterModal({ isOpen, onClose, onFarmerRegi
               className="px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-on-primary font-bold text-xs shadow-md transition disabled:opacity-50 flex items-center gap-2"
             >
               <UserPlus className="w-4 h-4" />
-              <span>{loading ? 'Registering...' : 'Register & Approve Farmer'}</span>
+              <span>{loading ? t('processing', 'Registering...') : t('register_and_verify', 'Register & Approve Farmer')}</span>
             </button>
           </div>
         </form>

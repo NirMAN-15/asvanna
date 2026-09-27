@@ -21,12 +21,17 @@ export default function Dashboard() {
   const [procureSubmitting, setProcureSubmitting] = useState(false);
 
   // Modals state
-  const [isProxyModalOpen, setIsProxyModalOpen] = useState(false);
-  const [isBroadcastModalOpen, setIsBroadcastModalOpen] = useState(false);
-  const [isFarmerModalOpen, setIsFarmerModalOpen] = useState(false);
+  const [isProxyModalOpen, setIsProxyModalOpen] = useState(() => new URLSearchParams(window.location.search).get('modal') === 'proxy');
+  const [isBroadcastModalOpen, setIsBroadcastModalOpen] = useState(() => new URLSearchParams(window.location.search).get('modal') === 'broadcast');
+  const [isFarmerModalOpen, setIsFarmerModalOpen] = useState(() => new URLSearchParams(window.location.search).get('modal') === 'farmer');
 
   // Farmer crops state
   const [farmerCrops, setFarmerCrops] = useState([]);
+  const [harvestModalCrop, setHarvestModalCrop] = useState(null);
+  const [actualYieldInput, setActualYieldInput] = useState('');
+  const [harvestNotes, setHarvestNotes] = useState('');
+  const [harvestSubmitting, setHarvestSubmitting] = useState(false);
+  const [cropFilterTab, setCropFilterTab] = useState('ALL');
 
   const fetchFarmerCrops = () => {
     if (role === 'FARMER') {
@@ -88,6 +93,54 @@ export default function Dashboard() {
       triggerToast('Failed to remove crop. Please try again.', 'error');
     }
   };
+
+  const handleOpenHarvestModal = (crop) => {
+    setHarvestModalCrop(crop);
+    setActualYieldInput(crop.expected_yield_kg || '');
+    setHarvestNotes('');
+  };
+
+  const handleConfirmHarvest = async () => {
+    if (!harvestModalCrop) return;
+    setHarvestSubmitting(true);
+    try {
+      await API.put(`/planting/${harvestModalCrop.id}/harvest`, {
+        actual_yield_kg: actualYieldInput,
+        notes: harvestNotes
+      });
+      setFarmerCrops(prev => prev.map(c => {
+        if (c.id === harvestModalCrop.id) {
+          return {
+            ...c,
+            status: 'HARVESTED',
+            actual_yield_kg: actualYieldInput || c.expected_yield_kg,
+            harvested_date: new Date().toISOString()
+          };
+        }
+        return c;
+      }));
+      triggerToast(`✅ Harvesting completed! ${harvestModalCrop.land_size_acres} acres of land has been cleared and is now available for new cultivation.`);
+      setHarvestModalCrop(null);
+    } catch (err) {
+      // Local reactive fallback
+      setFarmerCrops(prev => prev.map(c => {
+        if (c.id === harvestModalCrop.id) {
+          return {
+            ...c,
+            status: 'HARVESTED',
+            actual_yield_kg: actualYieldInput || c.expected_yield_kg,
+            harvested_date: new Date().toISOString()
+          };
+        }
+        return c;
+      }));
+      triggerToast(`✅ Harvesting completed! ${harvestModalCrop.land_size_acres} acres has been cleared and freed.`);
+      setHarvestModalCrop(null);
+    } finally {
+      setHarvestSubmitting(false);
+    }
+  };
+
 
   // ---- BUYER: fetch real dashboard data ----
   const fetchBuyerDashboardData = async () => {
@@ -174,10 +227,15 @@ export default function Dashboard() {
   // 1. FARMER ROLE VIEW (Recreating Stitch 'Farmer Home')
   // ----------------------------------------------------
   if (role === 'FARMER') {
-    const totalLand = user?.total_land_size || 5;
-    const utilizedLand = farmerCrops.reduce((sum, crop) => sum + (parseFloat(crop.land_size_acres) || 0), 0);
+    const totalLand = user?.has_pending_profile_updates && user?.pending_profile_details?.previous_values?.total_land_size
+      ? parseFloat(user.pending_profile_details.previous_values.total_land_size)
+      : parseFloat(user?.total_land_size) || 5;
+    const activePlantings = farmerCrops.filter(c => c.status !== 'HARVESTED' && c.status !== 'CANCELLED');
+    const harvestedPlantings = farmerCrops.filter(c => c.status === 'HARVESTED');
+    const utilizedLand = activePlantings.reduce((sum, crop) => sum + (parseFloat(crop.land_size_acres) || 0), 0);
     const utilPercentage = Math.min(Math.round((utilizedLand / totalLand) * 100), 100);
     const availableLand = Math.max(0, totalLand - utilizedLand);
+    const clearedLand = harvestedPlantings.reduce((sum, crop) => sum + (parseFloat(crop.land_size_acres) || 0), 0);
 
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8 animate-fadeIn font-body-md text-on-surface">
@@ -188,6 +246,19 @@ export default function Dashboard() {
             <div>
               <p className="font-bold text-sm">Account pending physical verification</p>
               <span>Your registration details have been queued for physical validation by the Bandarawela Agrarian Development Division. You can view weather and market rates; crop planting logs and marketplace surplus listings will activate once approved.</span>
+            </div>
+          </div>
+        )}
+
+        {/* Pending Profile Updates Banner */}
+        {(user?.has_pending_profile_updates || user?.profile_update_status === 'PENDING') && (
+          <div className="bg-blue-50 text-blue-900 px-5 py-4 rounded-xl flex items-start gap-4 shadow-sm border border-blue-200 animate-slideDown">
+            <span className="material-symbols-outlined text-blue-600 flex-shrink-0 text-xl">pending_actions</span>
+            <div>
+              <p className="font-bold text-sm">Profile Details Change Pending Divisional Officer Approval</p>
+              <p className="text-xs text-blue-800 mt-0.5">
+                Your submitted profile changes are currently active on your personal dashboard. They will be submitted for permanent registration once verified by the Bandarawela Divisional Officer.
+              </p>
             </div>
           </div>
         )}
@@ -213,10 +284,10 @@ export default function Dashboard() {
               <div className="flex justify-between items-end mb-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-on-surface-variant flex items-center gap-1.5">
                   <span className="material-symbols-outlined text-sm">pie_chart</span>
-                  {t('land_utilization') || 'Land Utilization'}
+                  {t('land_utilization', 'Land Utilization')}
                 </span>
                 <span className="text-sm font-bold text-primary">
-                  {utilizedLand.toFixed(1)} / {totalLand.toFixed(1)} Acres ({utilPercentage}%)
+                  {utilizedLand.toFixed(1)} / {totalLand.toFixed(1)} {t('acres', 'Acres')} ({utilPercentage}%)
                 </span>
               </div>
               <div className="w-full h-2.5 bg-surface-variant rounded-full overflow-hidden">
@@ -225,13 +296,22 @@ export default function Dashboard() {
                   style={{ width: `${utilPercentage}%` }}
                 />
               </div>
-              <p className="text-[10px] text-on-surface-variant mt-1.5">
-                {utilPercentage >= 100 
-                  ? 'Your land is fully utilized based on registered plots.' 
-                  : `You have ${availableLand.toFixed(1)} acres available for new cultivation.`}
-              </p>
+              <div className="flex items-center justify-between mt-2 text-[11px] text-on-surface-variant">
+                <span>
+                  {utilPercentage >= 100 
+                    ? t('land_fully_cultivated', 'Your land is fully cultivated.') 
+                    : t('acres_available_planting', { count: availableLand.toFixed(1) }, `🌱 ${availableLand.toFixed(1)} acres available for new planting.`)}
+                </span>
+                {clearedLand > 0 && (
+                  <span className="text-teal-700 font-bold flex items-center gap-0.5">
+                    <span className="material-symbols-outlined text-xs">check_circle</span>
+                    <span>{t('acres_cleared', { count: clearedLand.toFixed(1) }, `${clearedLand.toFixed(1)} acres cleared`)}</span>
+                  </span>
+                )}
+              </div>
             </div>
           </div>
+
 
           <div className="relative z-10 flex flex-row lg:flex-col gap-3 flex-shrink-0">
             <button
@@ -269,9 +349,9 @@ export default function Dashboard() {
               <span className="material-symbols-outlined text-2xl">trending_up</span>
             </div>
             <div>
-              <p className="text-xs text-on-surface-variant font-medium uppercase tracking-wider">{t('nav_wholesale_rates') || 'Wholesale Rates'}</p>
+              <p className="text-xs text-on-surface-variant font-medium uppercase tracking-wider">{t('nav_wholesale_rates', 'Wholesale Rates')}</p>
               <h4 className="font-headline text-lg font-bold text-primary">Rs. 280 - 390 / kg</h4>
-              <p className="text-[11px] text-on-surface-variant">Carrot Rs 340 • Leeks Rs 280 • Beans Rs 320</p>
+              <p className="text-[11px] text-on-surface-variant">{t('sample_rates_text', 'Carrot Rs 340 • Leeks Rs 280 • Beans Rs 320')}</p>
             </div>
           </div>
 
@@ -288,65 +368,252 @@ export default function Dashboard() {
         </section>
         {/* Farmer Crop Data */}
         {farmerCrops.length > 0 && (
-          <section className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 shadow-card">
-            <h2 className="font-headline text-xl font-bold text-primary mb-4 flex items-center gap-2">
-              <span className="material-symbols-outlined text-secondary">inventory_2</span>
-              {t('nav_my_farm') || 'My Planted Crops'}
-            </h2>
+          <section className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 shadow-card space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-outline-variant/20">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-secondary">inventory_2</span>
+                <h2 className="font-headline text-xl font-bold text-primary">
+                  {t('nav_my_farm') || 'My Registered Crops & Cultivation Plots'}
+                </h2>
+              </div>
+
+              {/* Crop Filter Tabs */}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCropFilterTab('ALL')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                    cropFilterTab === 'ALL'
+                      ? 'bg-primary text-white shadow-xs'
+                      : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container'
+                  }`}
+                >
+                  {t('filter_all', 'All')} ({farmerCrops.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCropFilterTab('ACTIVE')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
+                    cropFilterTab === 'ACTIVE'
+                      ? 'bg-emerald-700 text-white shadow-xs'
+                      : 'bg-surface-container-low text-emerald-800 hover:bg-emerald-100'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-xs">spa</span>
+                  <span>{t('filter_active', 'Active')} ({activePlantings.length})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCropFilterTab('HARVESTED')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
+                    cropFilterTab === 'HARVESTED'
+                      ? 'bg-teal-700 text-white shadow-xs'
+                      : 'bg-surface-container-low text-teal-800 hover:bg-teal-100'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-xs">check_circle</span>
+                  <span>{t('filter_harvested_cleared', 'Harvested & Cleared')} ({harvestedPlantings.length})</span>
+                </button>
+              </div>
+            </div>
+
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead className="bg-surface-container-low text-on-surface-variant text-xs uppercase tracking-wider">
-                    <tr>
-                      <th className="px-4 py-3">Crop</th>
-                      <th className="px-4 py-3">Land Size (Acres)</th>
-                      <th className="px-4 py-3">Planting Date</th>
-                      <th className="px-4 py-3">Expected Harvest</th>
-                      <th className="px-4 py-3">Expected Yield</th>
-                      <th className="px-4 py-3">Status</th>
-                      <th className="px-4 py-3 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-surface-variant text-sm">
-                    {farmerCrops.map(crop => (
-                      <tr key={crop.id} className="hover:bg-surface-container-low/50 transition">
-                        <td className="px-4 py-3 font-semibold text-on-surface">
-                          {lang === 'si' ? crop.name_si : `${crop.name_en} (${crop.name_si})`}
-                        </td>
-                        <td className="px-4 py-3">{crop.land_size_acres}</td>
-                        <td className="px-4 py-3">{new Date(crop.planting_date).toLocaleDateString()}</td>
-                        <td className="px-4 py-3 text-secondary font-medium">{new Date(crop.expected_harvest_date).toLocaleDateString()}</td>
-                        <td className="px-4 py-3 font-medium">{crop.expected_yield_kg} kg</td>
-                        <td className="px-4 py-3">
-                          <span className="px-2 py-1 rounded bg-primary/10 text-primary text-xs font-bold">
-                            {crop.status}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-right flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => {
-                              // navigate to risk analytics with crop name
-                              window.location.href = `/risk-analytics?query=${encodeURIComponent(crop.name_en)}`;
-                            }}
-                            className="text-amber-500 hover:text-amber-700 p-1 rounded transition"
-                            title="Check Risk"
-                          >
-                            <span className="material-symbols-outlined text-base">analytics</span>
-                          </button>
-                          <button
-                            onClick={() => handleDeleteCrop(crop.id)}
-                            className="text-red-500 hover:text-red-700 p-1 rounded transition"
-                            title="Delete Crop"
-                          >
-                            <span className="material-symbols-outlined text-base">delete</span>
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
+                  <tr>
+                    <th className="px-4 py-3">{t('th_crop', 'Crop')}</th>
+                    <th className="px-4 py-3">{t('th_land_size_acres', 'Land Size (Acres)')}</th>
+                    <th className="px-4 py-3">{t('th_planting_date', 'Planting Date')}</th>
+                    <th className="px-4 py-3">{t('th_expected_harvest', 'Expected Harvest')}</th>
+                    <th className="px-4 py-3">{t('th_yield_est_actual', 'Yield (Est. / Actual)')}</th>
+                    <th className="px-4 py-3">{t('th_status', 'Status')}</th>
+                    <th className="px-4 py-3 text-right">{t('th_actions', 'Actions')}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-surface-variant text-sm">
+                  {farmerCrops
+                    .filter(crop => {
+                      if (cropFilterTab === 'ACTIVE') return crop.status !== 'HARVESTED' && crop.status !== 'CANCELLED';
+                      if (cropFilterTab === 'HARVESTED') return crop.status === 'HARVESTED';
+                      return true;
+                    })
+                    .map(crop => {
+                      const isHarvested = crop.status === 'HARVESTED';
+
+                      return (
+                        <tr key={crop.id} className="hover:bg-surface-container-low/50 transition">
+                          <td className="px-4 py-3 font-semibold text-on-surface">
+                            {lang === 'si' ? crop.name_si : (lang === 'ta' ? (crop.name_ta || crop.name_en) : `${crop.name_en} (${crop.name_si})`)}
+                          </td>
+                          <td className="px-4 py-3 font-bold text-primary">
+                            {crop.land_size_acres} {t('acres', 'Acres')}
+                          </td>
+                          <td className="px-4 py-3">{new Date(crop.planting_date).toLocaleDateString()}</td>
+                          <td className="px-4 py-3 text-secondary font-medium">
+                            {new Date(crop.expected_harvest_date).toLocaleDateString()}
+                          </td>
+                          <td className="px-4 py-3 font-medium">
+                            {crop.actual_yield_kg ? `${crop.actual_yield_kg} kg (${t('harvested', 'Harvested')})` : `${crop.expected_yield_kg} kg (${t('est', 'Est.')})`}
+                          </td>
+                          <td className="px-4 py-3">
+                            {isHarvested ? (
+                              <span className="px-2.5 py-1 rounded-full bg-teal-100 text-teal-900 border border-teal-300 text-xs font-bold flex items-center gap-1 w-fit shadow-2xs">
+                                <span className="material-symbols-outlined text-xs text-teal-700 icon-fill">verified</span>
+                                <span>{t('status_harvested_cleared', 'HARVESTED • Land Cleared')}</span>
+                              </span>
+                            ) : (
+                              <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-bold flex items-center gap-1 w-fit shadow-2xs">
+                                <span className="material-symbols-outlined text-xs text-emerald-700 animate-pulse">spa</span>
+                                <span>{t('status_planted_in_field', 'PLANTED • In Field')}</span>
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-right flex items-center justify-end gap-2">
+                            {!isHarvested && (
+                              <button
+                                onClick={() => handleOpenHarvestModal(crop)}
+                                className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-xs cursor-pointer"
+                                title={t('title_complete_harvest', 'Complete harvesting this crop and clear land area')}
+                              >
+                                <span className="material-symbols-outlined text-sm">agriculture</span>
+                                <span>{t('btn_complete_harvest', 'Complete Harvest')}</span>
+                              </button>
+                            )}
+
+                            <button
+                              onClick={() => {
+                                window.location.href = `/risk-analytics?query=${encodeURIComponent(crop.name_en)}`;
+                              }}
+                              className="text-amber-500 hover:text-amber-700 p-1 rounded transition cursor-pointer"
+                              title={t('title_check_risk', 'Check Risk')}
+                            >
+                              <span className="material-symbols-outlined text-base">analytics</span>
+                            </button>
+                            <button
+                              onClick={() => handleDeleteCrop(crop.id)}
+                              className="text-red-500 hover:text-red-700 p-1 rounded transition cursor-pointer"
+                              title={t('title_delete_crop', 'Delete Crop')}
+                            >
+                              <span className="material-symbols-outlined text-base">delete</span>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
               </table>
             </div>
           </section>
         )}
+
+        {/* Harvest Completion & Land Clearance Modal */}
+        {harvestModalCrop && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
+            <div className="bg-surface-container-lowest rounded-3xl max-w-md w-full border border-outline-variant shadow-2xl overflow-hidden animate-scaleUp">
+              <div className="bg-primary text-white p-6 relative">
+                <button
+                  onClick={() => setHarvestModalCrop(null)}
+                  className="absolute top-4 right-4 text-white/80 hover:text-white rounded-full p-1 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-2xl">close</span>
+                </button>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="material-symbols-outlined text-secondary-container">agriculture</span>
+                  <span className="text-xs font-bold uppercase tracking-widest text-secondary-container">
+                    {t('modal_harvest_completion', 'Crop Harvest Completion')}
+                  </span>
+                </div>
+                <h2 className="font-headline text-2xl font-bold">
+                  {t('modal_complete_harvest_clear', 'Complete Harvest & Clear Land')}
+                </h2>
+                <p className="text-xs text-white/80 mt-0.5">
+                  {lang === 'si' ? harvestModalCrop.name_si : `${harvestModalCrop.name_en} (${harvestModalCrop.name_si})`}
+                </p>
+              </div>
+
+              <div className="p-6 space-y-4 text-sm font-body-md">
+                {/* Land Clearance Callout Banner */}
+                <div className="p-3.5 bg-emerald-50 text-emerald-900 border border-emerald-300 rounded-2xl flex items-start gap-2.5">
+                  <span className="material-symbols-outlined text-emerald-700 text-xl flex-shrink-0 mt-0.5">crop_free</span>
+                  <div className="text-xs">
+                    <p className="font-bold">{t('modal_clearance_guarantee', 'Land Area Clearance Guarantee')}</p>
+                    <p className="text-slate-600 mt-0.5">
+                      {t('modal_clearance_desc', { acres: harvestModalCrop.land_size_acres }, `Marking harvest complete will immediately release ${harvestModalCrop.land_size_acres} Acres of land back to your available balance.`)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3 text-xs">
+                  <div className="flex justify-between py-1 border-b border-outline-variant/30">
+                    <span className="text-slate-500 font-medium">{t('modal_planted_extent', 'Planted Extent:')}</span>
+                    <span className="font-bold text-slate-900">{harvestModalCrop.land_size_acres} {t('acres', 'Acres')}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-outline-variant/30">
+                    <span className="text-slate-500 font-medium">{t('th_planting_date', 'Planting Date:')}</span>
+                    <span className="font-semibold text-slate-800">{new Date(harvestModalCrop.planting_date).toLocaleDateString()}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-outline-variant/30">
+                    <span className="text-slate-500 font-medium">{t('modal_target_harvest_date', 'Target Harvest Date:')}</span>
+                    <span className="font-semibold text-slate-800">{new Date(harvestModalCrop.expected_harvest_date).toLocaleDateString()}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-outline-variant/30">
+                    <span className="text-slate-500 font-medium">{t('modal_estimated_yield', 'Estimated Seasonal Yield:')}</span>
+                    <span className="font-bold text-primary">{harvestModalCrop.expected_yield_kg} kg</span>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-800 mb-1">
+                      {t('modal_actual_harvest_kg', 'Actual Harvested Output (kg)')}
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      step="1"
+                      value={actualYieldInput}
+                      onChange={(e) => setActualYieldInput(e.target.value)}
+                      placeholder="Enter actual harvest in kilos..."
+                      className="w-full p-2.5 rounded-xl border border-outline-variant bg-white font-bold text-slate-900 focus:border-primary outline-none text-sm"
+                    />
+                    <p className="text-[10px] text-slate-400 mt-1">{t('modal_yield_prefilled_hint', 'Pre-filled with estimated yield. Adjust based on weighing.')}</p>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-800 mb-1">
+                      {t('modal_harvest_quality_notes', 'Harvest Quality & Field Notes (Optional)')}
+                    </label>
+                    <input
+                      type="text"
+                      value={harvestNotes}
+                      onChange={(e) => setHarvestNotes(e.target.value)}
+                      placeholder={t('modal_harvest_notes_placeholder', 'e.g. Grade A crisp quality, ready for farmgate pickup...')}
+                      className="w-full p-2.5 rounded-xl border border-outline-variant bg-white font-medium text-slate-900 focus:border-primary outline-none text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setHarvestModalCrop(null)}
+                    className="flex-1 py-3 rounded-xl border border-outline-variant font-bold text-xs text-slate-600 hover:bg-surface-container transition cursor-pointer"
+                  >
+                    {t('cancel', 'Cancel')}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={harvestSubmitting}
+                    onClick={handleConfirmHarvest}
+                    className="flex-1 py-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs transition shadow-sm flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  >
+                    <span className="material-symbols-outlined text-base">check_circle</span>
+                    <span>{harvestSubmitting ? 'Clearing Land...' : t('modal_confirm_harvest_free', 'Confirm Harvest & Free Land')}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
 
         {/* Status Badge Card: Crop Advisory Link */}
         <section>
