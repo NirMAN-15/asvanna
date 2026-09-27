@@ -46,8 +46,17 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [role, setRole] = useState('FARMER'); // 'FARMER', 'BUYER', 'OFFICER'
-  const [nic, setNic] = useState('197823456789');
+  const [role, setRole] = useState(() => {
+    const q = new URLSearchParams(window.location.search).get('role') || location.state?.role;
+    if (q && ['FARMER', 'BUYER', 'OFFICER'].includes(q.toUpperCase())) return q.toUpperCase();
+    return 'FARMER';
+  });
+  const [nic, setNic] = useState(() => {
+    const q = new URLSearchParams(window.location.search).get('role') || location.state?.role;
+    if (q?.toUpperCase() === 'OFFICER') return '198512345678';
+    if (q?.toUpperCase() === 'BUYER') return '200134567890';
+    return '197823456789';
+  });
   const [nicError, setNicError] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -403,12 +412,19 @@ export default function Login() {
 
             {/* Footer Registration Link */}
             <div className="text-center pt-3 border-t border-outline-variant/20 flex flex-col gap-1.5 font-body-sm text-sm sm:text-base text-on-surface-variant">
-              <p>
-                Don't have an account yet?{' '}
-                <Link to={getRegisterLink()} className="text-primary font-bold hover:underline">
-                  Register as {role === 'OFFICER' ? 'Officer' : role === 'BUYER' ? 'Buyer' : 'Farmer'}
-                </Link>
-              </p>
+              {role === 'OFFICER' ? (
+                <p className="text-xs sm:text-sm text-on-surface-variant flex items-center justify-center gap-1.5 bg-surface-container/60 py-2 px-3 rounded-lg border border-outline-variant/30">
+                  <span className="material-symbols-outlined text-base text-primary">info</span>
+                  <span>{lang === 'si' ? 'ප්‍රාදේශීය නිලධාරී ගිණුම් ගොවිජන සංවර්ධන දෙපාර්තමේන්තුව මගින් නිකුත් කරනු ලැබේ.' : lang === 'ta' ? 'பிரதேச அலுவலர் கணக்குகள் கமநல அபிவிருத்தி திணைக்களத்தால் ஒதுக்கப்படுகின்றன.' : 'Officer accounts are officially pre-assigned by the Department of Agrarian Development.'}</span>
+                </p>
+              ) : (
+                <p>
+                  Don't have an account yet?{' '}
+                  <Link to={getRegisterLink()} className="text-primary font-bold hover:underline">
+                    Register as {role === 'BUYER' ? 'Buyer' : 'Farmer'}
+                  </Link>
+                </p>
+              )}
               <p>
                 Need help accessing your account?{' '}
                 <a href="tel:1920" className="text-secondary font-semibold hover:underline">

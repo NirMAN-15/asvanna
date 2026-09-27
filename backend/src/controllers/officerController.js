@@ -91,6 +91,99 @@ class OfficerController {
   }
 
   /**
+   * GET /api/v1/officer/farmer-updates/pending
+   * List pending farmer profile updates awaiting divisional officer approval
+   */
+  static async getFarmerProfileRequests(req, res, next) {
+    try {
+      const result = await db.query(
+        `SELECT id, first_name, middle_name, last_name, full_name, phone, nic, email,
+                district, division, gnd_division, address_line1, address_line2, city, postal_code, address,
+                total_land_size, last_profile_update_at, pending_profile_updates, profile_update_status
+         FROM users
+         WHERE role = 'FARMER' AND profile_update_status = 'PENDING'
+         ORDER BY last_profile_update_at DESC`
+      );
+      return ApiResponse.success(res, result.rows || [], 'Pending profile change requests retrieved');
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * POST /api/v1/officer/farmer-updates/:farmerId/review
+   * Approve or reject farmer profile details change
+   */
+  static async reviewFarmerProfileRequest(req, res, next) {
+    try {
+      const { farmerId } = req.params;
+      const { approved, rejectionReason } = req.body;
+
+      const userRes = await db.query('SELECT * FROM users WHERE id = $1', [farmerId]);
+      if (userRes.rows.length === 0) return ApiResponse.error(res, 'Farmer not found', 404);
+      const farmer = userRes.rows[0];
+
+      if (approved) {
+        let pending = farmer.pending_profile_updates;
+        if (typeof pending === 'string') {
+          try { pending = JSON.parse(pending); } catch (e) {}
+        }
+        pending = pending || {};
+
+        const updateRes = await db.query(
+          `UPDATE users
+           SET full_name = COALESCE($1, full_name),
+               first_name = COALESCE($2, first_name),
+               middle_name = COALESCE($3, middle_name),
+               last_name = COALESCE($4, last_name),
+               gnd_division = COALESCE($5, gnd_division),
+               total_land_size = COALESCE($6, total_land_size),
+               address_line1 = COALESCE($7, address_line1),
+               address_line2 = COALESCE($8, address_line2),
+               city = COALESCE($9, city),
+               postal_code = COALESCE($10, postal_code),
+               address = COALESCE($11, address),
+               profile_update_status = 'APPROVED',
+               pending_profile_updates = NULL,
+               updated_at = CURRENT_TIMESTAMP
+           WHERE id = $12
+           RETURNING *`,
+          [
+            pending.full_name || null,
+            pending.first_name || null,
+            pending.middle_name || null,
+            pending.last_name || null,
+            pending.gnd_division || null,
+            pending.total_land_size !== undefined ? parseFloat(pending.total_land_size) : null,
+            pending.address_line1 || null,
+            pending.address_line2 || null,
+            pending.city || null,
+            pending.postal_code || null,
+            pending.address || null,
+            farmerId
+          ]
+        );
+
+        return ApiResponse.success(res, updateRes.rows[0], 'Farmer profile updates approved and officially synchronized');
+      } else {
+        const updateRes = await db.query(
+          `UPDATE users
+           SET profile_update_status = 'REJECTED',
+               pending_profile_updates = NULL,
+               updated_at = CURRENT_TIMESTAMP
+           WHERE id = $1
+           RETURNING *`,
+          [farmerId]
+        );
+        return ApiResponse.success(res, updateRes.rows[0], 'Farmer profile updates rejected');
+      }
+    } catch (err) {
+      next(err);
+    }
+  }
+
+
+  /**
    * POST /api/v1/officer/proxy-register
    * Officer registers a farmer on their behalf (verified immediately)
    */

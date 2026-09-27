@@ -54,3 +54,17 @@ serviceAccountKey.json
 
 # folder
 docs/member_guides
+
+# Change Logs and Documentation
+[Cc][Hh][Aa][Nn][Gg][Ee]*.md
+*[Cc][Hh][Aa][Nn][Gg][Ee]*.md
+docs/[Cc][Hh][Aa][Nn][Gg][Ee]*.md
+CHANGE*.md
+change*.md
+
+# Local runtime data
+backend/data/
+
+# Tree visualizers
+frontend/public/tree*.html
+frontend/public/trees/

@@ -485,7 +485,7 @@ export default function BuyerAuth() {
           {/* Footer */}
           <p className="font-body-sm text-body-sm text-on-surface-variant text-center mt-6">
             Already have an account?{' '}
-            <Link to="/login" className="text-secondary font-bold hover:underline">
+            <Link to="/login?role=BUYER" state={{ role: 'BUYER' }} className="text-secondary font-bold hover:underline">
               Sign In
             </Link>
           </p>

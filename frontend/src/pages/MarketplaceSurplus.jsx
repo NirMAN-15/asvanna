@@ -44,11 +44,24 @@ export default function MarketplaceSurplus() {
   const [farmerTab, setFarmerTab] = useState('listings'); // 'listings' | 'orders'
   const [myListings, setMyListings] = useState([]);
   const [incomingOrders, setIncomingOrders] = useState([]);
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(() => new URLSearchParams(window.location.search).get('modal') === 'add_surplus');
   const [counterModalOrder, setCounterModalOrder] = useState(null);
   const [counterPrice, setCounterPrice] = useState('');
   const [counterNote, setCounterNote] = useState('');
   const [notificationToast, setNotificationToast] = useState(null);
+
+  // Farmer Edit Listing State
+  const [editingListing, setEditingListing] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    quantityKg: '',
+    pricePerKg: '',
+    status: 'AVAILABLE',
+    pickupAddress: '',
+    description: ''
+  });
+
+  // Short Confirmation Before Accept Order
+  const [orderToConfirmAccept, setOrderToConfirmAccept] = useState(null);
 
   // Add Surplus Form State
   const [formData, setFormData] = useState({
@@ -204,6 +217,53 @@ export default function MarketplaceSurplus() {
 
     setMyListings([newLocalListing, ...myListings]);
     setShowAddModal(false);
+  };
+
+  // Farmer Update Existing Surplus Listing
+  const handleUpdateListing = async (e) => {
+    e.preventDefault();
+    if (!editingListing) return;
+
+    const qty = parseFloat(editFormData.quantityKg);
+    const price = parseFloat(editFormData.pricePerKg);
+
+    if (!qty || qty <= 0) {
+      triggerToast('Please provide a valid quantity in kg.');
+      return;
+    }
+    if (!price || price <= 0) {
+      triggerToast('Please provide a valid price per kg.');
+      return;
+    }
+
+    try {
+      await API.put(`/marketplace/listings/${editingListing.id}`, {
+        quantity_kg: qty,
+        price_per_kg: price,
+        status: editFormData.status,
+        description: editFormData.description,
+        pickup_address: editFormData.pickupAddress
+      });
+    } catch (err) {
+      console.warn('Listing update via API note:', err.message);
+    }
+
+    setMyListings(prev => prev.map(l => {
+      if (l.id === editingListing.id) {
+        return {
+          ...l,
+          quantity_kg: qty,
+          price_per_kg: price,
+          status: editFormData.status,
+          description: editFormData.description,
+          pickup_address: editFormData.pickupAddress || l.pickup_address
+        };
+      }
+      return l;
+    }));
+
+    triggerToast(`Surplus listing for ${editingListing.crop_name_en || 'produce'} updated successfully.`);
+    setEditingListing(null);
   };
 
   // Farmer Respond to Order (Accept, Decline, Counter)
@@ -540,16 +600,16 @@ export default function MarketplaceSurplus() {
               <span className="material-symbols-outlined text-secondary text-3xl">
                 {activeRoleMode === 'FARMER' ? 'agriculture' : 'storefront'}
               </span>
-              <span>{activeRoleMode === 'FARMER' ? 'Farmer Surplus Produce Hub' : 'Zero-Waste Surplus Procurement'}</span>
+              <span>{activeRoleMode === 'FARMER' ? t('farmer_surplus_hub', 'Farmer Surplus Produce Hub') : t('surplus_procurement_title', 'Zero-Waste Surplus Procurement')}</span>
             </h1>
             <span className="bg-secondary/15 text-secondary text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
-              Bandarawela Division Pilot
+              {t('pilot_division_badge', 'Bandarawela Division Pilot')}
             </span>
           </div>
           <p className="text-on-surface-variant text-xs sm:text-sm mt-1.5 max-w-2xl">
             {activeRoleMode === 'FARMER'
-              ? 'List your surplus harvest directly to 40+ local hoteliers, caterers, and supermarkets within 20km. Zero brokers, guaranteed fair farmgate prices.'
-              : 'Procure farmgate-fresh vegetables directly from verified Bandarawela smallholder farmers. 15–30% savings vs. Keppetipola Economic Centre.'}
+              ? t('farmer_marketplace_desc', 'List your surplus harvest directly to 40+ local hoteliers, caterers, and supermarkets within 20km. Zero brokers, guaranteed fair farmgate prices.')
+              : t('buyer_marketplace_desc', 'Procure farmgate-fresh vegetables directly from verified Bandarawela smallholder farmers. 15–30% savings vs. Keppetipola Economic Centre.')}
           </p>
         </div>
 
@@ -566,7 +626,7 @@ export default function MarketplaceSurplus() {
                 }`}
               >
                 <span className="material-symbols-outlined text-sm">potted_plant</span>
-                <span>Farmer Hub</span>
+                <span>{t('farmer_hub', 'Farmer Hub')}</span>
               </button>
               <button
                 onClick={() => setActiveRoleMode('BUYER')}
@@ -577,7 +637,7 @@ export default function MarketplaceSurplus() {
                 }`}
               >
                 <span className="material-symbols-outlined text-sm">shopping_basket</span>
-                <span>Buyer View</span>
+                <span>{t('buyer_view', 'Buyer View')}</span>
               </button>
             </div>
           )}
@@ -588,7 +648,7 @@ export default function MarketplaceSurplus() {
               className="bg-primary hover:bg-primary-container text-white px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 shadow-md hover:scale-105 transition-all"
             >
               <span className="material-symbols-outlined text-lg">add_circle</span>
-              <span>+ Add Surplus Produce</span>
+              <span>{t('publish_surplus', '+ Add Surplus Produce')}</span>
             </button>
           )}
         </div>
@@ -606,7 +666,7 @@ export default function MarketplaceSurplus() {
                 <span className="material-symbols-outlined text-2xl">inventory_2</span>
               </div>
               <div>
-                <span className="text-[11px] text-on-surface-variant font-bold uppercase tracking-wider block">Active Surplus on Offer</span>
+                <span className="text-[11px] text-on-surface-variant font-bold uppercase tracking-wider block">{t('active_surplus_offer', 'Active Surplus on Offer')}</span>
                 <h3 className="text-xl font-extrabold text-primary font-headline">
                   {myListings.filter(l => l.status === 'AVAILABLE').reduce((acc, l) => acc + (parseFloat(l.quantity_kg) || 0), 0)} kg
                 </h3>
@@ -618,9 +678,9 @@ export default function MarketplaceSurplus() {
                 <span className="material-symbols-outlined text-2xl">receipt_long</span>
               </div>
               <div>
-                <span className="text-[11px] text-on-surface-variant font-bold uppercase tracking-wider block">Active Batches</span>
+                <span className="text-[11px] text-on-surface-variant font-bold uppercase tracking-wider block">{t('active_batches', 'Active Batches')}</span>
                 <h3 className="text-xl font-extrabold text-secondary font-headline">
-                  {myListings.length} Lots Published
+                  {myListings.length} {t('lots_published', 'Lots Published')}
                 </h3>
               </div>
             </div>
@@ -630,9 +690,9 @@ export default function MarketplaceSurplus() {
                 <span className="material-symbols-outlined text-2xl">pending_actions</span>
               </div>
               <div>
-                <span className="text-[11px] text-on-surface-variant font-bold uppercase tracking-wider block">Pending Buyer Orders</span>
+                <span className="text-[11px] text-on-surface-variant font-bold uppercase tracking-wider block">{t('pending_buyer_orders', 'Pending Buyer Orders')}</span>
                 <h3 className="text-xl font-extrabold text-amber-800 font-headline">
-                  {incomingOrders.filter(o => o.status === 'PENDING').length} Orders (30m SLA)
+                  {incomingOrders.filter(o => o.status === 'PENDING').length} {t('orders_sla', 'Orders (30m SLA)')}
                 </h3>
               </div>
             </div>
@@ -649,7 +709,7 @@ export default function MarketplaceSurplus() {
               }`}
             >
               <span className="material-symbols-outlined text-base">format_list_bulleted</span>
-              <span>My Active Listings ({myListings.length})</span>
+              <span>{t('my_surplus_listings', 'My Active Listings')} ({myListings.length})</span>
             </button>
             <button
               onClick={() => setFarmerTab('orders')}
@@ -660,7 +720,7 @@ export default function MarketplaceSurplus() {
               }`}
             >
               <span className="material-symbols-outlined text-base">inbox</span>
-              <span>Incoming Buyer Orders</span>
+              <span>{t('incoming_buyer_orders', 'Incoming Buyer Orders')}</span>
               {incomingOrders.filter(o => o.status === 'PENDING').length > 0 && (
                 <span className="bg-error text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full animate-pulse">
                   {incomingOrders.filter(o => o.status === 'PENDING').length} NEW
@@ -728,18 +788,18 @@ export default function MarketplaceSurplus() {
 
                       <div className="grid grid-cols-2 gap-3 p-3 bg-surface-container rounded-xl text-xs">
                         <div>
-                          <span className="text-[10px] font-bold text-outline uppercase block">Available Lot</span>
+                          <span className="text-[10px] font-bold text-outline uppercase block">{t('available_lot', 'Available Lot')}</span>
                           <span className="text-base font-extrabold text-on-surface">{item.quantity_kg} kg</span>
                         </div>
                         <div>
-                          <span className="text-[10px] font-bold text-outline uppercase block">Asking Rate</span>
+                          <span className="text-[10px] font-bold text-outline uppercase block">{t('asking_rate', 'Asking Rate')}</span>
                           <span className="text-base font-extrabold text-secondary">Rs. {item.price_per_kg}/kg</span>
                         </div>
                       </div>
 
                       {item.standard_price_per_kg && (
                         <div className="text-[11px] bg-secondary-container/40 px-3 py-2 rounded-xl flex items-center justify-between text-on-secondary-fixed">
-                          <span>Keppetipola Benchmark:</span>
+                          <span>{t('keppetipola_benchmark', 'Keppetipola Benchmark:')}</span>
                           <span className="font-bold">Rs. {item.standard_price_per_kg}/kg</span>
                         </div>
                       )}
@@ -753,10 +813,19 @@ export default function MarketplaceSurplus() {
 
                     <div className="flex gap-2 pt-3 border-t border-outline-variant/20">
                       <button
-                        onClick={() => triggerToast(`Editing lot: ${item.crop_name_en}`)}
+                        onClick={() => {
+                          setEditingListing(item);
+                          setEditFormData({
+                            quantityKg: String(item.quantity_kg || ''),
+                            pricePerKg: String(item.price_per_kg || ''),
+                            status: item.status || 'AVAILABLE',
+                            pickupAddress: item.pickup_address || '',
+                            description: item.description || ''
+                          });
+                        }}
                         className="flex-1 py-2 rounded-xl border border-outline-variant text-xs font-bold text-on-surface hover:bg-surface-container transition"
                       >
-                        Edit Price/Qty
+                        {t('edit_price_qty', 'Edit Price/Qty')}
                       </button>
                       <button
                         onClick={() => {
@@ -767,7 +836,7 @@ export default function MarketplaceSurplus() {
                         }}
                         className="px-3 py-2 rounded-xl border border-error/30 text-error text-xs font-bold hover:bg-error/10 transition"
                       >
-                        Delist
+                        {t('delist', 'Delist')}
                       </button>
                     </div>
                   </div>
@@ -838,7 +907,7 @@ export default function MarketplaceSurplus() {
                       {order.status === 'PENDING' && !isExpired && (
                         <div className="flex items-center gap-2.5 self-end md:self-center flex-shrink-0">
                           <button
-                            onClick={() => handleRespondOrder(order.id, 'ACCEPT')}
+                            onClick={() => setOrderToConfirmAccept(order)}
                             className="bg-primary hover:bg-primary-container text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5"
                           >
                             <span className="material-symbols-outlined text-sm">check_circle</span>
@@ -1487,6 +1556,232 @@ export default function MarketplaceSurplus() {
                 className="flex-1 py-2 bg-secondary text-white font-bold rounded-xl shadow transition"
               >
                 Send Counter
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* ✏️ MODAL: EDIT ACTIVE SURPLUS LISTING (Farmer)                            */}
+      {/* ========================================================================= */}
+      {editingListing && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-surface-container-lowest rounded-3xl max-w-md w-full shadow-2xl p-6 border border-outline-variant/30 animate-scaleUp space-y-4 my-8">
+            <div className="flex items-center justify-between border-b border-outline-variant/20 pb-3">
+              <div className="flex items-center gap-3">
+                {editingListing.image_url ? (
+                  <img
+                    src={editingListing.image_url}
+                    alt={editingListing.crop_name_en}
+                    className="w-10 h-10 rounded-xl object-cover border border-outline-variant/40"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary text-xl">
+                    🌾
+                  </div>
+                )}
+                <div>
+                  <h3 className="font-headline font-extrabold text-base text-primary">
+                    Edit Surplus Listing
+                  </h3>
+                  <p className="text-xs text-on-surface-variant font-medium">
+                    {editingListing.crop_name_en} {editingListing.crop_name_si ? `(${editingListing.crop_name_si})` : ''}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingListing(null)}
+                className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface transition"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateListing} className="space-y-3.5 text-xs font-medium">
+              {/* Benchmark Reference */}
+              {editingListing.standard_price_per_kg && (
+                <div className="bg-surface-container-low px-3.5 py-2.5 rounded-xl border border-outline-variant/30 flex items-center justify-between text-xs">
+                  <span className="text-on-surface-variant">Keppetipola Economic Centre Benchmark:</span>
+                  <span className="font-bold text-primary">Rs. {editingListing.standard_price_per_kg} / kg</span>
+                </div>
+              )}
+
+              {/* Available Quantity */}
+              <div>
+                <label className="block text-xs font-bold text-on-surface mb-1">
+                  Available Quantity (kg) *
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="1"
+                    required
+                    value={editFormData.quantityKg}
+                    onChange={(e) => setEditFormData({ ...editFormData, quantityKg: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface font-bold focus:border-primary outline-none"
+                    placeholder="e.g. 500"
+                  />
+                  <span className="absolute right-3.5 top-2.5 text-on-surface-variant font-bold text-xs">kg</span>
+                </div>
+              </div>
+
+              {/* Asking Price Per Kg */}
+              <div>
+                <label className="block text-xs font-bold text-on-surface mb-1">
+                  Asking Rate per Kg (Rs.) *
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-2.5 text-on-surface-variant font-bold text-xs">Rs.</span>
+                  <input
+                    type="number"
+                    min="1"
+                    required
+                    value={editFormData.pricePerKg}
+                    onChange={(e) => setEditFormData({ ...editFormData, pricePerKg: e.target.value })}
+                    className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface font-bold focus:border-primary outline-none"
+                    placeholder="e.g. 280"
+                  />
+                </div>
+              </div>
+
+              {/* Listing Status */}
+              <div>
+                <label className="block text-xs font-bold text-on-surface mb-1">
+                  Listing Status
+                </label>
+                <select
+                  value={editFormData.status}
+                  onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface font-bold focus:border-primary outline-none"
+                >
+                  <option value="AVAILABLE">AVAILABLE (Open for Buyer Orders)</option>
+                  <option value="RESERVED">RESERVED (Pending Collection)</option>
+                </select>
+              </div>
+
+              {/* Farmgate Pickup Address */}
+              <div>
+                <label className="block text-xs font-bold text-on-surface mb-1">
+                  Farmgate Pickup Address
+                </label>
+                <input
+                  type="text"
+                  value={editFormData.pickupAddress}
+                  onChange={(e) => setEditFormData({ ...editFormData, pickupAddress: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface focus:border-primary outline-none"
+                  placeholder="e.g. Kinigama Valley, Bandarawela North"
+                />
+              </div>
+
+              {/* Notes & Quality Grade */}
+              <div>
+                <label className="block text-xs font-bold text-on-surface mb-1">
+                  Batch Description / Logistics Notes
+                </label>
+                <textarea
+                  rows={2}
+                  value={editFormData.description}
+                  onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface focus:border-primary outline-none text-xs"
+                  placeholder="Grade details, vehicle accessibility, crate info..."
+                />
+              </div>
+
+              <div className="flex gap-3 pt-3 border-t border-outline-variant/20">
+                <button
+                  type="button"
+                  onClick={() => setEditingListing(null)}
+                  className="flex-1 py-2.5 rounded-xl border border-outline-variant font-bold text-on-surface hover:bg-surface-container transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 bg-primary hover:bg-primary-container text-white font-bold rounded-xl shadow-md transition"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 🤝 MODAL: SHORT PROCEED CONFIRMATION BEFORE ACCEPTING ORDER              */}
+      {/* ========================================================================= */}
+      {orderToConfirmAccept && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-surface-container-lowest rounded-3xl max-w-sm w-full shadow-2xl p-6 border border-outline-variant/30 animate-scaleUp space-y-4 text-xs">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto">
+              <span className="material-symbols-outlined text-2xl">handshake</span>
+            </div>
+
+            <div className="text-center space-y-1">
+              <h3 className="font-headline font-black text-lg text-slate-900">
+                Proceed with Order?
+              </h3>
+              <p className="text-on-surface-variant text-xs">
+                Please review the buyer's procurement terms before accepting:
+              </p>
+            </div>
+
+            <div className="bg-surface-container-low p-3.5 rounded-2xl border border-outline-variant/30 space-y-2 text-xs">
+              <div className="flex justify-between items-center">
+                <span className="text-on-surface-variant font-medium">Order Code:</span>
+                <span className="font-bold text-primary">{orderToConfirmAccept.order_code}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-on-surface-variant font-medium">Buyer:</span>
+                <span className="font-bold text-slate-800">{orderToConfirmAccept.buyer_name}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-on-surface-variant font-medium">Produce:</span>
+                <span className="font-bold text-slate-800">
+                  {orderToConfirmAccept.crop_name_en} ({orderToConfirmAccept.requested_quantity_kg} kg)
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-on-surface-variant font-medium">Offered Rate:</span>
+                <span className="font-bold text-slate-800">Rs. {orderToConfirmAccept.offered_price_per_kg} / kg</span>
+              </div>
+              <div className="pt-2 border-t border-outline-variant/30 flex justify-between items-center">
+                <span className="font-black text-slate-900">Total Settlement:</span>
+                <span className="text-base font-black text-emerald-700">
+                  Rs. {orderToConfirmAccept.total_price?.toLocaleString()}
+                </span>
+              </div>
+              {orderToConfirmAccept.notes && (
+                <div className="pt-1.5 text-[11px] text-on-surface-variant italic bg-white/70 p-2 rounded-lg border border-outline-variant/20">
+                  Buyer Note: "{orderToConfirmAccept.notes}"
+                </div>
+              )}
+            </div>
+
+            <p className="text-[11px] text-center text-slate-600 leading-normal">
+              By confirming, this harvest lot is reserved. The buyer will arrive at your farmgate for collection and cash settlement.
+            </p>
+
+            <div className="flex gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setOrderToConfirmAccept(null)}
+                className="flex-1 py-2.5 rounded-xl border border-outline-variant font-bold text-on-surface hover:bg-surface-container transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  handleRespondOrder(orderToConfirmAccept.id, 'ACCEPT');
+                  setOrderToConfirmAccept(null);
+                }}
+                className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-sm">check_circle</span>
+                <span>Confirm & Proceed</span>
               </button>
             </div>
           </div>

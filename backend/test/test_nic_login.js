@@ -10,11 +10,14 @@
  * 6. Rejection with 401 when password is incorrect
  */
 
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 const assert = require('assert');
 const AuthController = require('../src/controllers/authController');
 
-const TEST_SECRET = process.env.TEST_USER_PASSWORD || ['asvanna', '123'].join('');
-const INVALID_SECRET = process.env.TEST_INVALID_PASSWORD || ['Wrong', 'Pass', '999'].join('');
+const testUserPassword = process.env.TEST_USER_PASSWORD || '';
+const testWrongPassword = process.env.TEST_INVALID_PASSWORD || 'incorrect-auth-test';
 
 console.log('🧪 Starting ASVANNA NIC-Only Login Verification...\n');
 
@@ -55,7 +58,7 @@ async function run() {
     const req = {
       body: {
         nic: '197823456789',
-        password: TEST_SECRET,
+        password: testUserPassword,
         role: 'FARMER'
       }
     };
@@ -74,7 +77,7 @@ async function run() {
     const req = {
       body: {
         nic: '198512345678',
-        password: TEST_SECRET,
+        password: testUserPassword,
         role: 'OFFICER'
       }
     };
@@ -91,7 +94,7 @@ async function run() {
     const req = {
       body: {
         nic: '200134567890',
-        password: TEST_SECRET,
+        password: testUserPassword,
         role: 'BUYER'
       }
     };
@@ -108,7 +111,7 @@ async function run() {
     const req = {
       body: {
         nic: '199999999999',
-        password: TEST_SECRET,
+        password: testUserPassword,
         role: 'FARMER'
       }
     };
@@ -125,7 +128,7 @@ async function run() {
     const req = {
       body: {
         nic: '197823456789',
-        password: INVALID_SECRET,
+        password: testWrongPassword,
         role: 'FARMER'
       }
     };
