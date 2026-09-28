@@ -319,8 +319,10 @@ class FarmerProfileScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              child: Column(
-                children: [
+              child: Material(
+                color: Colors.transparent,
+                child: Column(
+                  children: [
                   ListTile(
                     leading: Container(
                       padding: const EdgeInsets.all(8),
@@ -422,6 +424,7 @@ class FarmerProfileScreen extends StatelessWidget {
                     },
                   ),
                 ],
+              ),
               ),
             ),
             const SizedBox(height: 30),

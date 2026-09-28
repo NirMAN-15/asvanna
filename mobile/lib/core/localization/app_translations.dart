@@ -62,11 +62,24 @@ class AppTranslations {
       'sell_surplus_btn': 'Sell Surplus',
       'market_prices_btn': 'Market Prices',
 
+      // Dashboard Action Cards
+      'crop_status': 'Crop status',
+      'crop_status_desc': 'All regional crops & live market status',
+      'plant_new_crop': 'Plant new crop',
+      'plant_new_crop_desc': 'Check risk & register new crop',
+      'sell_surplus': 'Sell surplus',
+      'sell_surplus_desc': '5km zero-waste marketplace',
+      'market_price': 'Market price',
+      'market_price_desc': 'Manning & HARTI daily rates',
+
       // Navigation
       'nav_home': 'Home',
+      'nav_crop_status': 'Crop Status',
+      'nav_my_crops': 'My crops',
+      'nav_notification': 'Notification',
+      'nav_profile': 'Profile',
       'nav_search': 'Search',
       'nav_market': 'Market',
-      'nav_profile': 'Profile',
 
       // Dashboard
       'acreage_planted': 'Acreage Planted',
@@ -271,11 +284,24 @@ class AppTranslations {
       'sell_surplus_btn': 'අතිරික්ත අලෙවිය',
       'market_prices_btn': 'වෙළඳපොළ මිල',
 
+      // Dashboard Action Cards
+      'crop_status': 'වගා තත්ත්වය',
+      'crop_status_desc': 'සියලු බෝගවල වෙළඳපොළ සහ වගා තත්ත්වය',
+      'plant_new_crop': 'නව බෝගයක් වගා කිරීම',
+      'plant_new_crop_desc': 'අවදානම පරීක්ෂා කර වගාව සටහන් කරන්න',
+      'sell_surplus': 'අතිරික්ත අස්වැන්න විකිණීම',
+      'sell_surplus_desc': 'කි.මී. 5 ශුන්‍ය නාස්ති වෙළඳපොළ',
+      'market_price': 'වෙළඳපොළ මිල ගණන්',
+      'market_price_desc': 'මැනිං සහ HARTI දෛනික තොග මිල',
+
       // Navigation
       'nav_home': 'මුල් පිටුව',
+      'nav_crop_status': 'වගා තත්ත්වය',
+      'nav_my_crops': 'මගේ වගාවන්',
+      'nav_notification': 'නිවේදන',
+      'nav_profile': 'පැතිකඩ',
       'nav_search': 'සොයන්න',
       'nav_market': 'වෙළඳපොළ',
-      'nav_profile': 'පැතිකඩ',
 
       // Dashboard
       'acreage_planted': 'වගා කළ බිම් ප්‍රමාණය',
@@ -482,11 +508,24 @@ class AppTranslations {
       'sell_surplus_btn': 'உபரி விற்பனை',
       'market_prices_btn': 'சந்தை விலைகள்',
 
+      // Dashboard Action Cards
+      'crop_status': 'பயிர் நிலை',
+      'crop_status_desc': 'அனைத்து பயிர்களின் நிலை & சந்தை நிலை',
+      'plant_new_crop': 'புதிய பயிர் நடவு',
+      'plant_new_crop_desc': 'அபாயத்தை சரிபார்த்து பதிவு செய்யவும்',
+      'sell_surplus': 'உபரி விற்பனை',
+      'sell_surplus_desc': '5 கி.மீ பூஜ்ஜிய விரய சந்தை',
+      'market_price': 'சந்தை விலை',
+      'market_price_desc': 'Manning & HARTI தினசரி விலைகள்',
+
       // Navigation
       'nav_home': 'முகப்பு',
+      'nav_crop_status': 'பயிர் நிலை',
+      'nav_my_crops': 'எனது பயிர்கள்',
+      'nav_notification': 'அறிவிப்புகள்',
+      'nav_profile': 'சுயவிவரம்',
       'nav_search': 'தேடல்',
       'nav_market': 'சந்தை',
-      'nav_profile': 'சுயவிவரம்',
 
       // Dashboard
       'acreage_planted': 'பயிரிடப்பட்ட நிலப்பரப்பு',

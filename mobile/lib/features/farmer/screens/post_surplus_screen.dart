@@ -8,14 +8,19 @@ import '../../../core/services/mock_data_service.dart';
 import '../../../core/providers/app_state_provider.dart';
 import '../../../core/localization/app_translations.dart';
 
-class PostSurplusModal extends StatefulWidget {
-  const PostSurplusModal({super.key});
+class PostSurplusScreen extends StatefulWidget {
+  final Crop? preSelectedCrop;
+
+  const PostSurplusScreen({
+    super.key,
+    this.preSelectedCrop,
+  });
 
   @override
-  State<PostSurplusModal> createState() => _PostSurplusModalState();
+  State<PostSurplusScreen> createState() => _PostSurplusScreenState();
 }
 
-class _PostSurplusModalState extends State<PostSurplusModal> {
+class _PostSurplusScreenState extends State<PostSurplusScreen> {
   final _formKey = GlobalKey<FormState>();
   late Crop _selectedCrop;
   final _quantityController = TextEditingController(text: '350');
@@ -26,9 +31,17 @@ class _PostSurplusModalState extends State<PostSurplusModal> {
   void initState() {
     super.initState();
     final appState = Provider.of<AppStateProvider>(context, listen: false);
-    _selectedCrop = appState.availableCrops.isNotEmpty
-        ? appState.availableCrops.first
-        : MockDataService.getUpcountryCrops().first;
+    final crops = appState.availableCrops;
+    if (widget.preSelectedCrop != null) {
+      _selectedCrop = crops.firstWhere(
+        (c) => c.id == widget.preSelectedCrop!.id,
+        orElse: () => widget.preSelectedCrop!,
+      );
+    } else {
+      _selectedCrop = crops.isNotEmpty
+          ? crops.first
+          : MockDataService.getUpcountryCrops().first;
+    }
     _priceController.text = (_selectedCrop.currentMarketPricePerKg * 0.75).round().toString();
   }
 
@@ -94,151 +107,153 @@ class _PostSurplusModalState extends State<PostSurplusModal> {
 
     final String titleText = lang == AppLanguage.sinhala
         ? 'අතිරික්ත අස්වැන්න විකිණීම'
-        : (lang == AppLanguage.tamil ? 'உபரி விளைச்சல் விற்பனை' : 'Post Surplus Produce');
+        : (lang == AppLanguage.tamil ? 'உபரி விளைச்சல் விற்பனை' : 'Sell Surplus Produce');
 
-    final String subtitleText = lang == AppLanguage.sinhala
-        ? 'කිලෝමීටර් 5ක් ඇතුළත හෝටල්, උත්සව සැපයුම්කරුවන් සහ තොග ගැනුම්කරුවන් වෙත සෘජුව අලෙවි කරන්න.'
-        : (lang == AppLanguage.tamil
-            ? '5 கி.மீ எல்லைக்குள் உள்ள மொத்த வாங்குபவர்களுடன் நேரடியாக இணையுங்கள்.'
-            : 'Connect directly with event caterers and bulk buyers within a 5km radius.');
-
-    return Container(
-      decoration: BoxDecoration(
-        color: context.cardBg,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+    return Scaffold(
+      backgroundColor: context.scaffoldBg,
+      appBar: AppBar(
+        title: Text(
+          titleText,
+          style: GoogleFonts.poppins(
+            fontSize: 17,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        elevation: 0,
       ),
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 12,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-      ),
-      child: Form(
+      body: Form(
         key: _formKey,
         child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
             children: [
-              // Drag Handle
-              Center(
-                child: Container(
-                  width: 44,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 14),
-                  decoration: BoxDecoration(
-                    color: context.subText.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(2),
+              // 5km Marketplace Info Banner
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF38230B) : const Color(0xFFFFFBEB),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isDark ? const Color(0xFFD97706).withValues(alpha: 0.5) : const Color(0xFFFDE68A),
                   ),
                 ),
-              ),
-
-              // Header Row
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          titleText,
-                          style: GoogleFonts.poppins(
-                            fontSize: 17,
-                            fontWeight: FontWeight.bold,
-                            color: context.titleText,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          subtitleText,
-                          style: GoogleFonts.inter(
-                            fontSize: 11.5,
-                            color: context.subText,
-                          ),
-                        ),
-                      ],
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD97706).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Text('📍', style: TextStyle(fontSize: 22)),
                     ),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.close_rounded, color: context.titleText),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            lang == AppLanguage.sinhala
+                                ? 'කි.මී. 5 ක්ෂණික ශුන්‍ය නාස්ති වෙළඳපොළ'
+                                : (lang == AppLanguage.tamil ? '5 கி.மீ பூஜ்ஜிய விரய சந்தை' : '5km Proximity Marketplace'),
+                            style: GoogleFonts.poppins(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? const Color(0xFFFDE68A) : const Color(0xFF92400E),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            lang == AppLanguage.sinhala
+                                ? 'කි.මී. 5 ඇතුළත හෝටල්, උත්සව සැපයුම්කරුවන් සහ තොග ගැනුම්කරුවන් වෙත සෘජුව අලෙවි කරන්න.'
+                                : (lang == AppLanguage.tamil
+                                    ? '5 கி.மீ எல்லைக்குள் உள்ள வாங்குபவர்களுடன் நேரடியாக இணையுங்கள்.'
+                                    : 'Connect directly with event caterers and bulk buyers within 5km.'),
+                            style: GoogleFonts.inter(
+                              fontSize: 11.5,
+                              color: isDark ? const Color(0xFFFDE68A).withValues(alpha: 0.85) : const Color(0xFFB45309),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 18),
 
               // Step 1: Select Crop
               Text(
-                lang == AppLanguage.sinhala ? 'බෝගය තෝරන්න' : (lang == AppLanguage.tamil ? 'பயிரைத் தேர்ந்தெடுக்கவும்' : 'Select Crop'),
+                lang == AppLanguage.sinhala ? '1. බෝගය තෝරන්න' : (lang == AppLanguage.tamil ? '1. பயிரைத் தேர்ந்தெடுக்கவும்' : '1. Select Crop Produce'),
                 style: GoogleFonts.poppins(
-                  fontSize: 13.5,
+                  fontSize: 14.5,
                   fontWeight: FontWeight.bold,
                   color: context.titleText,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               _buildCropDropdownSelector(
                 context: context,
                 crops: appState.availableCrops,
                 selectedCrop: _selectedCrop,
-                activeColor: AppColors.badgeHarvest,
+                activeColor: const Color(0xFFD97706),
                 onSelect: _onCropSelected,
                 lang: lang,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 18),
 
-              // Step 2: Quantity & Asking Price (Pure Clean Manual Input Card)
+              // Step 2: Quantity & Asking Price
               Text(
-                lang == AppLanguage.sinhala ? 'ප්‍රමාණය සහ අපේක්ෂිත මිල' : (lang == AppLanguage.tamil ? 'அளவு மற்றும் விலை' : 'Quantity & Asking Price'),
+                lang == AppLanguage.sinhala ? '2. ප්‍රමාණය සහ ඔබගේ මිල' : (lang == AppLanguage.tamil ? '2. அளவு மற்றும் விலை' : '2. Quantity & Asking Price'),
                 style: GoogleFonts.poppins(
-                  fontSize: 13.5,
+                  fontSize: 14.5,
                   fontWeight: FontWeight.bold,
                   color: context.titleText,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               _buildQuantityAndPriceCard(
                 context: context,
                 isDark: isDark,
                 lang: lang,
                 currencyUnit: currencyUnit,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 18),
 
-              // Step 3: Condition / Notes
+              // Step 3: Notes / Condition
               Text(
-                lang == AppLanguage.sinhala ? 'අමතර විස්තර / තත්ත්වය' : (lang == AppLanguage.tamil ? 'மேலதிக குறிப்புகள்' : 'Condition / Notes for Buyer'),
+                lang == AppLanguage.sinhala ? '3. අස්වනු තත්ත්වය සහ ඇසුරුම් විස්තර' : (lang == AppLanguage.tamil ? '3. மேலதிக குறிப்புகள்' : '3. Condition & Packaging Notes'),
                 style: GoogleFonts.poppins(
-                  fontSize: 13.5,
+                  fontSize: 14.5,
                   fontWeight: FontWeight.bold,
                   color: context.titleText,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               TextFormField(
                 controller: _notesController,
                 maxLines: 2,
-                style: GoogleFonts.inter(fontSize: 13, color: context.titleText),
+                style: GoogleFonts.inter(fontSize: 13.5, color: context.titleText),
                 decoration: InputDecoration(
                   hintText: lang == AppLanguage.sinhala
-                      ? 'උදා: අලුත් අස්වැන්න, සෝදා 25kg උරවල අසුරා ඇත.'
-                      : 'e.g. Fresh harvest, washed and graded in 25kg bags.',
-                  hintStyle: GoogleFonts.inter(fontSize: 12, color: context.subText),
+                      ? 'උදා: අද උදෑසන නෙළන ලද නැවුම් අස්වැන්න, කිලෝ 25 මළුවල අසුරා ඇත.'
+                      : 'e.g. Fresh harvest from this morning, sorted & packed in 25kg crates.',
+                  hintStyle: GoogleFonts.inter(fontSize: 12.5, color: context.subText),
                   filled: true,
-                  fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAF8),
+                  fillColor: context.cardBg,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : context.cardBorder),
+                    borderSide: BorderSide(color: context.cardBorder),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : context.cardBorder),
+                    borderSide: BorderSide(color: context.cardBorder),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: AppColors.badgeHarvest, width: 1.5),
+                    borderSide: const BorderSide(color: Color(0xFFD97706), width: 1.5),
                   ),
                 ),
               ),
@@ -246,7 +261,7 @@ class _PostSurplusModalState extends State<PostSurplusModal> {
 
               // Live Summary Box
               Container(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: isDark ? const Color(0xFF38230B) : const Color(0xFFFFF8E1),
                   borderRadius: BorderRadius.circular(16),
@@ -269,19 +284,20 @@ class _PostSurplusModalState extends State<PostSurplusModal> {
                                 color: isDark ? const Color(0xFFFDE68A) : AppColors.textSecondary,
                               ),
                             ),
+                            const SizedBox(height: 2),
                             Text(
                               '${qty.toStringAsFixed(0)} Kg',
                               style: GoogleFonts.poppins(
-                                fontSize: 16,
+                                fontSize: 17,
                                 fontWeight: FontWeight.bold,
-                                color: isDark ? Colors.white : AppColors.badgeHarvest,
+                                color: isDark ? Colors.white : const Color(0xFFD97706),
                               ),
                             ),
                           ],
                         ),
                         Container(
                           width: 1,
-                          height: 34,
+                          height: 38,
                           color: (isDark ? const Color(0xFFFBBF24) : const Color(0xFFFFD54F)).withValues(alpha: 0.5),
                         ),
                         Column(
@@ -294,27 +310,28 @@ class _PostSurplusModalState extends State<PostSurplusModal> {
                                 color: isDark ? const Color(0xFFFDE68A) : AppColors.textSecondary,
                               ),
                             ),
+                            const SizedBox(height: 2),
                             Text(
                               '$currencyUnit ${totalEstimatedValue.toStringAsFixed(0)}',
                               style: GoogleFonts.poppins(
-                                fontSize: 16,
+                                fontSize: 17,
                                 fontWeight: FontWeight.bold,
-                                color: isDark ? const Color(0xFFFCD34D) : AppColors.badgeHarvest,
+                                color: isDark ? const Color(0xFFFCD34D) : const Color(0xFFD97706),
                               ),
                             ),
                           ],
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
                     Row(
                       children: [
                         Icon(
-                          Icons.location_on_rounded,
-                          color: isDark ? const Color(0xFFFCD34D) : AppColors.badgeHarvest,
-                          size: 15,
+                          Icons.radar_rounded,
+                          color: isDark ? const Color(0xFFFCD34D) : const Color(0xFFD97706),
+                          size: 16,
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 6),
                         Expanded(
                           child: Text(
                             lang == AppLanguage.sinhala
@@ -323,7 +340,7 @@ class _PostSurplusModalState extends State<PostSurplusModal> {
                                     ? '5 கி.மீ எல்லைக்குள் வாங்குபவர்கள் உடனடியாக இணைக்கப்படுவார்கள்'
                                     : '5km proximity buyers receive instant notification'),
                             style: GoogleFonts.inter(
-                              fontSize: 11,
+                              fontSize: 11.5,
                               color: isDark ? const Color(0xFFFDE68A) : AppColors.textSecondary,
                             ),
                           ),
@@ -333,9 +350,9 @@ class _PostSurplusModalState extends State<PostSurplusModal> {
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
 
-              // Giant Action Button
+              // Action Button
               ElevatedButton.icon(
                 icon: const Text('📦', style: TextStyle(fontSize: 18)),
                 label: Text(
@@ -349,14 +366,15 @@ class _PostSurplusModalState extends State<PostSurplusModal> {
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.badgeHarvest,
+                  backgroundColor: const Color(0xFFD97706),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  elevation: 3,
+                  elevation: 2,
                 ),
                 onPressed: () => _submit(appState),
               ),
+              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -391,7 +409,6 @@ class _PostSurplusModalState extends State<PostSurplusModal> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Row of Quantity & Asking Price
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -448,7 +465,7 @@ class _PostSurplusModalState extends State<PostSurplusModal> {
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
-                            color: AppColors.badgeHarvest,
+                            color: Color(0xFFD97706),
                             width: 1.5,
                           ),
                         ),
@@ -460,6 +477,7 @@ class _PostSurplusModalState extends State<PostSurplusModal> {
                 ),
               ),
               const SizedBox(width: 12),
+
               // Asking Price Field
               Expanded(
                 child: Column(
@@ -513,7 +531,7 @@ class _PostSurplusModalState extends State<PostSurplusModal> {
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
-                            color: AppColors.badgeHarvest,
+                            color: Color(0xFFD97706),
                             width: 1.5,
                           ),
                         ),
@@ -540,7 +558,7 @@ class _PostSurplusModalState extends State<PostSurplusModal> {
                 Icon(
                   Icons.info_outline_rounded,
                   size: 15,
-                  color: isDark ? const Color(0xFFFBBF24) : AppColors.badgeHarvest,
+                  color: isDark ? const Color(0xFFFBBF24) : const Color(0xFFD97706),
                 ),
                 const SizedBox(width: 6),
                 Expanded(
@@ -621,7 +639,6 @@ class _PostSurplusModalState extends State<PostSurplusModal> {
     final String currencyUnit = lang == AppLanguage.sinhala ? 'රු.' : (lang == AppLanguage.tamil ? 'ரூ.' : 'Rs.');
     String tr(String key) => AppTranslations.tr(lang, key);
 
-    // Safeguard to ensure selectedCrop is present in crops
     final safeSelectedCrop = crops.firstWhere(
       (c) => c.id == selectedCrop.id,
       orElse: () => crops.isNotEmpty ? crops.first : selectedCrop,
@@ -760,7 +777,7 @@ class _PostSurplusModalState extends State<PostSurplusModal> {
                           style: GoogleFonts.poppins(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? const Color(0xFFFBBF24) : AppColors.badgeHarvest,
+                            color: isDark ? const Color(0xFFFBBF24) : const Color(0xFFD97706),
                           ),
                         ),
                         Text(
