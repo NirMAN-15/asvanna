@@ -6,6 +6,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/providers/app_state_provider.dart';
 import '../../core/localization/app_translations.dart';
 import 'screens/farmer_dashboard_screen.dart';
+import 'screens/my_crops_screen.dart';
 import 'screens/pre_planting_risk_screen.dart';
 import 'screens/notice_board_screen.dart';
 import 'screens/farmer_profile_screen.dart';
@@ -43,7 +44,7 @@ class _FarmerMainNavState extends State<FarmerMainNav> {
 
     final List<Widget> screens = [
       FarmerDashboardScreen(onTabSelected: _onItemTapped),
-      const PrePlantingRiskScreen(),
+      const MyCropsScreen(),
       const NoticeBoardScreen(),
       const FarmerProfileScreen(),
     ];

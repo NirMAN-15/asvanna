@@ -21,8 +21,6 @@ class PrePlantingRiskScreen extends StatefulWidget {
 }
 
 class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
-  final _searchController = TextEditingController();
-  String _searchQuery = '';
   RiskCategoryFilter _activeFilter = RiskCategoryFilter.safe;
   double _modalSimulatedAcreage = 1.0;
 
@@ -52,12 +50,6 @@ class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
     }
   }
 
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
   CropRiskLevel _getCropRiskLevel(Crop crop, AppStateProvider appState) {
     final cropId = crop.id;
     final risk = appState.getRiskForCrop(cropId);
@@ -83,17 +75,7 @@ class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
     final mediumCrops = <Crop>[];
     final highCrops = <Crop>[];
 
-    final query = _searchQuery.trim().toLowerCase();
-
     for (final crop in allCrops) {
-      final nameLower = crop.name.toLowerCase();
-      final sinhalaLower = crop.sinhalaName.toLowerCase();
-      final matchesSearch = query.isEmpty ||
-          nameLower.contains(query) ||
-          sinhalaLower.contains(query);
-
-      if (!matchesSearch) continue;
-
       final riskLevel = _getCropRiskLevel(crop, appState);
       switch (riskLevel) {
         case CropRiskLevel.safe:
@@ -183,50 +165,7 @@ class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 1. Search Bar
-              TextField(
-                controller: _searchController,
-                onChanged: (val) => setState(() => _searchQuery = val),
-                style: GoogleFonts.inter(fontSize: 14, color: context.titleText),
-                decoration: InputDecoration(
-                  hintText: tr('search_crop'),
-                  hintStyle: GoogleFonts.inter(fontSize: 13.5, color: context.mutedText),
-                  prefixIcon: Icon(
-                    Icons.search,
-                    color: isDark ? const Color(0xFF4ADE80) : AppColors.primary,
-                  ),
-                  filled: true,
-                  fillColor: context.inputBg,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide(color: context.inputBorder),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide(color: context.inputBorder),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide(
-                      color: isDark ? const Color(0xFF4ADE80) : AppColors.primary,
-                      width: 1.5,
-                    ),
-                  ),
-                  suffixIcon: _searchQuery.isNotEmpty
-                      ? IconButton(
-                          icon: Icon(Icons.clear, color: context.subText),
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() => _searchQuery = '');
-                          },
-                        )
-                      : null,
-                ),
-              ),
-              const SizedBox(height: 14),
-
-              // 2. 3-Part Category Tabs (Safe, Medium Risk, High Risk)
+              // 1. 3-Part Category Tabs (Safe, Medium Risk, High Risk)
               _build3CategoryTabs(
                 context: context,
                 safeCount: totalSafeCount,
@@ -236,7 +175,7 @@ class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
               ),
               const SizedBox(height: 16),
 
-              // 3. Crops List for the Selected Category (No redundant category banner)
+              // 2. Crops List for the Selected Category (No redundant category banner)
               if (displayedCrops.isNotEmpty) ...[
                 ...displayedCrops.map((crop) => _buildCropCard(
                       context: context,
@@ -253,15 +192,13 @@ class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          Icons.search_off_rounded,
+                          Icons.inventory_2_outlined,
                           size: 40,
                           color: context.mutedText,
                         ),
                         const SizedBox(height: 10),
                         Text(
-                          _searchQuery.isNotEmpty
-                              ? 'No crops found matching "$_searchQuery"'
-                              : 'No crops in this category',
+                          'No crops in this category',
                           style: GoogleFonts.inter(fontSize: 13.5, color: context.subText),
                         ),
                       ],
@@ -536,40 +473,6 @@ class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
                           ),
                         ),
                       ),
-                      // Status Badge (Top-Left)
-                      Positioned(
-                        top: 10,
-                        left: 10,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: statusColor.withValues(alpha: 0.95),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 6,
-                                height: 6,
-                                decoration: const BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 5),
-                              Text(
-                                statusLabel,
-                                style: GoogleFonts.inter(
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
                       // Bottom Row: Crop Names & Market Price
                       Positioned(
                         left: 12,
@@ -627,92 +530,12 @@ class _PrePlantingRiskScreenState extends State<PrePlantingRiskScreen> {
                 ),
               ),
 
-              // 2. Card Body: Simple Key Metrics & Quota
+              // 2. Card Body: Regional Quota & Risk Analysis Link
               Padding(
                 padding: const EdgeInsets.all(14),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Stat Metrics Row
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-                            decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: context.cardBorder.withValues(alpha: 0.6)),
-                            ),
-                            child: Row(
-                              children: [
-                                const Text('⏱️', style: TextStyle(fontSize: 13)),
-                                const SizedBox(width: 6),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      '${crop.maturityDays} Days',
-                                      style: GoogleFonts.inter(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w700,
-                                        color: context.titleText,
-                                      ),
-                                    ),
-                                    Text(
-                                      tr('days_to_harvest'),
-                                      style: GoogleFonts.inter(
-                                        fontSize: 9.5,
-                                        color: context.mutedText,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-                            decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: context.cardBorder.withValues(alpha: 0.6)),
-                            ),
-                            child: Row(
-                              children: [
-                                const Text('⚖️', style: TextStyle(fontSize: 13)),
-                                const SizedBox(width: 6),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      '${crop.expectedYieldKgPerAcre.toInt()} kg',
-                                      style: GoogleFonts.inter(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w700,
-                                        color: context.titleText,
-                                      ),
-                                    ),
-                                    Text(
-                                      lang == AppLanguage.sinhala ? 'අක්කරයකට' : 'Per acre yield',
-                                      style: GoogleFonts.inter(
-                                        fontSize: 9.5,
-                                        color: context.mutedText,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-
                     // Regional Planting Quota Progress
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,

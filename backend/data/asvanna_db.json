@@ -25,7 +25,8 @@
       "total_land_size": 2.5,
       "language_preference": "si",
       "verification_status": "APPROVED",
-      "is_verified": true
+      "is_verified": true,
+      "fcm_token": "fcm_asvanna_bandarawela_380379"
     },
     {
       "id": 3,

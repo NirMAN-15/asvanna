@@ -6,77 +6,11 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/app_state_provider.dart';
 import '../../../core/localization/app_translations.dart';
 import 'farm_land_map_screen.dart';
+import 'farmer_history_screen.dart';
 import '../../auth/login_screen.dart';
 
 class FarmerProfileScreen extends StatelessWidget {
   const FarmerProfileScreen({super.key});
-
-  void _showLanguageDialog(BuildContext context, AppStateProvider appState) {
-    final isDark = context.isDarkMode;
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: context.cardBg,
-        title: Text(
-          'Select Language / භාෂාව / மொழி',
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-            color: context.titleText,
-          ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Text('🇬🇧', style: TextStyle(fontSize: 22)),
-              title: Text(
-                'English',
-                style: GoogleFonts.inter(color: context.titleText),
-              ),
-              trailing: appState.currentLanguage == AppLanguage.english
-                  ? Icon(Icons.check_circle, color: isDark ? const Color(0xFF4ADE80) : AppColors.primary)
-                  : null,
-              onTap: () {
-                appState.setLanguage(AppLanguage.english);
-                Navigator.pop(context);
-              },
-            ),
-            Divider(color: context.dividerColor),
-            ListTile(
-              leading: const Text('🇱🇰', style: TextStyle(fontSize: 22)),
-              title: Text(
-                'සිංහල (Sinhala)',
-                style: GoogleFonts.inter(color: context.titleText),
-              ),
-              trailing: appState.currentLanguage == AppLanguage.sinhala
-                  ? Icon(Icons.check_circle, color: isDark ? const Color(0xFF4ADE80) : AppColors.primary)
-                  : null,
-              onTap: () {
-                appState.setLanguage(AppLanguage.sinhala);
-                Navigator.pop(context);
-              },
-            ),
-            Divider(color: context.dividerColor),
-            ListTile(
-              leading: const Text('🇱🇰', style: TextStyle(fontSize: 22)),
-              title: Text(
-                'தமிழ் (Tamil)',
-                style: GoogleFonts.inter(color: context.titleText),
-              ),
-              trailing: appState.currentLanguage == AppLanguage.tamil
-                  ? Icon(Icons.check_circle, color: isDark ? const Color(0xFF4ADE80) : AppColors.primary)
-                  : null,
-              onTap: () {
-                appState.setLanguage(AppLanguage.tamil);
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -329,38 +263,33 @@ class FarmerProfileScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(
-                        Icons.language_rounded,
+                        Icons.history_rounded,
                         color: isDark ? const Color(0xFF86EFAC) : AppColors.asvannaButtonGreen,
                         size: 20,
                       ),
                     ),
                     title: Text(
-                      tr('app_language'),
+                      'Cultivation & Sales History',
                       style: GoogleFonts.inter(
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
                         color: context.titleText,
                       ),
                     ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          lang == AppLanguage.english
-                              ? 'English'
-                              : lang == AppLanguage.sinhala
-                                  ? 'සිංහල'
-                                  : 'தமிழ்',
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            color: context.subText,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        Icon(Icons.chevron_right_rounded, color: context.subText),
-                      ],
+                    subtitle: Text(
+                      'Harvest records & 5km surplus sales',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: context.subText,
+                      ),
                     ),
-                    onTap: () => _showLanguageDialog(context, appState),
+                    trailing: Icon(Icons.chevron_right_rounded, color: context.subText),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const FarmerHistoryScreen()),
+                      );
+                    },
                   ),
                   Divider(height: 1, color: context.dividerColor),
                   SwitchListTile(

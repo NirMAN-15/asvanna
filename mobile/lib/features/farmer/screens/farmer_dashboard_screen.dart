@@ -105,17 +105,6 @@ class FarmerDashboardScreen extends StatelessWidget {
     String tr(String key) => AppTranslations.tr(lang, key);
     final isDark = context.isDarkMode;
 
-    // Calculate crop status metrics
-    final totalPlantings = farmer.activePlantings.length;
-    int atRiskCount = 0;
-    for (final planting in farmer.activePlantings) {
-      final risk = appState.getRiskForCrop(planting.cropId);
-      final nameLower = planting.cropName.toLowerCase();
-      final isAtRisk = (risk != null && risk.riskLevel == CropRiskLevel.critical) ||
-          (risk == null && (nameLower.contains('leek') || nameLower.contains('carrot')));
-      if (isAtRisk) atRiskCount++;
-    }
-
     final greetingText = _getDynamicGreeting(tr);
     final rawFarmerName = farmer.fullName.trim();
     final farmerName = rawFarmerName.isNotEmpty ? rawFarmerName : 'Nirman Senanayake';
@@ -203,8 +192,6 @@ class FarmerDashboardScreen extends StatelessWidget {
                             // 3. THE 4 EXPANDED ACTION CARDS WITH EMBEDDED IMAGES (2x2 Grid)
                             _build2x2ActionGrid(
                               context: context,
-                              totalPlantings: totalPlantings,
-                              atRiskCount: atRiskCount,
                               tr: tr,
                             ),
                             const SizedBox(height: 6),
@@ -583,12 +570,8 @@ class FarmerDashboardScreen extends StatelessWidget {
   // 3. 2x2 Grid of Main Action Cards with Embedded Images & Translucent Surfaces
   Widget _build2x2ActionGrid({
     required BuildContext context,
-    required int totalPlantings,
-    required int atRiskCount,
     required String Function(String) tr,
   }) {
-    final isDark = context.isDarkMode;
-
     return Column(
       children: [
         // Row 1: Crop status (Top Left) & Plant new crop (Top Right)
@@ -599,25 +582,12 @@ class FarmerDashboardScreen extends StatelessWidget {
               child: _buildImageActionCard(
                 context: context,
                 title: tr('crop_status'),
-                subtitle: totalPlantings > 0
-                    ? (atRiskCount > 0 ? '$atRiskCount at risk' : 'Healthy growth')
-                    : tr('crop_status_desc'),
-                imageUrl: 'https://images.unsplash.com/photo-1592417817098-8f3d6eb22509?w=400&auto=format&fit=crop&q=80',
-                icon: Icons.eco_rounded,
-                iconColor: isDark ? const Color(0xFF4ADE80) : AppColors.asvannaButtonGreen,
-                iconBgColor: isDark ? const Color(0xFF143E23) : Colors.white,
-                badgeText: totalPlantings > 0 ? '$totalPlantings Active' : '0 Active',
-                badgeBgColor: atRiskCount > 0 ? const Color(0xFFDC2626) : const Color(0xFF16A34A),
-                badgeTextColor: Colors.white,
+                imageUrl: 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=600&auto=format&fit=crop&q=80',
                 onTap: () {
-                  if (onTabSelected != null) {
-                    onTabSelected!(1); // Switch to My Crops Tab
-                  } else {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const PrePlantingRiskScreen()),
-                    );
-                  }
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const PrePlantingRiskScreen()),
+                  );
                 },
               ),
             ),
@@ -628,14 +598,7 @@ class FarmerDashboardScreen extends StatelessWidget {
               child: _buildImageActionCard(
                 context: context,
                 title: tr('plant_new_crop'),
-                subtitle: tr('plant_new_crop_desc'),
-                imageUrl: 'https://images.unsplash.com/photo-1530507629858-e4977d30e9e0?w=400&auto=format&fit=crop&q=80',
-                icon: Icons.add_rounded,
-                iconColor: Colors.white,
-                iconBgColor: AppColors.asvannaButtonGreen,
-                badgeText: 'NEW',
-                badgeBgColor: AppColors.asvannaButtonGreen,
-                badgeTextColor: Colors.white,
+                imageUrl: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=600&auto=format&fit=crop&q=80',
                 isPrimaryEmphasis: true,
                 onTap: () {
                   Navigator.push(
@@ -657,14 +620,7 @@ class FarmerDashboardScreen extends StatelessWidget {
               child: _buildImageActionCard(
                 context: context,
                 title: tr('sell_surplus'),
-                subtitle: tr('sell_surplus_desc'),
-                imageUrl: 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=400&auto=format&fit=crop&q=80',
-                icon: Icons.shopping_basket_rounded,
-                iconColor: const Color(0xFFD97706),
-                iconBgColor: isDark ? const Color(0xFF451A03) : Colors.white,
-                badgeText: '5km',
-                badgeBgColor: const Color(0xFFD97706),
-                badgeTextColor: Colors.white,
+                imageUrl: 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=600&auto=format&fit=crop&q=80',
                 onTap: () {
                   showModalBottomSheet(
                     context: context,
@@ -682,14 +638,7 @@ class FarmerDashboardScreen extends StatelessWidget {
               child: _buildImageActionCard(
                 context: context,
                 title: tr('market_price'),
-                subtitle: tr('market_price_desc'),
-                imageUrl: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=400&auto=format&fit=crop&q=80',
-                icon: Icons.trending_up_rounded,
-                iconColor: const Color(0xFF0284C7),
-                iconBgColor: isDark ? const Color(0xFF0C4A6E) : Colors.white,
-                badgeText: 'Live',
-                badgeBgColor: const Color(0xFF0284C7),
-                badgeTextColor: Colors.white,
+                imageUrl: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=600&auto=format&fit=crop&q=80',
                 onTap: () {
                   Navigator.push(
                     context,
@@ -708,14 +657,7 @@ class FarmerDashboardScreen extends StatelessWidget {
   Widget _buildImageActionCard({
     required BuildContext context,
     required String title,
-    required String subtitle,
     required String imageUrl,
-    required IconData icon,
-    required Color iconColor,
-    required Color iconBgColor,
-    required String badgeText,
-    required Color badgeBgColor,
-    required Color badgeTextColor,
     required VoidCallback onTap,
     bool isPrimaryEmphasis = false,
   }) {
@@ -725,7 +667,7 @@ class FarmerDashboardScreen extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(22),
       child: Container(
-        height: 195,
+        height: 180,
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1E293B).withValues(alpha: 0.88) : Colors.white.withValues(alpha: 0.90),
@@ -745,11 +687,11 @@ class FarmerDashboardScreen extends StatelessWidget {
           ],
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Top Image Area (with image & floating badges)
+            // Top Image Area
             Expanded(
-              flex: 5,
+              flex: 7,
               child: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -773,7 +715,11 @@ class FarmerDashboardScreen extends StatelessWidget {
                       return Container(
                         color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE8F5E9),
                         child: Center(
-                          child: Icon(icon, color: iconColor, size: 30),
+                          child: Icon(
+                            Icons.image_outlined,
+                            color: isDark ? const Color(0xFF4ADE80) : AppColors.asvannaButtonGreen,
+                            size: 30,
+                          ),
                         ),
                       );
                     },
@@ -782,62 +728,9 @@ class FarmerDashboardScreen extends StatelessWidget {
                   Container(
                     decoration: const BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [Colors.black38, Colors.transparent, Colors.black45],
+                        colors: [Colors.black12, Colors.transparent, Colors.black26],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                      ),
-                    ),
-                  ),
-
-                  // Floating Icon on Top-Left
-                  Positioned(
-                    top: 8,
-                    left: 8,
-                    child: Container(
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color: iconBgColor.withValues(alpha: 0.95),
-                        borderRadius: BorderRadius.circular(10),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.15),
-                            blurRadius: 4,
-                            offset: const Offset(0, 1),
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Icon(icon, color: iconColor, size: 20),
-                      ),
-                    ),
-                  ),
-
-                  // Floating Badge on Top-Right
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: badgeBgColor.withValues(alpha: 0.95),
-                        borderRadius: BorderRadius.circular(8),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.15),
-                            blurRadius: 4,
-                            offset: const Offset(0, 1),
-                          ),
-                        ],
-                      ),
-                      child: Text(
-                        badgeText,
-                        style: GoogleFonts.inter(
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w800,
-                          color: badgeTextColor,
-                          letterSpacing: -0.1,
-                        ),
                       ),
                     ),
                   ),
@@ -845,40 +738,24 @@ class FarmerDashboardScreen extends StatelessWidget {
               ),
             ),
 
-            // Bottom Content Area (Title & Subtitle)
+            // Bottom Content Area (Centralized Title)
             Expanded(
-              flex: 4,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      title,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w700,
-                        color: context.titleText,
-                        letterSpacing: -0.2,
-                        height: 1.15,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: GoogleFonts.inter(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w500,
-                        color: context.subText,
-                        height: 1.2,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+              flex: 3,
+              child: Container(
+                alignment: Alignment.center,
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                child: Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w700,
+                    color: context.titleText,
+                    letterSpacing: -0.2,
+                    height: 1.15,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ),
