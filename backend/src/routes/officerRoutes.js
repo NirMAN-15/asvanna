@@ -8,6 +8,7 @@ router.use(authenticate);
 router.use(authorizeRoles('OFFICER', 'ADMIN'));
 
 router.get('/farmers', OfficerController.getFarmerDirectory);
+router.put('/farmers/:farmerId', OfficerController.updateFarmerDetails);
 router.get('/verifications/pending', OfficerController.getPendingVerifications);
 router.post('/verifications/:farmerId', OfficerController.reviewFarmer);
 router.get('/farmer-updates/pending', OfficerController.getFarmerProfileRequests);

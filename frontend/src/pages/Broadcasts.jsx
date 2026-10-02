@@ -3,6 +3,7 @@ import API from '../services/api';
 import { LanguageContext } from '../context/LanguageContext';
 import { AuthContext } from '../context/AuthContext';
 import BroadcastModal from '../components/BroadcastModal';
+import Pagination from '../components/Pagination';
 import {
   Radio, PlusCircle, CheckCircle2, ShieldAlert, AlertTriangle, Info,
   TrendingUp, Calendar, MapPin, UserCheck, FileText, Check, Share2,
@@ -92,6 +93,7 @@ export default function Broadcasts() {
 
   const [broadcasts, setBroadcasts] = useState(SEED_BROADCASTS);
   const [activeCategory, setActiveCategory] = useState('ALL'); // 'ALL' | 'CULTIVATION_GLUT' | 'AGRO_WEATHER' | 'MARKET_PRICE'
+  const [page, setPage] = useState(1);
   const [selectedNoticeForModal, setSelectedNoticeForModal] = useState(null);
   const [acknowledgedAlerts, setAcknowledgedAlerts] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(() => new URLSearchParams(window.location.search).get('modal') === 'new_broadcast');
@@ -319,7 +321,23 @@ export default function Broadcasts() {
       {/* 📋 DIRECTIVE CARDS (Structured with Dynamic Severity Outlines)             */}
       {/* ========================================================================= */}
       <div className="space-y-5">
-        {filteredBroadcasts.map((b) => {
+        {filteredBroadcasts.length === 0 ? (
+          <div className="py-16 px-6 text-center bg-surface-container-low/40 border border-dashed border-outline-variant/40 rounded-3xl space-y-3">
+            <div className="w-14 h-14 rounded-2xl bg-secondary/10 text-secondary flex items-center justify-center mx-auto">
+              <Radio className="w-7 h-7 text-secondary" />
+            </div>
+            <h3 className="font-bold text-base text-on-surface">
+              {lang === 'si' ? 'මෙම කාණ්ඩය යටතේ නිවේදන නොමැත' : 'No Directives in this Category'}
+            </h3>
+            <p className="text-xs text-on-surface-variant max-w-md mx-auto">
+              {lang === 'si'
+                ? 'තෝරාගත් කාණ්ඩය යටතේ නිකුත් කරන ලද සක්‍රීය කෘෂිකාර්මික උපදේශන හෝ අනතුරු ඇඟවීම් නොමැත.'
+                : 'There are no active agrarian directives or alerts matching the selected category filter.'}
+            </p>
+          </div>
+        ) : (
+          <>
+            {filteredBroadcasts.slice((page - 1) * 4, page * 4).map((b) => {
           const isAcked = acknowledgedAlerts[b.id];
           const sev = (b.severity || 'WARNING').toUpperCase();
           const isEmergency = sev === 'CRITICAL' || sev === 'EMERGENCY' || sev === 'HIGH';
@@ -468,7 +486,16 @@ export default function Broadcasts() {
             </div>
           );
         })}
-      </div>
+
+        <Pagination
+          currentPage={page}
+          totalItems={filteredBroadcasts.length}
+          itemsPerPage={4}
+          onPageChange={setPage}
+        />
+      </>
+    )}
+  </div>
 
       {/* ========================================================================= */}
       {/* 📄 WELL-DETAILED OFFICIAL DIRECTIVE FORM MODAL                           */}
