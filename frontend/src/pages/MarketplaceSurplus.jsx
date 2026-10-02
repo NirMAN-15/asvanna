@@ -733,15 +733,17 @@ export default function MarketplaceSurplus() {
           {farmerTab === 'listings' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {myListings.length === 0 ? (
-                <div className="col-span-full p-12 text-center bg-surface-container-lowest rounded-2xl border border-dashed border-outline-variant">
-                  <span className="material-symbols-outlined text-5xl text-outline mb-2">inventory_2</span>
+                <div className="col-span-full p-12 text-center bg-surface-container-low/40 rounded-3xl border border-dashed border-outline-variant/40 space-y-2">
+                  <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-2">
+                    <span className="material-symbols-outlined text-3xl">inventory_2</span>
+                  </div>
                   <h3 className="font-bold text-base text-primary">No Active Produce Listings</h3>
-                  <p className="text-xs text-on-surface-variant mt-1 max-w-md mx-auto">
+                  <p className="text-xs text-on-surface-variant max-w-md mx-auto">
                     You haven't listed any surplus crops yet. Tap the button below to publish your harvest.
                   </p>
                   <button
                     onClick={() => setShowAddModal(true)}
-                    className="mt-4 bg-primary text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow hover:bg-primary-container"
+                    className="mt-3 bg-primary text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow hover:bg-primary/90 transition cursor-pointer"
                   >
                     + Add Surplus Produce
                   </button>
@@ -849,10 +851,12 @@ export default function MarketplaceSurplus() {
           {farmerTab === 'orders' && (
             <div className="space-y-4">
               {incomingOrders.length === 0 ? (
-                <div className="p-12 text-center bg-surface-container-lowest rounded-2xl border border-outline-variant">
-                  <span className="material-symbols-outlined text-4xl text-outline mb-2">inbox</span>
-                  <p className="font-bold text-sm text-primary">No buyer orders received yet.</p>
-                  <p className="text-xs text-outline mt-1">Orders placed by verified local buyers will appear here with an active 30-minute response timer.</p>
+                <div className="p-12 text-center bg-surface-container-low/40 rounded-3xl border border-dashed border-outline-variant/40 space-y-2">
+                  <div className="w-14 h-14 rounded-2xl bg-secondary/10 text-secondary flex items-center justify-center mx-auto mb-2">
+                    <span className="material-symbols-outlined text-3xl">inbox</span>
+                  </div>
+                  <p className="font-bold text-base text-primary">No buyer orders received yet.</p>
+                  <p className="text-xs text-on-surface-variant max-w-md mx-auto">Orders placed by verified local buyers will appear here with an active 30-minute response timer.</p>
                 </div>
               ) : (
                 incomingOrders.map(order => {
@@ -1144,10 +1148,12 @@ export default function MarketplaceSurplus() {
           {buyerTab === 'my_orders' && (
             <div className="space-y-4">
               {myBuyerOrders.length === 0 ? (
-                <div className="p-12 text-center bg-surface-container-lowest rounded-2xl border border-outline-variant">
-                  <span className="material-symbols-outlined text-4xl text-outline mb-2">receipt_long</span>
-                  <p className="font-bold text-sm text-primary">No procurement orders placed yet.</p>
-                  <p className="text-xs text-outline mt-1">Browse surplus produce above to submit direct farmgate orders.</p>
+                <div className="p-12 text-center bg-surface-container-low/40 rounded-3xl border border-dashed border-outline-variant/40 space-y-2">
+                  <div className="w-14 h-14 rounded-2xl bg-secondary/10 text-secondary flex items-center justify-center mx-auto mb-2">
+                    <span className="material-symbols-outlined text-3xl">receipt_long</span>
+                  </div>
+                  <p className="font-bold text-base text-primary">No procurement orders placed yet.</p>
+                  <p className="text-xs text-on-surface-variant max-w-md mx-auto">Browse surplus produce above to submit direct farmgate orders.</p>
                 </div>
               ) : (
                 myBuyerOrders.map(order => {
