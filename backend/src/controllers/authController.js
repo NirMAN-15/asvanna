@@ -42,7 +42,9 @@ class AuthController {
         resolvedMiddle = resolvedMiddle !== null ? resolvedMiddle : nameParts.middle_name;
         resolvedLast = resolvedLast || nameParts.last_name;
       }
-      if (!resolvedFull && resolvedFirst) {
+      if (resolvedFirst && resolvedLast) {
+        resolvedFull = formatFullName(resolvedFirst, resolvedMiddle, resolvedLast);
+      } else if (!resolvedFull && resolvedFirst) {
         resolvedFull = formatFullName(resolvedFirst, resolvedMiddle, resolvedLast);
       }
       if (!resolvedFull) {
@@ -63,7 +65,9 @@ class AuthController {
         resolvedCity = addrParts.city;
         resolvedPostal = addrParts.postal_code;
       }
-      if (!resolvedAddr && resolvedAddr1) {
+      if (resolvedAddr1) {
+        resolvedAddr = formatAddress(resolvedAddr1, resolvedAddr2, resolvedCity, resolvedPostal);
+      } else if (!resolvedAddr && resolvedAddr1) {
         resolvedAddr = formatAddress(resolvedAddr1, resolvedAddr2, resolvedCity, resolvedPostal);
       }
 
@@ -135,11 +139,15 @@ class AuthController {
 
   static async login(req, res, next) {
     try {
-      const { phone, password, role } = req.body;
+      const { nic, phone, identifier, password, role } = req.body;
+      const userIdent = (nic || identifier || phone || '').trim();
 
-      const result = await db.query('SELECT * FROM users WHERE phone = $1', [phone]);
+      const result = await db.query(
+        'SELECT * FROM users WHERE (nic IS NOT NULL AND LOWER(nic) = LOWER($1)) OR phone = $1',
+        [userIdent]
+      );
       if (!result || !result.rows || result.rows.length === 0) {
-        return ApiResponse.error(res, 'Invalid phone number or password.', 401);
+        return ApiResponse.error(res, 'Invalid NIC number or password.', 401);
       }
 
       const user = result.rows[0];
@@ -158,7 +166,7 @@ class AuthController {
 
       const isMatch = await bcrypt.compare(password, user.password_hash);
       if (!isMatch) {
-        return ApiResponse.error(res, 'Invalid phone number or password.', 401);
+        return ApiResponse.error(res, 'Invalid NIC number or password.', 401);
       }
 
       // Check verification status
@@ -196,12 +204,40 @@ class AuthController {
            id, first_name, middle_name, last_name, full_name, phone, nic, email, role, language_preference,
            district, division, gnd_division, address_line1, address_line2, city, postal_code, address,
            latitude, longitude, total_land_size, preferred_search_radius,
-           business_name, business_type, profile_photo_url, verification_status, is_verified, created_at
+           business_name, business_type, profile_photo_url, verification_status, is_verified,
+           last_profile_update_at, pending_profile_updates, profile_update_status, created_at
          FROM users WHERE id = $1`,
         [req.user.id]
       );
       if (result.rows.length === 0) return ApiResponse.error(res, 'User not found', 404);
-      return ApiResponse.success(res, result.rows[0], 'User profile retrieved');
+      
+      let userProfile = result.rows[0];
+
+      // If user is a farmer and has pending profile updates, merge pending values for their self view
+      if (userProfile.role === 'FARMER' && userProfile.profile_update_status === 'PENDING' && userProfile.pending_profile_updates) {
+        const pending = typeof userProfile.pending_profile_updates === 'string'
+          ? JSON.parse(userProfile.pending_profile_updates)
+          : userProfile.pending_profile_updates;
+
+        userProfile = {
+          ...userProfile,
+          full_name: pending.full_name || userProfile.full_name,
+          first_name: pending.first_name || userProfile.first_name,
+          middle_name: pending.middle_name || userProfile.middle_name,
+          last_name: pending.last_name || userProfile.last_name,
+          gnd_division: pending.gnd_division || userProfile.gnd_division,
+          total_land_size: pending.total_land_size !== undefined ? pending.total_land_size : userProfile.total_land_size,
+          address_line1: pending.address_line1 || userProfile.address_line1,
+          address_line2: pending.address_line2 || userProfile.address_line2,
+          city: pending.city || userProfile.city,
+          postal_code: pending.postal_code || userProfile.postal_code,
+          address: pending.address || userProfile.address,
+          has_pending_profile_updates: true,
+          pending_profile_details: pending
+        };
+      }
+
+      return ApiResponse.success(res, userProfile, 'User profile retrieved');
     } catch (err) {
       next(err);
     }
@@ -212,6 +248,7 @@ class AuthController {
       const {
         first_name, middle_name, last_name, full_name,
         email, language_preference,
+        gnd_division, total_land_size,
         address_line1, address_line2, city, postal_code, address,
         preferred_search_radius, business_name, business_type,
         profile_photo_url
@@ -251,6 +288,78 @@ class AuthController {
         resolvedPostal = addrParts.postal_code;
       }
 
+      // Special handling for FARMER:
+      // 1) 2-Week cooldown rule
+      // 2) Pending divisional officer approval
+      if (req.user.role === 'FARMER') {
+        if (current.last_profile_update_at) {
+          const lastUpdate = new Date(current.last_profile_update_at).getTime();
+          const twoWeeksMs = 14 * 24 * 60 * 60 * 1000;
+          const timeSince = Date.now() - lastUpdate;
+          if (timeSince < twoWeeksMs) {
+            const daysRemaining = Math.ceil((twoWeeksMs - timeSince) / (24 * 60 * 60 * 1000));
+            const availableDate = new Date(lastUpdate + twoWeeksMs).toLocaleDateString();
+            return ApiResponse.error(
+              res,
+              `Farmers can only update profile details once every 2 weeks to ensure agrarian registry integrity. You can make your next update in ${daysRemaining} day(s) on ${availableDate}.`,
+              429
+            );
+          }
+        }
+
+        const pendingUpdates = {
+          first_name: resolvedFirst,
+          middle_name: resolvedMiddle,
+          last_name: resolvedLast,
+          full_name: resolvedFull,
+          gnd_division: gnd_division !== undefined ? gnd_division : current.gnd_division,
+          total_land_size: total_land_size !== undefined ? parseFloat(total_land_size) : current.total_land_size,
+          address_line1: resolvedAddr1,
+          address_line2: resolvedAddr2,
+          city: resolvedCity,
+          postal_code: resolvedPostal,
+          address: resolvedAddr,
+          requested_at: new Date().toISOString(),
+          previous_values: {
+            full_name: current.full_name,
+            gnd_division: current.gnd_division,
+            total_land_size: current.total_land_size,
+            address: current.address
+          }
+        };
+
+        const updateRes = await db.query(
+          `UPDATE users
+           SET pending_profile_updates = $1,
+               profile_update_status = 'PENDING',
+               last_profile_update_at = CURRENT_TIMESTAMP,
+               updated_at = CURRENT_TIMESTAMP
+           WHERE id = $2
+           RETURNING id, first_name, middle_name, last_name, full_name, phone, nic, email, role,
+                     language_preference, district, division, gnd_division,
+                     address_line1, address_line2, city, postal_code, address,
+                     latitude, longitude, total_land_size, preferred_search_radius,
+                     business_name, business_type, profile_photo_url, verification_status, is_verified,
+                     last_profile_update_at, pending_profile_updates, profile_update_status`,
+          [JSON.stringify(pendingUpdates), req.user.id]
+        );
+
+        const updatedUser = updateRes.rows[0];
+        const selfView = {
+          ...updatedUser,
+          ...pendingUpdates,
+          has_pending_profile_updates: true,
+          pending_profile_details: pendingUpdates
+        };
+
+        return ApiResponse.success(
+          res,
+          selfView,
+          'Profile changes submitted successfully! Changes are visible on your personal account and will be reviewed by the Divisional Agrarian Officer.'
+        );
+      }
+
+      // Non-farmer roles (or officers/admins): update directly
       const result = await db.query(
         `UPDATE users
          SET first_name = $1,
@@ -268,8 +377,10 @@ class AuthController {
              business_name = COALESCE($13, business_name),
              business_type = COALESCE($14, business_type),
              profile_photo_url = COALESCE($15, profile_photo_url),
+             gnd_division = COALESCE($16, gnd_division),
+             total_land_size = COALESCE($17, total_land_size),
              updated_at = CURRENT_TIMESTAMP
-         WHERE id = $16
+         WHERE id = $18
          RETURNING id, first_name, middle_name, last_name, full_name, phone, nic, email, role,
                    language_preference, district, division, gnd_division,
                    address_line1, address_line2, city, postal_code, address,
@@ -280,7 +391,8 @@ class AuthController {
           email, language_preference,
           resolvedAddr1, resolvedAddr2, resolvedCity, resolvedPostal, resolvedAddr,
           preferred_search_radius, business_name, business_type,
-          profile_photo_url, req.user.id
+          profile_photo_url, gnd_division, total_land_size ? parseFloat(total_land_size) : null,
+          req.user.id
         ]
       );
 
@@ -289,6 +401,7 @@ class AuthController {
       next(err);
     }
   }
+
 
   static async updateFcmToken(req, res, next) {
     try {

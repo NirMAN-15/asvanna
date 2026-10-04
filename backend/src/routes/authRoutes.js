@@ -11,10 +11,12 @@ router.post('/register', AuthController.register);
 router.post(
   '/login',
   [
-    body('phone').notEmpty().withMessage('Phone is required'),
     body().custom((value) => {
-      if (!value.password && !value.otp) {
-        throw new Error('Password or verification code is required');
+      if (!value.nic && !value.phone && !value.identifier) {
+        throw new Error('NIC number is required');
+      }
+      if (!value.password) {
+        throw new Error('Password is required');
       }
       return true;
     })

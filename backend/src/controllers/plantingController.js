@@ -90,7 +90,7 @@ class PlantingController {
     try {
       const { district = 'Badulla', division, crop_id } = req.query;
       let query = `
-        SELECT pr.*, c.name_en, c.name_si, c.name_ta, c.crop_code, u.full_name as farmer_name, u.phone as farmer_phone
+        SELECT pr.*, c.name_en, c.name_si, c.name_ta, c.crop_code, u.full_name as farmer_name, u.phone as farmer_phone, u.gnd_division, u.division as farmer_division
         FROM planting_records pr
         JOIN crops c ON pr.crop_id = c.id
         JOIN users u ON pr.farmer_id = u.id
@@ -115,6 +115,96 @@ class PlantingController {
     }
   }
 
+  static async completeHarvest(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { actual_yield_kg, notes } = req.body;
+
+      const checkRes = await db.query('SELECT * FROM planting_records WHERE id = $1', [id]);
+      if (checkRes.rows.length === 0) return ApiResponse.error(res, 'Planting record not found', 404);
+      const record = checkRes.rows[0];
+
+      if (req.user.role === 'FARMER' && Number(record.farmer_id) !== Number(req.user.id)) {
+        return ApiResponse.error(res, 'Unauthorized to complete harvesting for this record', 403);
+      }
+
+      const actualYield = actual_yield_kg !== undefined && actual_yield_kg !== null && actual_yield_kg !== ''
+        ? parseFloat(actual_yield_kg)
+        : parseFloat(record.expected_yield_kg);
+
+      const updateRes = await db.query(
+        `UPDATE planting_records
+         SET status = 'HARVESTED',
+             actual_yield_kg = $1,
+             harvested_date = CURRENT_TIMESTAMP,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE id = $2
+         RETURNING *`,
+        [actualYield, id]
+      );
+
+      // Re-evaluate updated crop risk since land is cleared and crop has transitioned from growing to harvested
+      let riskAssessment = null;
+      try {
+        riskAssessment = await RiskEngineService.evaluateCropRisk(record.crop_id, record.district || 'Badulla');
+      } catch (e) {
+        console.warn('Risk engine re-evaluation note:', e.message);
+      }
+
+      return ApiResponse.success(
+        res,
+        {
+          record: updateRes.rows[0] || { ...record, status: 'HARVESTED', actual_yield_kg: actualYield },
+          cleared_land_size_acres: parseFloat(record.land_size_acres) || 0,
+          riskAssessment
+        },
+        `Harvesting completed successfully! ${record.land_size_acres} acres has been cleared and is now available for new cultivation.`
+      );
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async getAllFarmHistory(req, res, next) {
+    try {
+      const { status, crop_id, division, search } = req.query;
+      let query = `
+        SELECT pr.*, 
+               c.name_en, c.name_si, c.name_ta, c.crop_code, c.avg_yield_per_acre_kg,
+               u.full_name as farmer_name, u.phone as farmer_phone, u.gnd_division, u.division as farmer_division,
+               u.nic as farmer_nic
+        FROM planting_records pr
+        JOIN crops c ON pr.crop_id = c.id
+        JOIN users u ON pr.farmer_id = u.id
+        WHERE 1=1
+      `;
+      const params = [];
+
+      if (status && status !== 'All') {
+        params.push(status);
+        query += ` AND pr.status = $${params.length}`;
+      }
+      if (crop_id && crop_id !== 'All') {
+        params.push(crop_id);
+        query += ` AND pr.crop_id = $${params.length}`;
+      }
+      if (division && division !== 'All') {
+        params.push(division);
+        query += ` AND (pr.division = $${params.length} OR u.gnd_division = $${params.length})`;
+      }
+      if (search) {
+        params.push(`%${search.toLowerCase()}%`);
+        query += ` AND (LOWER(u.full_name) LIKE $${params.length} OR LOWER(c.name_en) LIKE $${params.length} OR LOWER(c.name_si) LIKE $${params.length} OR u.phone LIKE $${params.length})`;
+      }
+
+      query += ' ORDER BY pr.planting_date DESC LIMIT 500';
+      const result = await db.query(query, params);
+      return ApiResponse.success(res, result.rows || [], 'All farmers farm history retrieved');
+    } catch (err) {
+      next(err);
+    }
+  }
+
   static async deletePlanting(req, res, next) {
     try {
       const { id } = req.params;
@@ -134,5 +224,6 @@ class PlantingController {
     }
   }
 }
+
 
 module.exports = PlantingController;

@@ -397,6 +397,13 @@ class MarketplaceController {
 
       if (action === 'ACCEPT') {
         newStatus = 'ACCEPTED';
+        await db.query(
+          `UPDATE marketplace_listings
+           SET quantity_kg = CASE WHEN quantity_kg - $1 > 0 THEN quantity_kg - $1 ELSE quantity_kg END,
+               status = CASE WHEN quantity_kg - $1 <= 0 THEN 'SOLD' ELSE status END
+           WHERE id = $2`,
+          [order.requested_quantity_kg, order.listing_id]
+        );
       } else if (action === 'DECLINE') {
         newStatus = 'DECLINED';
       } else if (action === 'COUNTER_OFFER') {

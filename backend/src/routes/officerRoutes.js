@@ -8,8 +8,11 @@ router.use(authenticate);
 router.use(authorizeRoles('OFFICER', 'ADMIN'));
 
 router.get('/farmers', OfficerController.getFarmerDirectory);
+router.put('/farmers/:farmerId', OfficerController.updateFarmerDetails);
 router.get('/verifications/pending', OfficerController.getPendingVerifications);
 router.post('/verifications/:farmerId', OfficerController.reviewFarmer);
+router.get('/farmer-updates/pending', OfficerController.getFarmerProfileRequests);
+router.post('/farmer-updates/:farmerId/review', OfficerController.reviewFarmerProfileRequest);
 router.post('/register-farmer-proxy', OfficerController.registerFarmerProxy);
 router.get('/analytics/summary', OfficerController.getRegionalAnalytics);
 router.get('/analytics/forecast', OfficerController.getForecasting);
