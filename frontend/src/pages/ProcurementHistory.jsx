@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { LanguageContext } from '../context/LanguageContext';
 import API from '../services/api';
+import ChatDrawer from '../components/ChatDrawer';
 
 export default function ProcurementHistory() {
   const { user } = useContext(AuthContext);
@@ -11,226 +12,11 @@ export default function ProcurementHistory() {
   const [activeHistoryTab, setActiveHistoryTab] = useState('FARM_DATA');
 
   // 1. Sales & Orders State
-  const [orders, setOrders] = useState([
-    { 
-      id: 101, 
-      order_code: 'ASV-ORD-8821', 
-      crop_name: 'Carrot (Upcountry Tender)', 
-      crop_code: 'CARROT', 
-      farmer_name: 'Kapila Bandara', 
-      farmer_phone: '0712345678', 
-      farmer_location: 'Bindunuwewa, Bandarawela',
-      buyer_name: 'Bandarawela Grand Hotel',
-      buyer_phone: '0572222222',
-      buyer_type: 'Hotel / Restaurant',
-      quantity_kg: 500, 
-      agreed_price_per_kg: 280, 
-      total_price: 140000, 
-      status: 'DELIVERED', 
-      created_at: '2026-09-26T14:20:00.000Z', 
-      delivery_address: 'Grand Bandarawela Hotel, Welimada Road, Bandarawela',
-      payment_method: 'Direct Farmgate Settlement'
-    },
-    { 
-      id: 102, 
-      order_code: 'ASV-ORD-8822', 
-      crop_name: 'Leeks (Bandarawela Crisp)', 
-      crop_code: 'LEEKS', 
-      farmer_name: 'Chaminda Silva', 
-      farmer_phone: '0719876543', 
-      farmer_location: 'Haputale North, Bandarawela',
-      buyer_name: 'Dewanga Catering Service',
-      buyer_phone: '0741699017',
-      buyer_type: 'Catering / Bulk Buyer',
-      quantity_kg: 350, 
-      agreed_price_per_kg: 240, 
-      total_price: 84000, 
-      status: 'IN_TRANSIT', 
-      created_at: '2026-09-25T09:10:00.000Z', 
-      delivery_address: 'Dewanga Catering Service, Ambatenna Lane, Bandarawela',
-      payment_method: 'Bank Transfer'
-    },
-    { 
-      id: 103, 
-      order_code: 'ASV-ORD-8823', 
-      crop_name: 'Beetroot (Deep Crimson)', 
-      crop_code: 'BEETROOT', 
-      farmer_name: 'sameera ayeshmantha', 
-      farmer_phone: '0711596479', 
-      farmer_location: 'Bandarawela Central',
-      buyer_name: 'Keppetipola Agro Logistics',
-      buyer_phone: '0572244444',
-      buyer_type: 'Wholesaler / Distributor',
-      quantity_kg: 400, 
-      agreed_price_per_kg: 260, 
-      total_price: 104000, 
-      status: 'COMPLETED', 
-      created_at: '2026-09-24T16:45:00.000Z', 
-      delivery_address: 'Bandarawela Wholesale Centre, Main Street',
-      payment_method: 'Cash on Delivery'
-    },
-    { 
-      id: 104, 
-      order_code: 'ASV-ORD-8824', 
-      crop_name: 'Cabbage (Golden Acre)', 
-      crop_code: 'CABBAGE', 
-      farmer_name: 'Kapila Bandara', 
-      farmer_phone: '0712345678', 
-      farmer_location: 'Bindunuwewa, Bandarawela',
-      buyer_name: 'Cargills Food City Bandarawela',
-      buyer_phone: '0572233333',
-      buyer_type: 'Supermarket Chain',
-      quantity_kg: 600, 
-      agreed_price_per_kg: 190, 
-      total_price: 114000, 
-      status: 'COMPLETED', 
-      created_at: '2026-09-22T11:30:00.000Z', 
-      delivery_address: 'Cargills Collection Centre, Badulla Road',
-      payment_method: 'Direct Farmgate Settlement'
-    }
-  ]);
+  const [orders, setOrders] = useState([]);
+  const [activeChatOrder, setActiveChatOrder] = useState(null);
 
   // 2. All Farmers Farm & Planting Data State
-  const [farmRecords, setFarmRecords] = useState([
-    {
-      id: 201,
-      plot_code: 'BW-PLT-101',
-      farmer_name: 'Kapila Bandara',
-      farmer_phone: '0712345678',
-      farmer_nic: '197823456789',
-      gnd_division: 'Bindunuwewa',
-      division: 'Bandarawela',
-      crop_name: 'Carrot',
-      crop_name_si: 'කැරට්',
-      crop_name_ta: 'கேரட்',
-      crop_code: 'CARROT',
-      land_size_acres: 1.5,
-      planting_date: '2026-08-10',
-      expected_harvest_date: '2026-11-04',
-      expected_yield_kg: 11250,
-      actual_yield_kg: 11400,
-      harvested_date: '2026-09-27T10:00:00.000Z',
-      status: 'HARVESTED',
-      entered_by_type: 'FARMER',
-      latitude: 6.8322,
-      longitude: 80.9984
-    },
-    {
-      id: 202,
-      plot_code: 'BW-PLT-102',
-      farmer_name: 'Chaminda Silva',
-      farmer_phone: '0719876543',
-      farmer_nic: '198234567890',
-      gnd_division: 'Haputale North',
-      division: 'Bandarawela',
-      crop_name: 'Cabbage',
-      crop_name_si: 'ගෝවා',
-      crop_name_ta: 'முட்டைக்கோஸ்',
-      crop_code: 'CABBAGE',
-      land_size_acres: 1.75,
-      planting_date: '2026-08-20',
-      expected_harvest_date: '2026-11-03',
-      expected_yield_kg: 21000,
-      actual_yield_kg: null,
-      harvested_date: null,
-      status: 'PLANTED',
-      entered_by_type: 'FARMER',
-      latitude: 6.8285,
-      longitude: 80.9850
-    },
-    {
-      id: 203,
-      plot_code: 'BW-PLT-103',
-      farmer_name: 'sameera ayeshmantha',
-      farmer_phone: '0711596479',
-      farmer_nic: '199512345678',
-      gnd_division: 'Bandarawela Central',
-      division: 'Bandarawela',
-      crop_name: 'Leeks',
-      crop_name_si: 'ලීක්ස්',
-      crop_name_ta: 'லீக்ஸ்',
-      crop_code: 'LEEKS',
-      land_size_acres: 1.0,
-      planting_date: '2026-08-01',
-      expected_harvest_date: '2026-10-30',
-      expected_yield_kg: 8500,
-      actual_yield_kg: null,
-      harvested_date: null,
-      status: 'PLANTED',
-      entered_by_type: 'OFFICER',
-      latitude: 6.8340,
-      longitude: 80.9920
-    },
-    {
-      id: 204,
-      plot_code: 'BW-PLT-104',
-      farmer_name: 'Kapila Bandara',
-      farmer_phone: '0712345678',
-      farmer_nic: '197823456789',
-      gnd_division: 'Bindunuwewa',
-      division: 'Bandarawela',
-      crop_name: 'Green Beans',
-      crop_name_si: 'බෝංචි',
-      crop_name_ta: 'போஞ்சி',
-      crop_code: 'BEANS',
-      land_size_acres: 1.0,
-      planting_date: '2026-07-25',
-      expected_harvest_date: '2026-09-23',
-      expected_yield_kg: 5000,
-      actual_yield_kg: 5200,
-      harvested_date: '2026-09-24T15:30:00.000Z',
-      status: 'HARVESTED',
-      entered_by_type: 'FARMER',
-      latitude: 6.8315,
-      longitude: 80.9990
-    },
-    {
-      id: 205,
-      plot_code: 'BW-PLT-105',
-      farmer_name: 'R. M. Herath',
-      farmer_phone: '0778899001',
-      farmer_nic: '198422334455',
-      gnd_division: 'Kinigama North',
-      division: 'Bandarawela',
-      crop_name: 'Upcountry Potato',
-      crop_name_si: 'අර්තාපල්',
-      crop_name_ta: 'உருளைக்கிழங்கு',
-      crop_code: 'POTATO',
-      land_size_acres: 2.25,
-      planting_date: '2026-08-15',
-      expected_harvest_date: '2026-11-23',
-      expected_yield_kg: 18000,
-      actual_yield_kg: null,
-      harvested_date: null,
-      status: 'PLANTED',
-      entered_by_type: 'OFFICER',
-      latitude: 6.8390,
-      longitude: 80.9780
-    },
-    {
-      id: 206,
-      plot_code: 'BW-PLT-106',
-      farmer_name: 'Chaminda Silva',
-      farmer_phone: '0719876543',
-      farmer_nic: '198234567890',
-      gnd_division: 'Haputale North',
-      division: 'Bandarawela',
-      crop_name: 'Beetroot',
-      crop_name_si: 'බීට්රූට්',
-      crop_name_ta: 'பீட்ரூட்',
-      crop_code: 'BEETROOT',
-      land_size_acres: 1.5,
-      planting_date: '2026-07-20',
-      expected_harvest_date: '2026-09-28',
-      expected_yield_kg: 12000,
-      actual_yield_kg: 12150,
-      harvested_date: '2026-09-27T08:45:00.000Z',
-      status: 'HARVESTED',
-      entered_by_type: 'FARMER',
-      latitude: 6.8290,
-      longitude: 80.9840
-    }
-  ]);
+  const [farmRecords, setFarmRecords] = useState([]);
 
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -252,7 +38,7 @@ export default function ProcurementHistory() {
       // 1. Fetch Orders / Sales
       try {
         const orderRes = await API.get('/marketplace/orders');
-        if (orderRes.data?.data && orderRes.data.data.length > 0) {
+        if (orderRes.data?.data) {
           setOrders(orderRes.data.data);
         }
       } catch (err) {
@@ -262,11 +48,11 @@ export default function ProcurementHistory() {
       // 2. Fetch Farm Planting & Harvest History
       try {
         const farmRes = await API.get('/plantings/history/all');
-        if (farmRes.data?.data && farmRes.data.data.length > 0) {
+        if (farmRes.data?.data) {
           setFarmRecords(farmRes.data.data);
         } else {
           const mapRes = await API.get('/plantings/regional-map');
-          if (mapRes.data?.data && mapRes.data.data.length > 0) {
+          if (mapRes.data?.data) {
             setFarmRecords(mapRes.data.data);
           }
         }
@@ -859,7 +645,7 @@ export default function ProcurementHistory() {
                             </div>
                             <p className="text-xs text-on-surface-variant flex items-center gap-1">
                               <span className="material-symbols-outlined text-xs text-outline">call</span>
-                              <span className="font-mono">{record.farmer_phone || '0712345678'}</span>
+                              <span className="font-mono">{record.farmer_phone || '-'}</span>
                             </p>
                             <p className="text-[11px] text-slate-500 flex items-center gap-1">
                               <span className="material-symbols-outlined text-xs text-emerald-600">location_on</span>
@@ -1102,7 +888,15 @@ export default function ProcurementHistory() {
                         </td>
 
                         {/* 8. Action */}
-                        <td className="py-4 px-4 whitespace-nowrap text-right">
+                        <td className="py-4 px-4 whitespace-nowrap text-right space-x-2">
+                          <button
+                            type="button"
+                            onClick={() => setActiveChatOrder(order)}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-primary/10 text-primary rounded-lg text-xs font-bold hover:bg-primary/20 transition cursor-pointer"
+                          >
+                            <span className="material-symbols-outlined text-sm">chat</span>
+                            <span>Chat</span>
+                          </button>
                           <button
                             onClick={() => setSelectedReceipt(order)}
                             className="inline-flex items-center gap-1 px-3 py-1.5 bg-primary text-white rounded-lg text-xs font-bold hover:bg-primary-container transition shadow-2xs cursor-pointer"
@@ -1407,6 +1201,20 @@ export default function ProcurementHistory() {
           </div>
         </div>
       )}
+
+      {/* 💬 Order Chat Drawer (Farmer <-> Buyer) */}
+      <ChatDrawer
+        isOpen={!!activeChatOrder}
+        onClose={() => setActiveChatOrder(null)}
+        order={activeChatOrder}
+        listingId={activeChatOrder?.listing_id}
+        otherPartyName={
+          user?.role === 'BUYER'
+            ? activeChatOrder?.farmer_name || 'Farmer'
+            : activeChatOrder?.buyer_name || 'Buyer'
+        }
+        otherPartyRole={user?.role === 'BUYER' ? 'FARMER' : 'BUYER'}
+      />
     </div>
   );
 }

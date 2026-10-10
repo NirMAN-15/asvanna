@@ -18,7 +18,20 @@ class AuthController {
       } = req.body;
 
       if (!['OFFICER', 'FARMER', 'BUYER'].includes(role)) {
-        return ApiResponse.error(res, 'Invalid role.', 400);
+        return ApiResponse.error(res, 'Invalid role. Public registration only supports FARMER, OFFICER, or BUYER.', 400);
+      }
+
+      // Strong password validation check
+      if (!password || typeof password !== 'string' || password.length < 8) {
+        return ApiResponse.error(res, 'Password must be at least 8 characters long.', 400);
+      }
+      const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,128}$/;
+      if (!strongPasswordRegex.test(password)) {
+        return ApiResponse.error(
+          res,
+          'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (!@#$%^&* etc.).',
+          400
+        );
       }
 
       // Check existing phone or NIC
@@ -137,6 +150,110 @@ class AuthController {
     }
   }
 
+  static async registerAdmin(req, res, next) {
+    try {
+      const {
+        first_name, middle_name, last_name, full_name,
+        phone, nic, email, password, admin_key
+      } = req.body;
+
+      // 1. Verify special authorization key
+      if (!admin_key || admin_key !== config.adminKey) {
+        return ApiResponse.error(
+          res,
+          'Invalid admin authorization key. You must provide the valid special key to create an administrator.',
+          403
+        );
+      }
+
+      // 2. Strong password validation check
+      if (!password || typeof password !== 'string' || password.length < 8) {
+        return ApiResponse.error(res, 'Password must be at least 8 characters long.', 400);
+      }
+      const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,128}$/;
+      if (!strongPasswordRegex.test(password)) {
+        return ApiResponse.error(
+          res,
+          'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (!@#$%^&* etc.).',
+          400
+        );
+      }
+
+      // 3. Check existing phone or NIC
+      const existing = await db.query(
+        'SELECT id FROM users WHERE phone = $1 OR (nic IS NOT NULL AND nic = $2)',
+        [phone, nic]
+      );
+      if (existing && existing.rows && existing.rows.length > 0) {
+        return ApiResponse.error(res, 'A user with this phone number or NIC already exists.', 400);
+      }
+
+      // 4. Resolve name parts & full_name
+      let resolvedFirst = first_name || null;
+      let resolvedMiddle = middle_name !== undefined ? middle_name : null;
+      let resolvedLast = last_name || null;
+      let resolvedFull = full_name || null;
+
+      if ((!resolvedFirst || !resolvedLast) && resolvedFull) {
+        const nameParts = splitFullName(resolvedFull);
+        resolvedFirst = resolvedFirst || nameParts.first_name;
+        resolvedMiddle = resolvedMiddle !== null ? resolvedMiddle : nameParts.middle_name;
+        resolvedLast = resolvedLast || nameParts.last_name;
+      }
+      if (resolvedFirst && resolvedLast) {
+        resolvedFull = formatFullName(resolvedFirst, resolvedMiddle, resolvedLast);
+      } else if (!resolvedFull && resolvedFirst) {
+        resolvedFull = formatFullName(resolvedFirst, resolvedMiddle, resolvedLast);
+      }
+      if (!resolvedFull) {
+        resolvedFull = 'System Administrator';
+      }
+
+      const salt = await bcrypt.genSalt(10);
+      const password_hash = await bcrypt.hash(password, salt);
+
+      const result = await db.query(
+        `INSERT INTO users (
+          first_name, middle_name, last_name, full_name,
+          phone, nic, email, password_hash, role,
+          district, division, gnd_division,
+          verification_status, is_verified, is_active
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'ADMIN', 'Badulla', 'Bandarawela', 'Central', 'APPROVED', TRUE, TRUE)
+        RETURNING id, first_name, middle_name, last_name, full_name, phone, nic, email, role,
+                  district, division, verification_status, is_verified, created_at`,
+        [
+          resolvedFirst, resolvedMiddle, resolvedLast, resolvedFull,
+          phone, nic || null, email || null, password_hash
+        ]
+      );
+
+      const newAdmin = result.rows[0];
+
+      // Record in audit log
+      try {
+        await db.query(
+          `INSERT INTO audit_logs (user_id, action, entity_type, entity_id, details)
+           VALUES ($1, 'ADMIN_CREATED', 'USER', $2, $3)`,
+          [
+            req.user ? req.user.id : newAdmin.id,
+            newAdmin.id,
+            JSON.stringify({
+              created_by: req.user ? req.user.id : 'SUPER_ADMIN_INIT',
+              admin_phone: phone,
+              created_at: new Date().toISOString()
+            })
+          ]
+        );
+      } catch (auditErr) {
+        console.warn('Audit log write error:', auditErr.message);
+      }
+
+      return ApiResponse.success(res, { admin: newAdmin }, 'New administrator account created successfully.', 201);
+    } catch (err) {
+      next(err);
+    }
+  }
+
   static async login(req, res, next) {
     try {
       const { nic, phone, identifier, password, role } = req.body;
@@ -183,14 +300,44 @@ class AuthController {
         }
       }
 
-      const expiresIn = user.role === 'OFFICER' ? config.jwt.officerExpiresIn : config.jwt.farmerExpiresIn;
+      // Dynamic role assumption for Admin / Superuser
+      const isSuperUser = user.role === 'ADMIN';
+      let effectiveRole = user.role;
+      if (isSuperUser) {
+        // If an Admin logs in through the Office portal (or default/Admin), they retain full ADMIN access!
+        // If they explicitly chose FARMER or BUYER tabs, they assume that role for view testing.
+        if (role === 'FARMER' || role === 'BUYER') {
+          effectiveRole = role.toUpperCase();
+        } else {
+          // For OFFICER, ADMIN, or default: retain full ADMIN authority
+          effectiveRole = 'ADMIN';
+        }
+      }
+
+      const expiresIn = (effectiveRole === 'OFFICER' || effectiveRole === 'ADMIN')
+        ? config.jwt.officerExpiresIn
+        : config.jwt.farmerExpiresIn;
+
       const token = jwt.sign(
-        { id: user.id, role: user.role, phone: user.phone, district: user.district, division: user.division },
+        {
+          id: user.id,
+          role: effectiveRole,
+          original_role: user.role,
+          is_admin: isSuperUser,
+          phone: user.phone,
+          district: user.district,
+          division: user.division
+        },
         config.jwt.secret,
         { expiresIn }
       );
 
       delete user.password_hash;
+      user.role = effectiveRole;
+      user.original_role = isSuperUser ? 'ADMIN' : user.role;
+      user.is_admin = isSuperUser;
+      user.can_switch_roles = isSuperUser;
+
       return ApiResponse.success(res, { user, token, verificationNote }, 'Login successful');
     } catch (err) {
       next(err);

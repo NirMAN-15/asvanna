@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { LanguageContext } from '../context/LanguageContext';
 import API from '../services/api';
+import ChatDrawer from '../components/ChatDrawer';
 
 // 25 Bandarawela Master Crops with Keppetipola Wholesale Benchmarks
 const MASTER_CROPS = [
@@ -49,6 +50,7 @@ export default function MarketplaceSurplus() {
   const [counterPrice, setCounterPrice] = useState('');
   const [counterNote, setCounterNote] = useState('');
   const [notificationToast, setNotificationToast] = useState(null);
+  const [activeChatOrder, setActiveChatOrder] = useState(null);
 
   // Farmer Edit Listing State
   const [editingListing, setEditingListing] = useState(null);
@@ -117,10 +119,10 @@ export default function MarketplaceSurplus() {
         ]);
 
         const serverListings = listingsRes.data?.data || [];
-        setMyListings(serverListings.length > 0 ? serverListings : getFallbackFarmerListings());
+        setMyListings(serverListings);
 
         const serverOrders = ordersRes.data?.data || [];
-        setIncomingOrders(serverOrders.length > 0 ? serverOrders : getFallbackIncomingOrders());
+        setIncomingOrders(serverOrders);
       } else {
         const buyerLat = user?.latitude || 6.8322;
         const buyerLng = user?.longitude || 80.9980;
@@ -145,11 +147,11 @@ export default function MarketplaceSurplus() {
           }));
           setBrowseListings(mapped);
         } else {
-          setBrowseListings(getFallbackBrowseListings());
+          setBrowseListings([]);
         }
 
         const serverBuyerOrders = ordersRes.data?.data || [];
-        setMyBuyerOrders(serverBuyerOrders.length > 0 ? serverBuyerOrders : getFallbackBuyerOrders());
+        setMyBuyerOrders(serverBuyerOrders);
       }
     } catch (err) {
       console.error('Marketplace load error:', err);
@@ -348,238 +350,21 @@ export default function MarketplaceSurplus() {
     return item.crop_name_en || item.cropKey || 'Vegetable Batch';
   };
 
-  // Fallback Data Generators
+  // Fallback Data Generators (Empty by default)
   function getFallbackFarmerListings() {
-    return [
-      {
-        id: 101,
-        crop_code: 'CARROT',
-        crop_name_en: 'Carrot (Nuwara Eliya / Upcountry)',
-        crop_name_si: 'කැරට්',
-        crop_name_ta: 'கேரட்',
-        quantity_kg: 650,
-        price_per_kg: 280,
-        standard_price_per_kg: 340,
-        status: 'AVAILABLE',
-        pickup_address: 'Kinigama Valley, Bandarawela North',
-        description: 'Grade A Local • Dimo Batta Accessible • Harvested today 6:30 AM',
-        available_to: new Date(Date.now() + 4 * 86400000).toISOString().split('T')[0],
-        image_url: '/crops/carrot.jpg'
-      },
-      {
-        id: 102,
-        crop_code: 'LEEKS',
-        crop_name_en: 'Leeks (Bandarawela Crisp)',
-        crop_name_si: 'ලීක්ස්',
-        crop_name_ta: 'லீக்ஸ்',
-        quantity_kg: 400,
-        price_per_kg: 220,
-        standard_price_per_kg: 280,
-        status: 'RESERVED',
-        pickup_address: 'Wewathenna, Bandarawela',
-        description: 'Grade A Export • Three-Wheeler Accessible • Reserved for Ella Grand Hotel',
-        available_to: new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0],
-        image_url: '/crops/leek.jpg'
-      },
-      {
-        id: 103,
-        crop_code: 'BEETROOT',
-        crop_name_en: 'Beetroot (Deep Crimson)',
-        crop_name_si: 'බීට්රූට්',
-        crop_name_ta: 'பீட்ரூட்',
-        quantity_kg: 300,
-        price_per_kg: 210,
-        standard_price_per_kg: 260,
-        status: 'AVAILABLE',
-        pickup_address: 'Diyatalawa Road, Bandarawela',
-        description: 'Grade B Wholesale • Lorry Accessible • Washed and crated',
-        available_to: new Date(Date.now() + 6 * 86400000).toISOString().split('T')[0],
-        image_url: '/crops/beetroot.jpg'
-      }
-    ];
+    return [];
   }
 
   function getFallbackIncomingOrders() {
-    return [
-      {
-        id: 201,
-        order_code: 'ASV-ORD-8821',
-        buyer_name: 'Sunil Weerasinghe (Ella Grand Hotel)',
-        buyer_phone: '0773344556',
-        buyer_business: 'Hotel & Restaurant Procurement',
-        crop_name_en: 'Carrot',
-        crop_name_si: 'කැරට්',
-        requested_quantity_kg: 250,
-        offered_price_per_kg: 280,
-        total_price: 70000,
-        status: 'PENDING',
-        response_deadline: new Date(Date.now() + 22 * 60 * 1000).toISOString(),
-        notes: 'Will arrive with Dimo Batta at 2:00 PM today. Cash on collection.'
-      },
-      {
-        id: 202,
-        order_code: 'ASV-ORD-8815',
-        buyer_name: 'K. Mahendran (Badulla Wholesale Catering)',
-        buyer_phone: '0714455667',
-        buyer_business: 'Event Caterer',
-        crop_name_en: 'Leeks',
-        crop_name_si: 'ලීක්ස්',
-        requested_quantity_kg: 400,
-        offered_price_per_kg: 220,
-        total_price: 88000,
-        status: 'ACCEPTED',
-        response_deadline: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
-        notes: 'Confirmed. Handshake completed at farmgate.'
-      }
-    ];
+    return [];
   }
 
   function getFallbackBrowseListings() {
-    return [
-      {
-        id: 1,
-        farmName: 'Green Valley Farms',
-        farmer: 'Sunil Shantha',
-        phone: '0712345678',
-        cropKey: 'Carrot',
-        crop_name_en: 'Carrot',
-        crop_name_si: 'කැරට්',
-        crop_name_ta: 'கேரட்',
-        distance: 3.2,
-        availableKg: 650,
-        pricePerKg: 280,
-        benchmarkPrice: 340,
-        badge: 'DoA Verified',
-        location: 'Bandarawela North (Kinigama)',
-        vehicle: 'Dimo Batta Accessible',
-        image: '/crops/carrot.jpg'
-      },
-      {
-        id: 2,
-        farmName: "Saman's Organic Plots",
-        farmer: 'Saman Kumara',
-        phone: '0778899112',
-        cropKey: 'Leeks',
-        crop_name_en: 'Leeks',
-        crop_name_si: 'ලීක්ස්',
-        crop_name_ta: 'லீக்ස්',
-        distance: 4.8,
-        availableKg: 400,
-        pricePerKg: 220,
-        benchmarkPrice: 280,
-        badge: 'GAP Certified',
-        location: 'Wewathenna Valley',
-        vehicle: 'Three-Wheeler Access',
-        image: '/crops/leek.jpg'
-      },
-      {
-        id: 3,
-        farmName: 'Ella Gap Organic Collective',
-        farmer: 'M. Dharmadasa',
-        phone: '0772211990',
-        cropKey: 'Beetroot',
-        crop_name_en: 'Beetroot',
-        crop_name_si: 'බීට්රූට්',
-        crop_name_ta: 'பீட்ரூட்',
-        distance: 6.5,
-        availableKg: 300,
-        pricePerKg: 210,
-        benchmarkPrice: 260,
-        badge: 'DoA Verified',
-        location: 'Diyatalawa Road',
-        vehicle: 'Canter / Lorry Access',
-        image: '/crops/beetroot.jpg'
-      },
-      {
-        id: 4,
-        farmName: 'Highland Springs Farm',
-        farmer: 'R. P. Jayasuriya',
-        phone: '0715566778',
-        cropKey: 'Green Beans',
-        crop_name_en: 'Green Beans',
-        crop_name_si: 'බෝංචි',
-        crop_name_ta: 'போஞ்சி',
-        distance: 5.1,
-        availableKg: 180,
-        pricePerKg: 260,
-        benchmarkPrice: 320,
-        badge: 'Fresh Harvest (<4h)',
-        location: 'Kabillawela South',
-        vehicle: 'Dimo Batta Accessible',
-        image: '/crops/bush_beans.jpg'
-      },
-      {
-        id: 5,
-        farmName: 'Diyatalawa Organic Valley',
-        farmer: 'N. Seneviratne',
-        phone: '0776655443',
-        cropKey: 'Radish',
-        crop_name_en: 'Radish',
-        crop_name_si: 'රාබු',
-        crop_name_ta: 'முள்ளங்கி',
-        distance: 7.2,
-        availableKg: 500,
-        pricePerKg: 110,
-        benchmarkPrice: 140,
-        badge: 'Urgent Clearance',
-        location: 'Diyatalawa Outer Ridge',
-        vehicle: 'Dimo Batta Accessible',
-        image: '/crops/radish.jpg'
-      },
-      {
-        id: 6,
-        farmName: 'Welimada Terraced Gardens',
-        farmer: 'K. G. Ariyadasa',
-        phone: '0718877665',
-        cropKey: 'Spring Onion',
-        crop_name_en: 'Spring Onion',
-        crop_name_si: 'ළූණු කොළ',
-        crop_name_ta: 'வெங்காய இலை',
-        distance: 8.4,
-        availableKg: 220,
-        pricePerKg: 230,
-        benchmarkPrice: 280,
-        badge: 'DoA Verified',
-        location: 'Mirahawatta',
-        vehicle: 'Three-Wheeler Access',
-        image: '/crops/spring_onion.jpg'
-      }
-    ];
+    return [];
   }
 
   function getFallbackBuyerOrders() {
-    return [
-      {
-        id: 301,
-        order_code: 'ASV-ORD-8821',
-        crop_name_en: 'Carrot',
-        crop_name_si: 'කැරට්',
-        requested_quantity_kg: 250,
-        offered_price_per_kg: 280,
-        total_price: 70000,
-        farmer_name: 'Sunil Shantha (Green Valley Farms)',
-        farmer_phone: '0712345678',
-        pickup_address: 'Kinigama Valley, Bandarawela North',
-        status: 'PENDING',
-        response_deadline: new Date(Date.now() + 22 * 60 * 1000).toISOString(),
-        created_at: new Date().toISOString()
-      },
-      {
-        id: 302,
-        order_code: 'ASV-ORD-8790',
-        crop_name_en: 'Green Beans',
-        crop_name_si: 'බෝංචි',
-        requested_quantity_kg: 100,
-        offered_price_per_kg: 260,
-        total_price: 26000,
-        farmer_name: 'R. P. Jayasuriya (Highland Springs)',
-        farmer_phone: '0715566778',
-        pickup_address: 'Kabillawela South, Bandarawela',
-        status: 'ACCEPTED',
-        response_deadline: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
-        created_at: new Date(Date.now() - 2 * 3600000).toISOString()
-      }
-    ];
+    return [];
   }
 
   return (
@@ -908,39 +693,50 @@ export default function MarketplaceSurplus() {
                       </div>
 
                       {/* Action Buttons */}
-                      {order.status === 'PENDING' && !isExpired && (
-                        <div className="flex items-center gap-2.5 self-end md:self-center flex-shrink-0">
-                          <button
-                            onClick={() => setOrderToConfirmAccept(order)}
-                            className="bg-primary hover:bg-primary-container text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5"
-                          >
-                            <span className="material-symbols-outlined text-sm">check_circle</span>
-                            <span>Accept Order</span>
-                          </button>
-                          <button
-                            onClick={() => {
-                              setCounterModalOrder(order);
-                              setCounterPrice(order.offered_price_per_kg);
-                            }}
-                            className="border border-secondary text-secondary hover:bg-secondary/10 px-3.5 py-2.5 rounded-xl text-xs font-bold transition"
-                          >
-                            Counter-Offer
-                          </button>
-                          <button
-                            onClick={() => handleRespondOrder(order.id, 'DECLINE')}
-                            className="text-error hover:bg-error/10 px-3 py-2.5 rounded-xl text-xs font-bold transition"
-                          >
-                            Decline
-                          </button>
-                        </div>
-                      )}
+                      <div className="flex flex-wrap items-center gap-2 self-end md:self-center flex-shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setActiveChatOrder(order)}
+                          className="bg-primary/10 text-primary hover:bg-primary/20 px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <span className="material-symbols-outlined text-sm">chat</span>
+                          <span>Chat with Buyer</span>
+                        </button>
 
-                      {order.status === 'ACCEPTED' && (
-                        <div className="bg-green-50 border border-green-200 p-3 rounded-xl text-xs text-green-800 font-bold flex items-center gap-2">
-                          <span className="material-symbols-outlined text-green-700">verified</span>
-                          <span>Order Confirmed. Awaiting farmgate pickup & settlement.</span>
-                        </div>
-                      )}
+                        {order.status === 'PENDING' && !isExpired && (
+                          <>
+                            <button
+                              onClick={() => setOrderToConfirmAccept(order)}
+                              className="bg-primary hover:bg-primary-container text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5"
+                            >
+                              <span className="material-symbols-outlined text-sm">check_circle</span>
+                              <span>Accept Order</span>
+                            </button>
+                            <button
+                              onClick={() => {
+                                setCounterModalOrder(order);
+                                setCounterPrice(order.offered_price_per_kg);
+                              }}
+                              className="border border-secondary text-secondary hover:bg-secondary/10 px-3.5 py-2.5 rounded-xl text-xs font-bold transition"
+                            >
+                              Counter-Offer
+                            </button>
+                            <button
+                              onClick={() => handleRespondOrder(order.id, 'DECLINE')}
+                              className="text-error hover:bg-error/10 px-3 py-2.5 rounded-xl text-xs font-bold transition"
+                            >
+                              Decline
+                            </button>
+                          </>
+                        )}
+
+                        {order.status === 'ACCEPTED' && (
+                          <div className="bg-green-50 border border-green-200 px-3 py-2 rounded-xl text-xs text-green-800 font-bold flex items-center gap-1.5">
+                            <span className="material-symbols-outlined text-sm text-green-700">verified</span>
+                            <span>Confirmed</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   );
                 })
@@ -1219,6 +1015,17 @@ export default function MarketplaceSurplus() {
                           </button>
                         </div>
                       )}
+
+                      <div className="flex justify-end pt-1">
+                        <button
+                          type="button"
+                          onClick={() => setActiveChatOrder(order)}
+                          className="bg-primary/10 text-primary hover:bg-primary/20 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <span className="material-symbols-outlined text-sm">chat</span>
+                          <span>Chat with Farmer</span>
+                        </button>
+                      </div>
                     </div>
                   );
                 })
@@ -1793,6 +1600,20 @@ export default function MarketplaceSurplus() {
           </div>
         </div>
       )}
+
+      {/* 💬 Order Chat Drawer (Farmer <-> Buyer) */}
+      <ChatDrawer
+        isOpen={!!activeChatOrder}
+        onClose={() => setActiveChatOrder(null)}
+        order={activeChatOrder}
+        listingId={activeChatOrder?.listing_id}
+        otherPartyName={
+          activeRoleMode === 'BUYER'
+            ? activeChatOrder?.farmer_name || 'Farmer'
+            : activeChatOrder?.buyer_name || 'Buyer'
+        }
+        otherPartyRole={activeRoleMode === 'BUYER' ? 'FARMER' : 'BUYER'}
+      />
     </div>
   );
 }
