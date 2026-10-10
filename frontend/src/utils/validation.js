@@ -120,3 +120,55 @@ export const validateLoginIdentifier = (identifier) => {
     message: 'Please enter a valid phone number (e.g. 0771234567) or NIC (e.g. 198512345678 / 851234567V).',
   };
 };
+
+/**
+ * Validates Password Complexity.
+ * - Min 8 characters
+ * - Uppercase letter (A-Z)
+ * - Lowercase letter (a-z)
+ * - Number (0-9)
+ * - Special character (!@#$%^&*...)
+ */
+export const validatePassword = (password) => {
+  if (!password || typeof password !== 'string') {
+    return {
+      isValid: false,
+      score: 0,
+      hasLength: false,
+      hasUpper: false,
+      hasLower: false,
+      hasNumber: false,
+      hasSpecial: false,
+      message: 'Password is required (min 8 characters).'
+    };
+  }
+
+  const hasLength = password.length >= 8;
+  const hasUpper = /[A-Z]/.test(password);
+  const hasLower = /[a-z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const hasSpecial = /[\W_]/.test(password);
+
+  const checks = [hasLength, hasUpper, hasLower, hasNumber, hasSpecial];
+  const score = checks.filter(Boolean).length;
+  const isValid = hasLength && hasUpper && hasLower && hasNumber && hasSpecial;
+
+  let message = '';
+  if (!hasLength) message = 'Password must be at least 8 characters long.';
+  else if (!hasUpper) message = 'Password must contain at least one uppercase letter (A-Z).';
+  else if (!hasLower) message = 'Password must contain at least one lowercase letter (a-z).';
+  else if (!hasNumber) message = 'Password must contain at least one number (0-9).';
+  else if (!hasSpecial) message = 'Password must contain at least one special character (!@#$%^&*...).';
+
+  return {
+    isValid,
+    score, // 0 to 5 for strength meter
+    hasLength,
+    hasUpper,
+    hasLower,
+    hasNumber,
+    hasSpecial,
+    message
+  };
+};
+

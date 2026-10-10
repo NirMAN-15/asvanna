@@ -22,21 +22,21 @@ export default function BroadcastModal({ isOpen, onClose, onBroadcastSent }) {
   const [showPreview, setShowPreview] = useState(false);
 
   const [formData, setFormData] = useState({
-    title_en: 'Bandarawela Carrot & Leeks Cultivation Warning: Quota Exceeded',
-    title_si: 'බණ්ඩාරවෙල කැරට් සහ ලීක්ස් අධික වගා අනතුරු ඇඟවීම: කෝටාව ඉක්මවා ඇත',
-    title_ta: 'பண்டாரவளை கேரட் மற்றும் லீக்ஸ் அதிக நடவு எச்சரிக்கை: ஒதுக்கீடு மீறல்',
-    message_en: 'Current regional leeks and carrot cultivation has exceeded 85% of market demand quota. Please halt new parcels immediately and prioritize recommended alternatives like Beetroot or Radish.',
-    message_si: 'වත්මන් කලාපීය ලීක්ස් සහ කැරට් වගාව වෙළඳපල ඉල්ලුමෙන් 85% ඉක්මවා ඇත. මිල කඩා වැටීම වැළැක්වීම සඳහා නව පාත්ති සකස් කිරීම නවත්වා බීට්රූට් හෝ රාබු වගාවට යොමු වන්න.',
-    message_ta: 'பண்டாரவளையில் லීக்ஸ் සහ கேரட் பயிர்ச்செய்கை 85% ஐ தாண்டியுள்ளது. தயவுசெய்து புதிய நடவுகளை நிறுத்தி மாற்று பயிர்களை பயிரிடவும்.',
+    title_en: '',
+    title_si: '',
+    title_ta: '',
+    message_en: '',
+    message_si: '',
+    message_ta: '',
     category: 'CULTIVATION_GLUT',
-    crop_code: 'LEEKS',
+    crop_code: '',
     target_district: 'Badulla',
     target_division: 'Bandarawela Division',
-    target_gnd: 'Bandarawela Central, Kinigama, Bindunuwewa',
-    severity: 'HIGH',
-    action_1: 'Halt new seed nursery preparation for this crop immediately.',
-    action_2: 'Shift planned plots to high-demand alternatives (Beetroot, Radish, Bush Beans).',
-    action_3: 'Register existing standing crops on ASVANNA for priority procurement matching.'
+    target_gnd: '',
+    severity: 'MEDIUM',
+    action_1: '',
+    action_2: '',
+    action_3: ''
   });
 
   const [loading, setLoading] = useState(false);

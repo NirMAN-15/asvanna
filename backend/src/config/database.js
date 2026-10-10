@@ -46,102 +46,9 @@ const initialCrops = [
 ];
 
 const initialDbState = {
-  users: [
-    {
-      id: 1,
-      first_name: 'W.',
-      middle_name: 'M.',
-      last_name: 'Bandara',
-      full_name: 'W. M. Bandara (DO Officer)',
-      phone: '0771234567',
-      nic: '851234567V',
-      password_hash: '$2a$10$wN1aP0/zB00vA5zLz.vV/uE221122334455',
-      role: 'OFFICER',
-      district: 'Badulla',
-      division: 'Bandarawela',
-      gnd_division: 'Bandarawela Central',
-      address_line1: 'DoA Agrarian Services Complex',
-      address_line2: 'Badulla Road',
-      city: 'Bandarawela',
-      postal_code: '90100',
-      address: 'DoA Agrarian Services Complex, Badulla Road, Bandarawela, 90100',
-      language_preference: 'si',
-      verification_status: 'APPROVED',
-      is_verified: true
-    },
-    {
-      id: 2,
-      first_name: 'Kapila',
-      middle_name: null,
-      last_name: 'Bandara',
-      full_name: 'Kapila Bandara (Farmer)',
-      phone: '0712345678',
-      nic: '782345678V',
-      password_hash: '$2a$10$wN1aP0/zB00vA5zLz.vV/uE221122334455',
-      role: 'FARMER',
-      district: 'Badulla',
-      division: 'Bandarawela',
-      gnd_division: 'Bindunuwewa',
-      address_line1: 'No. 42',
-      address_line2: 'Bindunuwewa Valley, Dowa Temple Road',
-      city: 'Bandarawela',
-      postal_code: '90100',
-      address: 'No. 42, Bindunuwewa Valley, Dowa Temple Road, Bandarawela, 90100',
-      total_land_size: 2.5,
-      language_preference: 'si',
-      verification_status: 'APPROVED',
-      is_verified: true
-    },
-    {
-      id: 3,
-      first_name: 'Bandarawela',
-      middle_name: null,
-      last_name: 'Traders',
-      full_name: 'Bandarawela Traders',
-      phone: '0572222222',
-      nic: '903456789V',
-      password_hash: '$2a$10$wN1aP0/zB00vA5zLz.vV/uE221122334455',
-      role: 'BUYER',
-      district: 'Badulla',
-      division: 'Bandarawela',
-      gnd_division: 'Bandarawela Town',
-      address_line1: 'No. 8',
-      address_line2: 'Welimada Road, Town Centre',
-      city: 'Bandarawela',
-      postal_code: '90100',
-      address: 'No. 8, Welimada Road, Town Centre, Bandarawela, 90100',
-      language_preference: 'en',
-      verification_status: 'APPROVED',
-      is_verified: true
-    },
-    {
-      id: 4,
-      first_name: 'Nirman',
-      middle_name: 'Achintha',
-      last_name: 'Wedikkara',
-      full_name: 'Nirman Achintha Wedikkara (Super Admin)',
-      phone: '0770000000',
-      nic: '990000000V',
-      password_hash: '$2a$10$wN1aP0/zB00vA5zLz.vV/uE221122334455',
-      role: 'ADMIN',
-      district: 'Badulla',
-      division: 'Bandarawela',
-      gnd_division: 'Bandarawela Central',
-      address_line1: 'No. 15',
-      address_line2: 'Station Road, Central Hill',
-      city: 'Bandarawela',
-      postal_code: '90100',
-      address: 'No. 15, Station Road, Central Hill, Bandarawela, 90100',
-      language_preference: 'en',
-      verification_status: 'APPROVED',
-      is_verified: true
-    }
-  ],
+  users: [],
   crops: initialCrops,
-  planting_records: [
-    { id: 1, farmer_id: 2, farmer_name: 'Kapila Bandara', crop_id: 1, name_en: 'Leeks', name_si: 'ලීක්ස්', land_size_acres: 2.0, expected_yield_kg: 17000, planting_date: '2026-08-01', expected_harvest_date: '2026-11-01', latitude: 6.8322, longitude: 80.9980, district: 'Badulla', division: 'Bandarawela', status: 'PLANTED', entered_by_type: 'FARMER' },
-    { id: 2, farmer_id: 2, farmer_name: 'Kapila Bandara', crop_id: 2, name_en: 'Cabbage', name_si: 'ගෝවා', land_size_acres: 3.5, expected_yield_kg: 42000, planting_date: '2026-08-10', expected_harvest_date: '2026-10-25', latitude: 6.8350, longitude: 80.9995, district: 'Badulla', division: 'Bandarawela', status: 'PLANTED', entered_by_type: 'FARMER' }
-  ],
+  planting_records: [],
   crop_seasons: [
     { id: 1, crop_id: 1, season_name: 'MAHA', optimal_start_month: 10, optimal_end_month: 3, suitability: 'BEST', suitability_score: 95.0 },
     { id: 2, crop_id: 1, season_name: 'YALA', optimal_start_month: 5, optimal_end_month: 8, suitability: 'MODERATE', suitability_score: 65.0 },
@@ -224,31 +131,79 @@ module.exports = {
 
     const lower = text.toLowerCase();
 
-    // SELECT Queries
-    if (lower.includes('from users where') && (lower.includes('phone') || lower.includes('nic'))) {
-      const val = (params[0] || '').trim().toLowerCase();
-      return {
-        rows: fileDb.users.filter(u =>
-          (u.nic && u.nic.toLowerCase() === val) ||
-          (u.phone && u.phone === val)
-        )
-      };
+    // TRUNCATE fallback
+    if (lower.includes('truncate table')) {
+      fileDb.users = [];
+      fileDb.planting_records = [];
+      fileDb.marketplace_listings = [];
+      fileDb.marketplace_orders = [];
+      fileDb.broadcast_warnings = [];
+      fileDb.farmer_verifications = [];
+      fileDb.notification_logs = [];
+      fileDb.audit_logs = [];
+      fileDb.risk_assessments = [];
+      fileDb.crop_recommendations = [];
+      fileDb.chat_messages = [];
+      saveDb(fileDb);
+      return { rows: [] };
     }
-    if (lower.includes('from users where id =')) {
-      const idVal = Number(params[0]);
-      return { rows: fileDb.users.filter(u => Number(u.id) === idVal) };
-    }
-    if (lower.includes('select count(*) as count from users')) {
-      let count = fileDb.users.filter(u => u.role === 'FARMER');
-      if (lower.includes("verification_status = 'approved'")) {
-        count = count.filter(u => u.verification_status === 'APPROVED');
-      } else if (lower.includes("verification_status = 'pending'")) {
-        count = count.filter(u => u.verification_status === 'PENDING');
+
+    // Generic COUNT Queries
+    if (lower.includes('count(*)')) {
+      if (lower.includes('from users')) {
+        let count = fileDb.users || [];
+        if (lower.includes("role = 'farmer'")) {
+          count = count.filter(u => u.role === 'FARMER');
+        } else if (lower.includes("role = 'admin'")) {
+          count = count.filter(u => u.role === 'ADMIN');
+        }
+        if (lower.includes("verification_status = 'approved'")) {
+          count = count.filter(u => u.verification_status === 'APPROVED');
+        } else if (lower.includes("verification_status = 'pending'")) {
+          count = count.filter(u => u.verification_status === 'PENDING');
+        }
+        return { rows: [{ count: count.length }] };
       }
-      return { rows: [{ count: count.length }] };
+      if (lower.includes('from planting_records')) {
+        return { rows: [{ count: (fileDb.planting_records || []).length }] };
+      }
+      if (lower.includes('from crops')) {
+        return { rows: [{ count: (fileDb.crops || []).length }] };
+      }
+      if (lower.includes('from marketplace_listings')) {
+        return { rows: [{ count: (fileDb.marketplace_listings || []).length }] };
+      }
+      if (lower.includes('from marketplace_orders')) {
+        return { rows: [{ count: (fileDb.marketplace_orders || []).length }] };
+      }
+      if (lower.includes('from chat_messages')) {
+        return { rows: [{ count: (fileDb.chat_messages || []).length }] };
+      }
+      return { rows: [{ count: 0 }] };
     }
-    if (lower.includes('select * from users') || (lower.includes('from users') && lower.includes("role = 'farmer'"))) {
-      let rows = fileDb.users;
+
+    // SELECT Queries
+    if (lower.includes('from users')) {
+      if (lower.includes("role = 'admin'")) {
+        const admins = (fileDb.users || []).filter(u => u.role === 'ADMIN' || u.phone === '0770000000');
+        return { rows: admins };
+      }
+      if (lower.includes('where id =')) {
+        const idVal = Number(params[0]);
+        return { rows: (fileDb.users || []).filter(u => Number(u.id) === idVal) };
+      }
+      if (lower.includes('where') && (lower.includes('phone') || lower.includes('nic'))) {
+        const val = (params[0] || '').trim().toLowerCase();
+        if (val) {
+          return {
+            rows: (fileDb.users || []).filter(u =>
+              (u.nic && u.nic.toLowerCase() === val) ||
+              (u.phone && u.phone === val)
+            )
+          };
+        }
+      }
+      let rows = fileDb.users || [];
       if (lower.includes("role = 'farmer'")) {
         rows = rows.filter(u => u.role === 'FARMER');
       }
@@ -298,7 +253,7 @@ module.exports = {
       });
       return { rows: rows.sort((a, b) => b.total_acres - a.total_acres) };
     }
-    if (lower.includes('select * from crops')) {
+    if (lower.includes('from crops') && !lower.includes('join')) {
       return { rows: fileDb.crops };
     }
     if (lower.includes('from crop_seasons')) {
@@ -350,6 +305,23 @@ module.exports = {
       }
       return { rows: fileDb.price_history || [] };
     }
+    if (lower.includes('from crop_monthly_price_benchmarks')) {
+      let rows = fileDb.crop_monthly_price_benchmarks || [];
+      if (lower.includes('where crop_id =') && lower.includes('month =')) {
+        const cId = Number(params[0]);
+        const m = Number(params[1]);
+        return { rows: rows.filter(b => Number(b.crop_id) === cId && Number(b.month) === m) };
+      }
+      if (lower.includes('where crop_id =')) {
+        const cId = Number(params[0]);
+        return { rows: rows.filter(b => Number(b.crop_id) === cId) };
+      }
+      return { rows };
+    }
+    if (lower.includes('from chat_messages')) {
+      const orderId = Number(params[0]);
+      return { rows: (fileDb.chat_messages || []).filter(m => Number(m.order_id) === orderId) };
+    }
     if (lower.includes('distinct on (c.id)') || lower.includes('from crops c left join price_history')) {
       const rows = fileDb.crops.map(c => {
         const ph = (fileDb.price_history || []).find(p => Number(p.crop_id) === Number(c.id));
@@ -397,8 +369,8 @@ module.exports = {
           standard_price_per_kg: crop.standard_price_per_kg,
           price_range_min: crop.standard_price_per_kg * 0.75,
           price_range_max: crop.standard_price_per_kg * 1.35,
-          farmer_name: farmer.full_name || l.farmer_name || 'Sunil Shantha',
-          farmer_phone: farmer.phone || l.farmer_phone || '0712345678'
+          farmer_name: farmer.full_name || l.farmer_name || '',
+          farmer_phone: farmer.phone || l.farmer_phone || ''
         };
       });
       if (lower.includes('where id =')) {
@@ -447,6 +419,17 @@ module.exports = {
     }
     if (lower.includes('select * from broadcast_warnings')) {
       return { rows: fileDb.broadcast_warnings || [] };
+    }
+    if (lower.includes('from chat_messages')) {
+      let rows = fileDb.chat_messages || [];
+      if (lower.includes('where order_id =')) {
+        const oId = Number(params[0]);
+        rows = rows.filter(m => Number(m.order_id) === oId);
+      } else if (lower.includes('where listing_id =')) {
+        const lId = Number(params[0]);
+        rows = rows.filter(m => Number(m.listing_id) === lId);
+      }
+      return { rows: rows.sort((a, b) => new Date(a.created_at) - new Date(b.created_at)) };
     }
     if (lower.includes('insert into notification_logs')) {
       const newLog = {
@@ -760,6 +743,124 @@ module.exports = {
       fileDb.farmer_verifications.push(newVerif);
       saveDb(fileDb);
       return { rows: [newVerif] };
+    }
+
+    if (lower.includes('insert into price_history')) {
+      const crop_id = Number(params[0]);
+      let price_per_kg, price_date, market_name;
+      if (params.length === 3) {
+        price_per_kg = Number(params[1]);
+        price_date = params[2];
+        market_name = 'Keppetipola Economic Centre';
+      } else {
+        market_name = params[1];
+        price_per_kg = Number(params[2]);
+        price_date = params[3];
+      }
+      const newPH = {
+        crop_id,
+        market_name,
+        price_per_kg,
+        price_date,
+        source: 'HARTI_BULLETIN'
+      };
+      if (!fileDb.price_history) fileDb.price_history = [];
+      const existingIdx = fileDb.price_history.findIndex(p => p.crop_id === crop_id && p.price_date === price_date);
+      if (existingIdx >= 0) {
+        fileDb.price_history[existingIdx] = newPH;
+      } else {
+        fileDb.price_history.push(newPH);
+      }
+      saveDb(fileDb);
+      return { rows: [newPH] };
+    }
+
+    if (lower.includes('insert into cropix_demand_benchmarks')) {
+      const newCDB = {
+        id: Date.now() + Math.random(),
+        crop_id: Number(params[0]),
+        district: 'Badulla',
+        target_month: Number(params[1]),
+        target_year: Number(params[2]),
+        national_demand_kg: Number(params[3]),
+        regional_quota_kg: Number(params[4]),
+        current_market_gap_kg: Number(params[5])
+      };
+      if (!fileDb.cropix_demand_benchmarks) fileDb.cropix_demand_benchmarks = [];
+      const existingIdx = fileDb.cropix_demand_benchmarks.findIndex(c => c.crop_id === newCDB.crop_id && c.target_month === newCDB.target_month && c.target_year === newCDB.target_year);
+      if (existingIdx >= 0) {
+        fileDb.cropix_demand_benchmarks[existingIdx] = newCDB;
+      } else {
+        fileDb.cropix_demand_benchmarks.push(newCDB);
+      }
+      saveDb(fileDb);
+      return { rows: [newCDB] };
+    }
+
+    if (lower.includes('insert into crop_monthly_price_benchmarks')) {
+      let crop_id, market_name, year, month, avg_price_per_kg, min_price_per_kg, max_price_per_kg, volatility_index, cyclical_glut_risk;
+      if (params.length === 8) {
+        crop_id = Number(params[0]);
+        market_name = 'Keppetipola Economic Centre';
+        year = Number(params[1]);
+        month = Number(params[2]);
+        avg_price_per_kg = Number(params[3]);
+        min_price_per_kg = Number(params[4]);
+        max_price_per_kg = Number(params[5]);
+        volatility_index = Number(params[6] || 15.0);
+        cyclical_glut_risk = params[7] || 'LOW';
+      } else {
+        crop_id = Number(params[0]);
+        market_name = params[1] || 'Keppetipola Economic Centre';
+        year = Number(params[2]);
+        month = Number(params[3]);
+        avg_price_per_kg = Number(params[4]);
+        min_price_per_kg = Number(params[5]);
+        max_price_per_kg = Number(params[6]);
+        volatility_index = Number(params[7] || 15.0);
+        cyclical_glut_risk = params[8] || 'LOW';
+      }
+      const newB = {
+        id: Date.now() + Math.random(),
+        crop_id,
+        market_name,
+        year,
+        month,
+        avg_price_per_kg,
+        min_price_per_kg,
+        max_price_per_kg,
+        volatility_index,
+        cyclical_glut_risk,
+        last_updated: new Date().toISOString()
+      };
+      if (!fileDb.crop_monthly_price_benchmarks) fileDb.crop_monthly_price_benchmarks = [];
+      const existingIdx = fileDb.crop_monthly_price_benchmarks.findIndex(
+        b => b.crop_id === newB.crop_id && b.market_name === newB.market_name && b.year === newB.year && b.month === newB.month
+      );
+      if (existingIdx >= 0) {
+        fileDb.crop_monthly_price_benchmarks[existingIdx] = newB;
+      } else {
+        fileDb.crop_monthly_price_benchmarks.push(newB);
+      }
+      saveDb(fileDb);
+      return { rows: [newB] };
+    }
+
+    if (lower.includes('insert into chat_messages')) {
+      const newMsg = {
+        id: Date.now(),
+        order_id: Number(params[0]),
+        listing_id: Number(params[1]),
+        sender_id: params[2],
+        sender_name: params[3],
+        sender_role: params[4],
+        message_text: params[5],
+        created_at: new Date().toISOString()
+      };
+      if (!fileDb.chat_messages) fileDb.chat_messages = [];
+      fileDb.chat_messages.push(newMsg);
+      saveDb(fileDb);
+      return { rows: [newMsg] };
     }
 
     return { rows: [] };

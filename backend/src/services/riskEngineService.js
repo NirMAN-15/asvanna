@@ -81,16 +81,26 @@ class RiskEngineService {
       }
     }
 
-    // 5. FACTOR 4: Historical Price Risk (15% weight)
+    // 5. FACTOR 4: Dual-Horizon Historical Price Risk (15% weight)
+    // 5A. Short-term 60-day price volatility momentum
     const priceAnalysis = await PriceService.getCropPriceHistory(crop.id, 60);
-    let priceRiskScore = 20; // Default
+    let shortTermPriceScore = 20;
     if (priceAnalysis.metrics && priceAnalysis.metrics.volatilityPercentage) {
       const vol = priceAnalysis.metrics.volatilityPercentage;
-      if (vol > 35) priceRiskScore = 80;
-      else if (vol > 20) priceRiskScore = 50;
-      else if (vol > 10) priceRiskScore = 30;
-      else priceRiskScore = 15;
+      if (vol > 35) shortTermPriceScore = 80;
+      else if (vol > 20) shortTermPriceScore = 50;
+      else if (vol > 10) shortTermPriceScore = 30;
+      else shortTermPriceScore = 15;
     }
+
+    // 5B. Long-term 3-Year Cyclical Glut Risk for projected harvest month
+    const growthMonths = Math.max(1, Math.round((crop.growth_duration_days || 75) / 30));
+    const projectedHarvestMonth = ((currentMonth + growthMonths - 1) % 12) + 1;
+    const threeYearPriceTrend = await PriceService.getThreeYearMonthlyPriceTrend(crop.id, projectedHarvestMonth);
+    const cyclicalGlutRiskScore = threeYearPriceTrend.cyclicalRiskScore || 20;
+
+    // Dual-Horizon Weighted Price Score: 40% Short-term recent volatility + 60% 3-Year cyclical seasonal risk
+    const priceRiskScore = Math.round((shortTermPriceScore * 0.40) + (cyclicalGlutRiskScore * 0.60));
 
     // 6. COMPOSITE WEIGHTED RISK SCORE
     const compositeRiskScore = Math.round(
@@ -139,8 +149,37 @@ class RiskEngineService {
       estimatedSupplyKg: rawEstimatedSupplyKg,
       targetDemandKg,
       riskPercentage: compositeRiskScore,
+      compositeRiskScore,
       riskLevel,
       factors: {
+        overPlanting: {
+          score: overPlantingScore,
+          weight: '45%',
+          ratio: Math.round(supplyDemandRatio),
+          demandQuotaKg: targetDemandKg,
+          currentPlantedKg: rawEstimatedSupplyKg
+        },
+        weather: {
+          score: weatherRiskScore,
+          weight: '25%',
+          temperatureScore: weatherEvaluation.temperatureScore,
+          rainfallScore: weatherEvaluation.rainfallScore,
+          advisory: weatherEvaluation.advisory
+        },
+        seasonal: {
+          score: seasonalRiskScore,
+          weight: '15%',
+          currentSeason: currentSeasonName,
+          status: seasonalRiskScore <= 25 ? 'IN_SEASON' : 'OFF_SEASON'
+        },
+        price: {
+          score: priceRiskScore,
+          weight: '15%',
+          volatilityPercentage: priceAnalysis.metrics.volatilityPercentage,
+          currentPrice: priceAnalysis.metrics.currentPrice
+        }
+      },
+      factorBreakdown: {
         overPlanting: {
           score: overPlantingScore,
           weight: '45%',

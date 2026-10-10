@@ -2,6 +2,8 @@ import React, { useContext, useState, useEffect } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { LanguageContext } from '../context/LanguageContext';
 import API from '../services/api';
+import { validateNIC, validatePhone, validatePassword } from '../utils/validation';
+import PasswordStrengthInput from '../components/PasswordStrengthInput';
 
 export default function Settings() {
   const { user, role, updateUser } = useContext(AuthContext);
@@ -67,6 +69,22 @@ export default function Settings() {
   const [notifySystemHealth, setNotifySystemHealth] = useState(true);
   const [notifyNewOfficer, setNotifyNewOfficer] = useState(true);
   const [notifyCriticalRisk, setNotifyCriticalRisk] = useState(true);
+
+  // Admin Creation Modal State (Restricted to ADMIN with Secret Key)
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+  const [adminFormData, setAdminFormData] = useState({
+    first_name: '',
+    middle_name: '',
+    last_name: '',
+    phone: '',
+    nic: '',
+    email: '',
+    password: '',
+    confirm_password: '',
+    admin_key: ''
+  });
+  const [adminCreating, setAdminCreating] = useState(false);
+  const [adminMsg, setAdminMsg] = useState({ text: '', type: '' });
 
   const userRole = (role || user?.role || 'FARMER').toUpperCase();
 
@@ -196,6 +214,13 @@ export default function Settings() {
   const handleChangePassword = async (e) => {
     e.preventDefault();
     setPwdMsg({ text: '', type: '' });
+
+    const pwdRes = validatePassword(newPassword);
+    if (!pwdRes.isValid) {
+      setPwdMsg({ text: pwdRes.message, type: 'error' });
+      return;
+    }
+
     if (newPassword !== confirmPassword) {
       setPwdMsg({ text: 'New passwords do not match!', type: 'error' });
       return;
@@ -214,6 +239,80 @@ export default function Settings() {
       setPwdMsg({ text: err.response?.data?.message || 'Failed to update password.', type: 'error' });
     } finally {
       setPwdLoading(false);
+    }
+  };
+
+  const handleRegisterAdmin = async (e) => {
+    e.preventDefault();
+    setAdminMsg({ text: '', type: '' });
+
+    const phoneRes = validatePhone(adminFormData.phone, true);
+    if (!phoneRes.isValid) {
+      setAdminMsg({ text: phoneRes.message, type: 'error' });
+      return;
+    }
+
+    const nicRes = validateNIC(adminFormData.nic);
+    if (!nicRes.isValid) {
+      setAdminMsg({ text: nicRes.message, type: 'error' });
+      return;
+    }
+
+    const pwdRes = validatePassword(adminFormData.password);
+    if (!pwdRes.isValid) {
+      setAdminMsg({ text: pwdRes.message, type: 'error' });
+      return;
+    }
+
+    if (adminFormData.password !== adminFormData.confirm_password) {
+      setAdminMsg({ text: 'Passwords do not match.', type: 'error' });
+      return;
+    }
+
+    if (!adminFormData.admin_key || adminFormData.admin_key.trim() !== 'asvanna#2026') {
+      setAdminMsg({ text: 'Invalid Master Admin Creation Key. Authorization denied.', type: 'error' });
+      return;
+    }
+
+    setAdminCreating(true);
+    try {
+      const res = await API.post('/auth/admin/register', {
+        first_name: adminFormData.first_name.trim(),
+        middle_name: adminFormData.middle_name.trim() || null,
+        last_name: adminFormData.last_name.trim(),
+        phone: phoneRes.clean,
+        nic: nicRes.clean,
+        email: adminFormData.email.trim() || undefined,
+        password: adminFormData.password,
+        admin_key: adminFormData.admin_key.trim()
+      });
+
+      setAdminMsg({
+        text: `Administrator account created successfully!`,
+        type: 'success'
+      });
+      setAdminFormData({
+        first_name: '',
+        middle_name: '',
+        last_name: '',
+        phone: '',
+        nic: '',
+        email: '',
+        password: '',
+        confirm_password: '',
+        admin_key: ''
+      });
+      setTimeout(() => {
+        setIsAdminModalOpen(false);
+        setAdminMsg({ text: '', type: '' });
+      }, 2000);
+    } catch (err) {
+      setAdminMsg({
+        text: err.response?.data?.message || 'Failed to create administrator account.',
+        type: 'error'
+      });
+    } finally {
+      setAdminCreating(false);
     }
   };
 
@@ -715,6 +814,31 @@ export default function Settings() {
           </button>
         </div>
       </div>
+
+      {/* Administrator Provisioning Card (Restricted to Admins) */}
+      <div className="bg-surface-container-lowest rounded-2xl p-6 border-2 border-primary/30 shadow-card space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="font-headline font-bold text-base text-primary flex items-center gap-2">
+            <span className="material-symbols-outlined text-secondary">admin_panel_settings</span>
+            <span>Administrator Management & Security</span>
+          </h2>
+          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase bg-primary/10 text-primary">
+            Restricted Admin Privilege
+          </span>
+        </div>
+        <p className="text-xs text-on-surface-variant leading-relaxed">
+          Only currently authenticated Administrators have permission to provision new administrative accounts.
+          All provisions require verification with the platform Master Creation Secret Key (<code className="font-mono bg-surface-container px-1 py-0.5 rounded">asvanna#2026</code>) and are logged to audit records.
+        </p>
+        <button
+          type="button"
+          onClick={() => setIsAdminModalOpen(true)}
+          className="px-4 py-2.5 bg-primary hover:bg-primary-container text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-sm cursor-pointer"
+        >
+          <span className="material-symbols-outlined text-sm">person_add</span>
+          <span>Add New Administrator</span>
+        </button>
+      </div>
     </>
   );
 
@@ -946,14 +1070,14 @@ export default function Settings() {
             />
           </div>
           <div>
-            <label className="block font-bold text-on-surface mb-1">{t('new_password', 'New Password')}</label>
-            <input 
-              type="password" 
+            <PasswordStrengthInput
+              id="settings_new_password"
+              name="settings_new_password"
+              label={t('new_password', 'New Password')}
               required
-              minLength={6}
-              value={newPassword} 
-              onChange={(e) => setNewPassword(e.target.value)} 
-              className="w-full p-2.5 rounded-xl border border-outline-variant bg-white font-semibold text-on-surface focus:border-primary outline-none" 
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              showCriteria={false}
             />
           </div>
           <div>
@@ -961,7 +1085,6 @@ export default function Settings() {
             <input 
               type="password" 
               required
-              minLength={6}
               value={confirmPassword} 
               onChange={(e) => setConfirmPassword(e.target.value)} 
               className="w-full p-2.5 rounded-xl border border-outline-variant bg-white font-semibold text-on-surface focus:border-primary outline-none" 
@@ -973,13 +1096,192 @@ export default function Settings() {
           <button
             type="submit"
             disabled={pwdLoading}
-            className="px-6 py-3 bg-error hover:bg-error-container text-white disabled:opacity-50 font-bold rounded-xl text-xs shadow-md transition flex items-center gap-2"
+            className="px-6 py-3 bg-error hover:bg-error-container text-white disabled:opacity-50 font-bold rounded-xl text-xs shadow-md transition flex items-center gap-2 cursor-pointer"
           >
             <span className="material-symbols-outlined text-base">key</span>
             <span>{pwdLoading ? t('processing', 'Updating...') : t('change_password_btn', 'Change Password')}</span>
           </button>
         </div>
       </form>
+
+      {/* 🛡️ MODAL: PROVISION NEW ADMINISTRATOR (Restricted to ADMIN) */}
+      {isAdminModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-surface-container-lowest rounded-3xl max-w-lg w-full border-2 border-primary/40 shadow-2xl overflow-hidden animate-scaleUp">
+            {/* Modal Header */}
+            <div className="bg-primary text-white p-5 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white">
+                  <span className="material-symbols-outlined text-xl">admin_panel_settings</span>
+                </div>
+                <div>
+                  <h3 className="font-headline font-extrabold text-base leading-tight">Add New Administrator</h3>
+                  <p className="text-xs text-primary-fixed-dim">Requires Master Key: asvanna#2026</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAdminModalOpen(false);
+                  setAdminMsg({ text: '', type: '' });
+                }}
+                className="text-white/80 hover:text-white p-1 rounded-full cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-2xl">close</span>
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <form onSubmit={handleRegisterAdmin} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+              {adminMsg.text && (
+                <div
+                  className={`p-3 rounded-xl text-xs font-bold flex items-center gap-2 ${
+                    adminMsg.type === 'error'
+                      ? 'bg-error-container text-on-error-container border border-error/30'
+                      : 'bg-emerald-50 text-emerald-800 border border-emerald-300'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-base">
+                    {adminMsg.type === 'error' ? 'error' : 'verified'}
+                  </span>
+                  <span>{adminMsg.text}</span>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div>
+                  <label className="block font-bold text-on-surface mb-1">First Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={adminFormData.first_name}
+                    onChange={(e) => setAdminFormData({ ...adminFormData, first_name: e.target.value })}
+                    placeholder="e.g. Kasun"
+                    className="w-full p-2.5 rounded-xl border border-outline-variant bg-white font-medium focus:border-primary outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-on-surface mb-1">Last Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={adminFormData.last_name}
+                    onChange={(e) => setAdminFormData({ ...adminFormData, last_name: e.target.value })}
+                    placeholder="e.g. Perera"
+                    className="w-full p-2.5 rounded-xl border border-outline-variant bg-white font-medium focus:border-primary outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div>
+                  <label className="block font-bold text-on-surface mb-1">Phone Number *</label>
+                  <input
+                    type="text"
+                    required
+                    value={adminFormData.phone}
+                    onChange={(e) => setAdminFormData({ ...adminFormData, phone: e.target.value })}
+                    placeholder="0771234567"
+                    className="w-full p-2.5 rounded-xl border border-outline-variant bg-white font-medium focus:border-primary outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-on-surface mb-1">NIC Number *</label>
+                  <input
+                    type="text"
+                    required
+                    value={adminFormData.nic}
+                    onChange={(e) => setAdminFormData({ ...adminFormData, nic: e.target.value })}
+                    placeholder="200012345678 or 851234567V"
+                    className="w-full p-2.5 rounded-xl border border-outline-variant bg-white font-medium focus:border-primary outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="text-xs">
+                <label className="block font-bold text-on-surface mb-1">Official Email Address</label>
+                <input
+                  type="email"
+                  value={adminFormData.email}
+                  onChange={(e) => setAdminFormData({ ...adminFormData, email: e.target.value })}
+                  placeholder="admin.name@asvanna.gov.lk"
+                  className="w-full p-2.5 rounded-xl border border-outline-variant bg-white font-medium focus:border-primary outline-none"
+                />
+              </div>
+
+              {/* Password & Confirm */}
+              <div className="space-y-3 pt-1">
+                <PasswordStrengthInput
+                  id="admin_password"
+                  name="admin_password"
+                  label="Account Password *"
+                  required
+                  value={adminFormData.password}
+                  onChange={(e) => setAdminFormData({ ...adminFormData, password: e.target.value })}
+                  placeholder="Strong password (8+ chars)"
+                />
+
+                <div className="text-xs">
+                  <label className="block font-bold text-on-surface mb-1">Confirm Password *</label>
+                  <input
+                    type="password"
+                    required
+                    value={adminFormData.confirm_password}
+                    onChange={(e) => setAdminFormData({ ...adminFormData, confirm_password: e.target.value })}
+                    placeholder="Repeat password"
+                    className="w-full p-2.5 rounded-xl border border-outline-variant bg-white font-medium focus:border-primary outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Secret Admin Creation Key */}
+              <div className="p-3 bg-amber-50 rounded-xl border border-amber-300 text-xs space-y-1.5">
+                <div className="flex items-center gap-1.5 text-amber-900 font-bold">
+                  <span className="material-symbols-outlined text-sm">vpn_key</span>
+                  <span>Master Administrator Creation Key *</span>
+                </div>
+                <input
+                  type="password"
+                  required
+                  value={adminFormData.admin_key}
+                  onChange={(e) => setAdminFormData({ ...adminFormData, admin_key: e.target.value })}
+                  placeholder="Enter secret key (asvanna#2026)"
+                  className="w-full p-2.5 rounded-xl border border-amber-300 bg-white font-mono text-xs focus:ring-2 focus:ring-primary outline-none"
+                />
+                <p className="text-[10px] text-amber-800">
+                  Provisioning is audited. Unauthorized attempts will be logged to system records.
+                </p>
+              </div>
+
+              {/* Submit Buttons */}
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-outline-variant/30">
+                <button
+                  type="button"
+                  onClick={() => setIsAdminModalOpen(false)}
+                  disabled={adminCreating}
+                  className="px-4 py-2.5 rounded-xl border border-outline-variant text-slate-700 font-bold text-xs hover:bg-surface-container transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={adminCreating}
+                  className="px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-container text-white font-bold text-xs shadow-md transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  {adminCreating ? (
+                    <span>Provisioning Admin...</span>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined text-sm">shield_person</span>
+                      <span>Provision Administrator</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

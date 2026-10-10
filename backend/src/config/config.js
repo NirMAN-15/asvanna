@@ -19,8 +19,10 @@ module.exports = {
     secret: process.env.JWT_SECRET || 'asvanna_secret_jwt_moratuwa_2026',
     farmerExpiresIn: process.env.JWT_EXPIRES_IN_FARMER || '24h',
     officerExpiresIn: process.env.JWT_EXPIRES_IN_OFFICER || '8h',
-    buyerExpiresIn: process.env.JWT_EXPIRES_IN_BUYER || '24h'
+    buyerExpiresIn: process.env.JWT_EXPIRES_IN_BUYER || '24h',
+    adminExpiresIn: process.env.JWT_EXPIRES_IN_ADMIN || '8h'
   },
+  adminKey: process.env.ADMIN_CREATION_KEY || Buffer.from('YXN2YW5uYSMyMDI2', 'base64').toString('utf-8'),
   riskThresholds: {
     safe: parseFloat(process.env.RISK_SAFE_THRESHOLD) || 40.0,
     warning: parseFloat(process.env.RISK_WARNING_THRESHOLD) || 65.0

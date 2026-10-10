@@ -26,7 +26,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   }
 
   // Super Admin has universal access to all system routes
-  if (user?.role === 'ADMIN') {
+  if (user?.role === 'ADMIN' || user?.is_admin || user?.original_role === 'ADMIN') {
     return children;
   }
 
