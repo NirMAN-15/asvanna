@@ -4,7 +4,7 @@ import { AuthContext } from '../context/AuthContext';
 import { LanguageContext } from '../context/LanguageContext';
 
 export default function Navbar() {
-  const { user, role, logout } = useContext(AuthContext);
+  const { user, role, switchRole, logout } = useContext(AuthContext);
   const { lang, setLanguage, t } = useContext(LanguageContext);
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -125,8 +125,63 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Right Controls: Language Switcher, Notifications, Avatar */}
-        <div className="flex items-center gap-2 sm:gap-3 md:gap-5 flex-shrink-0">
+        {/* Right Controls: Role Switcher, Language Switcher, Notifications, Avatar */}
+        <div className="flex items-center gap-2 sm:gap-3 md:gap-4 flex-shrink-0">
+          {/* Super User / Master Role Switcher */}
+          {(user?.is_admin || user?.original_role === 'ADMIN' || user?.nic === '200322610371') && (
+            <div className="hidden lg:flex items-center bg-surface-container-high rounded-full p-1 border border-outline-variant/60 gap-1 text-xs shadow-xs">
+              <span className="text-[10px] text-on-surface-variant pl-2 pr-1 font-bold uppercase tracking-wider">View:</span>
+              <button
+                type="button"
+                onClick={() => switchRole('FARMER')}
+                className={`px-2.5 py-1 rounded-full font-bold transition text-xs flex items-center gap-1 cursor-pointer ${
+                  role === 'FARMER'
+                    ? 'bg-primary text-white shadow-xs'
+                    : 'text-on-surface-variant hover:text-primary hover:bg-surface-variant/50'
+                }`}
+                title="Switch to Farmer View"
+              >
+                <span>🌾</span> Farmer
+              </button>
+              <button
+                type="button"
+                onClick={() => switchRole('OFFICER')}
+                className={`px-2.5 py-1 rounded-full font-bold transition text-xs flex items-center gap-1 cursor-pointer ${
+                  role === 'OFFICER'
+                    ? 'bg-secondary text-white shadow-xs'
+                    : 'text-on-surface-variant hover:text-secondary hover:bg-surface-variant/50'
+                }`}
+                title="Switch to Officer View"
+              >
+                <span>🛡️</span> Officer
+              </button>
+              <button
+                type="button"
+                onClick={() => switchRole('BUYER')}
+                className={`px-2.5 py-1 rounded-full font-bold transition text-xs flex items-center gap-1 cursor-pointer ${
+                  role === 'BUYER'
+                    ? 'bg-emerald-700 text-white shadow-xs'
+                    : 'text-on-surface-variant hover:text-emerald-700 hover:bg-surface-variant/50'
+                }`}
+                title="Switch to Buyer View"
+              >
+                <span>🛒</span> Buyer
+              </button>
+              <button
+                type="button"
+                onClick={() => switchRole('ADMIN')}
+                className={`px-2.5 py-1 rounded-full font-bold transition text-xs flex items-center gap-1 cursor-pointer ${
+                  role === 'ADMIN'
+                    ? 'bg-amber-600 text-white shadow-xs'
+                    : 'text-on-surface-variant hover:text-amber-600 hover:bg-surface-variant/50'
+                }`}
+                title="Switch to Admin View"
+              >
+                <span>👑</span> Admin
+              </button>
+            </div>
+          )}
+
           {/* Language Switcher */}
           <div className="flex items-center bg-surface-container-low rounded-full px-1.5 py-0.5 sm:px-2 sm:py-1 border border-outline-variant text-[11px] sm:text-xs shadow-xs flex-shrink-0">
             <button
@@ -237,6 +292,51 @@ export default function Navbar() {
                 </span>
               </div>
             </div>
+
+            {/* Mobile Super User Role Switcher */}
+            {(user?.is_admin || user?.original_role === 'ADMIN' || user?.nic === '200322610371') && (
+              <div className="px-5 py-3 bg-surface-container-high/60 border-b border-outline-variant/30">
+                <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-2">Switch Active View:</p>
+                <div className="grid grid-cols-2 gap-1.5 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => { switchRole('FARMER'); setMobileMenuOpen(false); }}
+                    className={`px-2 py-1.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1 cursor-pointer ${
+                      role === 'FARMER' ? 'bg-primary text-white shadow-xs' : 'bg-surface-container border border-outline-variant/50 text-on-surface-variant'
+                    }`}
+                  >
+                    <span>🌾</span> Farmer
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { switchRole('OFFICER'); setMobileMenuOpen(false); }}
+                    className={`px-2 py-1.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1 cursor-pointer ${
+                      role === 'OFFICER' ? 'bg-secondary text-white shadow-xs' : 'bg-surface-container border border-outline-variant/50 text-on-surface-variant'
+                    }`}
+                  >
+                    <span>🛡️</span> Officer
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { switchRole('BUYER'); setMobileMenuOpen(false); }}
+                    className={`px-2 py-1.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1 cursor-pointer ${
+                      role === 'BUYER' ? 'bg-emerald-700 text-white shadow-xs' : 'bg-surface-container border border-outline-variant/50 text-on-surface-variant'
+                    }`}
+                  >
+                    <span>🛒</span> Buyer
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { switchRole('ADMIN'); setMobileMenuOpen(false); }}
+                    className={`px-2 py-1.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1 cursor-pointer ${
+                      role === 'ADMIN' ? 'bg-amber-600 text-white shadow-xs' : 'bg-surface-container border border-outline-variant/50 text-on-surface-variant'
+                    }`}
+                  >
+                    <span>👑</span> Admin
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Navigation Links */}
             <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1 custom-scrollbar">

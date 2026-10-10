@@ -252,6 +252,22 @@ CREATE TABLE IF NOT EXISTS price_history (
     UNIQUE(crop_id, market_name, price_date)
 );
 
+-- 13b. 3-Year Rolling Monthly Price Benchmarks (36 Months Cyclical Analytics)
+CREATE TABLE IF NOT EXISTS crop_monthly_price_benchmarks (
+    id SERIAL PRIMARY KEY,
+    crop_id INT NOT NULL REFERENCES crops(id) ON DELETE CASCADE,
+    market_name VARCHAR(100) DEFAULT 'Keppetipola Economic Centre',
+    year INT NOT NULL,
+    month INT NOT NULL CHECK (month BETWEEN 1 AND 12),
+    avg_price_per_kg DECIMAL(8, 2) NOT NULL,
+    min_price_per_kg DECIMAL(8, 2) NOT NULL,
+    max_price_per_kg DECIMAL(8, 2) NOT NULL,
+    volatility_index DECIMAL(5, 2) DEFAULT 15.0,
+    cyclical_glut_risk VARCHAR(20) DEFAULT 'LOW' CHECK (cyclical_glut_risk IN ('LOW', 'MODERATE', 'HIGH', 'CRITICAL')),
+    last_updated TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(crop_id, market_name, year, month)
+);
+
 -- 14. Notification Logs Table
 CREATE TABLE IF NOT EXISTS notification_logs (
     id SERIAL PRIMARY KEY,
@@ -279,6 +295,18 @@ CREATE TABLE IF NOT EXISTS farmer_verifications (
     verified_by INT REFERENCES users(id) ON DELETE SET NULL,
     rejection_reason TEXT,
     verified_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 16. Chat Messages Table (Order-linked Buyer-Farmer Real-Time Negotiations)
+CREATE TABLE IF NOT EXISTS chat_messages (
+    id SERIAL PRIMARY KEY,
+    order_id INT REFERENCES marketplace_orders(id) ON DELETE CASCADE,
+    listing_id INT REFERENCES marketplace_listings(id) ON DELETE CASCADE,
+    sender_id INT REFERENCES users(id) ON DELETE SET NULL,
+    sender_name VARCHAR(200) NOT NULL,
+    sender_role VARCHAR(20) NOT NULL CHECK (sender_role IN ('BUYER', 'FARMER', 'ADMIN', 'OFFICER')),
+    message_text TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -329,3 +357,5 @@ CREATE INDEX IF NOT EXISTS idx_risk_crop_district ON risk_assessments(crop_id, d
 CREATE INDEX IF NOT EXISTS idx_weather_location_date ON weather_cache(location_key, forecast_date);
 CREATE INDEX IF NOT EXISTS idx_price_history_crop_date ON price_history(crop_id, price_date);
 CREATE INDEX IF NOT EXISTS idx_crop_seasons_crop ON crop_seasons(crop_id);
+CREATE INDEX IF NOT EXISTS idx_monthly_price_crop_month ON crop_monthly_price_benchmarks(crop_id, month);
+CREATE INDEX IF NOT EXISTS idx_chat_order ON chat_messages(order_id);

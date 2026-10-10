@@ -9,28 +9,7 @@ const EventEmitter = require('events');
 class RealtimeStore extends EventEmitter {
   constructor() {
     super();
-    this.messages = [
-      {
-        id: 'MSG-001',
-        listingId: 1,
-        orderId: 1,
-        senderId: 3,
-        senderName: 'Bandarawela Wholesale Buyers',
-        senderRole: 'BUYER',
-        text: 'Hello, can you deliver 200kg Leeks by tomorrow morning?',
-        timestamp: new Date(Date.now() - 3600000).toISOString()
-      },
-      {
-        id: 'MSG-002',
-        listingId: 1,
-        orderId: 1,
-        senderId: 2,
-        senderName: 'Sunil Shantha (Farmer)',
-        senderRole: 'FARMER',
-        text: 'Yes, fresh harvest ready at my farm in Bandarawela. Rs 180 per kg is confirmed.',
-        timestamp: new Date(Date.now() - 1800000).toISOString()
-      }
-    ];
+    this.messages = [];
     this.liveMarketplaceEvents = [];
     this.telemetryFeed = [];
     console.log('⚡ ASVANNA Real-time Data Store Initialized (Dual DB Realtime Layer)');

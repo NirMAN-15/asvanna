@@ -2,7 +2,8 @@ import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import { LanguageContext } from '../../context/LanguageContext';
-import { validatePhone, validateBuyerNicOrBr } from '../../utils/validation';
+import { validatePhone, validateBuyerNicOrBr, validatePassword } from '../../utils/validation';
+import PasswordStrengthInput from '../../components/PasswordStrengthInput';
 
 export default function BuyerAuth() {
   const navigate = useNavigate();
@@ -65,6 +66,13 @@ export default function BuyerAuth() {
     if (!nicRes.isValid) {
       setFieldErrors((prev) => ({ ...prev, nic: nicRes.message }));
       setError(nicRes.message);
+      return;
+    }
+
+    // Password Complexity Validation
+    const pwdRes = validatePassword(formData.password);
+    if (!pwdRes.isValid) {
+      setError(pwdRes.message);
       return;
     }
 
@@ -432,21 +440,15 @@ export default function BuyerAuth() {
             </div>
 
             {/* Password */}
-            <div className="flex flex-col gap-1">
-              <label className="font-label-md text-label-md text-on-surface-variant font-semibold" htmlFor="password">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="••••••••"
-                className="w-full h-12 px-4 font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition outline-none"
-              />
-            </div>
+            <PasswordStrengthInput
+              id="password"
+              name="password"
+              label="Password"
+              required
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="••••••••"
+            />
 
             {/* Confirm Password */}
             <div className="flex flex-col gap-1">

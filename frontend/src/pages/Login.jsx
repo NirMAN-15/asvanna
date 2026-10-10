@@ -29,12 +29,12 @@ const roleInfo = {
     ],
   },
   OFFICER: {
-    badge: 'Divisional Agrarian Portal',
+    badge: 'Divisional Agrarian & Admin Portal',
     icon: 'admin_panel_settings',
     image: officerBg,
     points: [
       'Regional Crop Heatmaps & Saturation',
-      'Proxy Data Entry for Offline Farmers',
+      'Divisional Administration & Officer Operations',
       'Emergency Broadcast Alert System',
     ],
   },
@@ -51,12 +51,7 @@ export default function Login() {
     if (q && ['FARMER', 'BUYER', 'OFFICER'].includes(q.toUpperCase())) return q.toUpperCase();
     return 'FARMER';
   });
-  const [nic, setNic] = useState(() => {
-    const q = new URLSearchParams(window.location.search).get('role') || location.state?.role;
-    if (q?.toUpperCase() === 'OFFICER') return '198512345678';
-    if (q?.toUpperCase() === 'BUYER') return '200134567890';
-    return '197823456789';
-  });
+  const [nic, setNic] = useState('');
   const [nicError, setNicError] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -68,13 +63,6 @@ export default function Login() {
     setRole(newRole);
     setError('');
     setNicError('');
-    if (newRole === 'OFFICER') {
-      setNic('198512345678');
-    } else if (newRole === 'FARMER') {
-      setNic('197823456789');
-    } else if (newRole === 'BUYER') {
-      setNic('200134567890');
-    }
   };
 
   const handleNicBlur = () => {
@@ -293,7 +281,7 @@ export default function Login() {
                 }`}
               >
                 <span className="material-symbols-outlined text-2xl sm:text-3xl">admin_panel_settings</span>
-                <span>Divisional Officer</span>
+                <span>Officer & Admin</span>
               </button>
             </div>
 

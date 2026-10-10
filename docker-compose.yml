@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres123}
       POSTGRES_DB: ${DB_NAME:-asvanna_db}
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "127.0.0.1:${DB_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/src/database/schema.sql:/docker-entrypoint-initdb.d/init.sql
@@ -42,9 +42,9 @@ services:
       JWT_EXPIRES_IN_OFFICER: 8h
       RISK_SAFE_THRESHOLD: 70
       RISK_WARNING_THRESHOLD: 85
-    command: sh -c "node src/database/migrate.js && node src/database/seed.js && node src/server.js"
+    command: sh -c "node src/database/migrate.js && node src/server.js"
     ports:
-      - "5000:5000"
+      - "127.0.0.1:5000:5000"
     volumes:
       - ./backend:/app
       - /app/node_modules
