@@ -14,9 +14,11 @@ const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 const assert = require('assert');
+const bcrypt = require('bcryptjs');
+const db = require('../src/config/database');
 const AuthController = require('../src/controllers/authController');
 
-const testUserPassword = process.env.TEST_USER_PASSWORD || '';
+const testUserPassword = process.env.TEST_USER_PASSWORD || 'asvanna123';
 const testWrongPassword = process.env.TEST_INVALID_PASSWORD || 'incorrect-auth-test';
 
 console.log('🧪 Starting ASVANNA NIC-Only Login Verification...\n');
@@ -53,6 +55,21 @@ async function test(name, fn) {
 }
 
 async function run() {
+  const testNics = ['197823456789', '198512345678', '200134567890'];
+  const salt = await bcrypt.genSalt(10);
+  const passwordHash = await bcrypt.hash(testUserPassword, salt);
+
+  // Setup temporary test users
+  await db.query("DELETE FROM users WHERE nic = ANY($1)", [testNics]);
+  await db.query(`
+    INSERT INTO users (full_name, phone, nic, password_hash, role, district, division, is_verified, verification_status)
+    VALUES 
+      ('Test Farmer', '0710000001', '197823456789', $1, 'FARMER', 'Badulla', 'Bandarawela', true, 'APPROVED'),
+      ('Test Officer', '0710000002', '198512345678', $1, 'OFFICER', 'Badulla', 'Bandarawela', true, 'APPROVED'),
+      ('Test Buyer', '0710000003', '200134567890', $1, 'BUYER', 'Badulla', 'Bandarawela', true, 'APPROVED')
+  `, [passwordHash]);
+
+  try {
   // Test 1: Farmer login with NIC
   await test('Farmer authentication with NIC (197823456789)', async () => {
     const req = {
@@ -140,6 +157,11 @@ async function run() {
     assert(res.body.message.includes('Invalid NIC number or password'));
   });
 
+  } finally {
+    await db.query("DELETE FROM users WHERE nic = ANY($1)", [testNics]);
+    console.log('  🧹 Cleaned up temporary test users');
+  }
+
   console.log(`\n========================================`);
   console.log(`Total: ${totalTests} | Passed: ${passedTests} | Failed: ${totalTests - passedTests}`);
   console.log(`========================================\n`);
@@ -147,6 +169,7 @@ async function run() {
   if (totalTests !== passedTests) {
     process.exit(1);
   }
+  process.exit(0);
 }
 
 run().catch(err => {

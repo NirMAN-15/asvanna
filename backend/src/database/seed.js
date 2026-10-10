@@ -1,4 +1,3 @@
-const bcrypt = require('bcryptjs');
 const db = require('../config/database');
 
 async function seedData() {
@@ -357,125 +356,7 @@ async function seedData() {
     }
     console.log('✅ Crop season suitability matrix seeded');
 
-    // 4. Seed Verified Roles & Profiles
-    const salt = await bcrypt.genSalt(10);
-    const defaultPassword = await bcrypt.hash('asvanna123', salt);
-
-    const { splitFullName, splitAddress, formatFullName, formatAddress } = require('../utils/nameAddressUtils');
-
-    const users = [
-      {
-        firstName: 'Nirman', middleName: 'Achintha', lastName: 'Wedikkara',
-        name: 'Nirman Achintha Wedikkara (Super Admin)', phone: '0770000000', nic: '199500000000', email: 'admin@asvanna.lk',
-        role: 'ADMIN', dist: 'Badulla', div: 'Bandarawela', gnd: 'Bandarawela Central',
-        addr1: 'No. 15, Station Road', addr2: 'Central Hill', city: 'Bandarawela', postal: '90100',
-        lat: 6.8258, lng: 80.9982,
-        landSize: null, radius: 20.0, status: 'APPROVED', verified: true, busName: null, busType: null
-      },
-      {
-        firstName: 'Sunil', middleName: null, lastName: 'Weerasinghe',
-        name: 'Sunil Weerasinghe (Divisional Officer)', phone: '0771234567', nic: '198512345678', email: 'officer.bandarawela@agrarian.gov.lk',
-        role: 'OFFICER', dist: 'Badulla', div: 'Bandarawela', gnd: 'Bandarawela Central',
-        addr1: 'DoA Agrarian Services Complex', addr2: 'Badulla Road', city: 'Bandarawela', postal: '90100',
-        lat: 6.8290, lng: 80.9995,
-        landSize: null, radius: 15.0, status: 'APPROVED', verified: true, busName: 'Agrarian Services Centre Bandarawela', busType: 'Government'
-      },
-      {
-        firstName: 'Kapila', middleName: null, lastName: 'Bandara',
-        name: 'Kapila Bandara (Farmer)', phone: '0712345678', nic: '197823456789', email: 'kapila.farmer@gmail.com',
-        role: 'FARMER', dist: 'Badulla', div: 'Bandarawela', gnd: 'Bindunuwewa',
-        addr1: 'No. 42, Bindunuwewa Valley', addr2: 'Dowa Temple Road', city: 'Bandarawela', postal: '90100',
-        lat: 6.8320, lng: 81.0120,
-        landSize: 2.50, radius: 5.0, status: 'APPROVED', verified: true, busName: 'Green Valley Holdings', busType: 'Farm'
-      },
-      {
-        firstName: 'Chaminda', middleName: null, lastName: 'Silva',
-        name: 'Chaminda Silva', phone: '0719876543', nic: '198234567890', email: 'chaminda.farmer@gmail.com',
-        role: 'FARMER', dist: 'Badulla', div: 'Bandarawela', gnd: 'Haputale North',
-        addr1: 'Hilltop Farm', addr2: 'Haputale Road', city: 'Bandarawela', postal: '90100',
-        lat: 6.8150, lng: 80.9850,
-        landSize: 3.25, radius: 5.0, status: 'APPROVED', verified: true, busName: 'Hilltop Bio Cultivations', busType: 'Farm'
-      },
-      {
-        firstName: 'R.', middleName: 'M.', lastName: 'Jayasundara',
-        name: 'R. M. Jayasundara (New Registrant)', phone: '0703344556', nic: '199245678901', email: 'jayasundara.farm@gmail.com',
-        role: 'FARMER', dist: 'Badulla', div: 'Bandarawela', gnd: 'Kinigama',
-        addr1: 'Plot 7', addr2: 'Kinigama Agricultural Zone', city: 'Bandarawela', postal: '90100',
-        lat: 6.8340, lng: 81.0020,
-        landSize: 1.75, radius: 5.0, status: 'PENDING', verified: false, busName: 'Jayasundara Farmlands', busType: 'Farm'
-      },
-      {
-        firstName: 'Bandarawela', middleName: 'Grand', lastName: 'Hotel',
-        name: 'Bandarawela Grand Hotel (Buyer)', phone: '0572222222', nic: '200134567890', email: 'procurement@grandbandarawela.com',
-        role: 'BUYER', dist: 'Badulla', div: 'Bandarawela', gnd: 'Bandarawela Town',
-        addr1: 'No. 8, Welimada Road', addr2: 'Town Centre', city: 'Bandarawela', postal: '90100',
-        lat: 6.8265, lng: 80.9970,
-        landSize: null, radius: 8.0, status: 'APPROVED', verified: true, busName: 'The Grand Bandarawela Hotel', busType: 'Hotel & Hospitality'
-      },
-      {
-        firstName: 'Miyuni', middleName: null, lastName: 'Dewanga',
-        name: 'Miyuni Dewanga (Local Buyer & Caterer)', phone: '0741699017', nic: '199876543210', email: 'miyuni.catering@gmail.com',
-        role: 'BUYER', dist: 'Badulla', div: 'Bandarawela', gnd: 'Ambatenna',
-        addr1: 'No. 24, Ambatenna Lane', addr2: 'Near Bus Stand', city: 'Bandarawela', postal: '90100',
-        lat: 6.8280, lng: 80.9960,
-        landSize: null, radius: 5.0, status: 'APPROVED', verified: true, busName: 'Dewanga Fresh Catering Service', busType: 'Catering & Events'
-      }
-    ];
-
-    for (const u of users) {
-      const fullAddress = formatAddress(u.addr1, u.addr2, u.city, u.postal);
-      const fullName = u.name || formatFullName(u.firstName, u.middleName, u.lastName);
-
-      const res = await db.query(
-        `INSERT INTO users (
-          first_name, middle_name, last_name, full_name,
-          phone, nic, email, password_hash, role,
-          district, division, gnd_division,
-          address_line1, address_line2, city, postal_code, address,
-          latitude, longitude, total_land_size, preferred_search_radius,
-          business_name, business_type, verification_status, is_verified
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
-        ON CONFLICT (phone) DO UPDATE SET
-          first_name = EXCLUDED.first_name,
-          middle_name = EXCLUDED.middle_name,
-          last_name = EXCLUDED.last_name,
-          full_name = EXCLUDED.full_name,
-          address_line1 = EXCLUDED.address_line1,
-          address_line2 = EXCLUDED.address_line2,
-          city = EXCLUDED.city,
-          postal_code = EXCLUDED.postal_code,
-          address = EXCLUDED.address,
-          role = EXCLUDED.role,
-          verification_status = EXCLUDED.verification_status,
-          total_land_size = EXCLUDED.total_land_size,
-          business_name = EXCLUDED.business_name
-        RETURNING id`,
-        [
-          u.firstName, u.middleName, u.lastName, fullName,
-          u.phone, u.nic, u.email, defaultPassword, u.role,
-          u.dist, u.div, u.gnd,
-          u.addr1, u.addr2, u.city, u.postal, fullAddress,
-          u.lat, u.lng, u.landSize, u.radius,
-          u.busName, u.busType, u.status, u.verified
-        ]
-      );
-
-      const userId = res.rows[0].id;
-
-      // Seed verification queue entry if farmer
-      if (u.role === 'FARMER') {
-        await db.query(
-          `INSERT INTO farmer_verifications (farmer_id, verification_status, nic_verified, land_gps_verified, land_size_verified, rejection_reason)
-           VALUES ($1, $2, $3, $4, $5, $6)
-           ON CONFLICT (farmer_id) DO UPDATE SET
-           verification_status = EXCLUDED.verification_status`,
-          [userId, u.status, u.verified, u.verified, u.verified, u.status === 'PENDING' ? 'Awaiting verification by officer' : null]
-        );
-      }
-    }
-    console.log('✅ Users & Farmer Verification Queue seeded');
-
-    // 5. Seed Real Keppetipola Wholesale Price History (Past 30 Days)
+    // 4. Seed Real Keppetipola Wholesale Price History (Past 30 Days)
     const today = new Date();
     const priceEntries = [
       { code: 'LEEKS', basePrice: 280.00 },
@@ -513,7 +394,7 @@ async function seedData() {
     }
     console.log('✅ Keppetipola wholesale price history (past 30 days) seeded');
 
-    // 6. Seed CROPIX Benchmarks for Badulla District
+    // 5. Seed CROPIX Benchmarks for Badulla District
     const currentMonth = new Date().getMonth() + 1;
     const currentYear = new Date().getFullYear();
 
@@ -545,35 +426,72 @@ async function seedData() {
     }
     console.log('✅ CROPIX national & regional demand quotas seeded');
 
-    // 7. Seed Initial Active Plantings in Bandarawela
-    const farmersRes = await db.query("SELECT id FROM users WHERE role = 'FARMER' AND verification_status = 'APPROVED' LIMIT 2");
-    if (farmersRes.rows.length >= 2) {
-      const f1 = farmersRes.rows[0].id;
-      const f2 = farmersRes.rows[1].id;
+    // 6. Seed Rolling 3-Year (36-Month: 2023-2026) Monthly Wholesale Price Benchmarks
+    const monthlyMultipliers = {
+      1: { mult: 0.92, risk: 'LOW' },
+      2: { mult: 0.86, risk: 'MODERATE' },
+      3: { mult: 1.02, risk: 'LOW' },
+      4: { mult: 1.48, risk: 'LOW' }, // April New Year Surge
+      5: { mult: 1.10, risk: 'LOW' },
+      6: { mult: 1.00, risk: 'LOW' },
+      7: { mult: 0.94, risk: 'LOW' },
+      8: { mult: 0.88, risk: 'MODERATE' }, // Yala harvest arrivals
+      9: { mult: 0.72, risk: 'CRITICAL' }, // September post-Yala heavy glut
+      10: { mult: 0.96, risk: 'LOW' },
+      11: { mult: 1.18, risk: 'LOW' },
+      12: { mult: 1.42, risk: 'LOW' } // December festival surge
+    };
 
-      // CLEAR existing mock plantings to prevent duplication on re-seed
-      await db.query("DELETE FROM planting_records WHERE farmer_id IN ($1, $2)", [f1, f2]).catch(() => {});
+    const yearMultipliers = {
+      2023: 0.86,
+      2024: 0.94,
+      2025: 1.02,
+      2026: 1.08
+    };
 
-      const plantings = [
-        { farmer: f1, code: 'LEEKS', acres: 2.0, yield: 17000, pDate: '2026-08-01', hDate: '2026-11-01', lat: 6.8322, lng: 80.9980 },
-        { farmer: f1, code: 'CARROT', acres: 0.5, yield: 3750, pDate: '2026-08-15', hDate: '2026-11-10', lat: 6.8320, lng: 81.0120 },
-        { farmer: f2, code: 'CABBAGE', acres: 2.5, yield: 30000, pDate: '2026-08-10', hDate: '2026-10-25', lat: 6.8150, lng: 80.9850 },
-        { farmer: f2, code: 'POTATO', acres: 0.75, yield: 6000, pDate: '2026-08-20', hDate: '2026-11-30', lat: 6.8160, lng: 80.9860 }
-      ];
+    let totalBenchmarksSeeded = 0;
+    for (const crop of crops) {
+      if (!cropMap[crop.code]) continue;
+      const cropId = cropMap[crop.code];
+      const baseStandard = crop.price;
 
-      for (const pl of plantings) {
-        if (cropMap[pl.code]) {
+      for (const [yearStr, yMult] of Object.entries(yearMultipliers)) {
+        const year = parseInt(yearStr, 10);
+        for (let m = 1; m <= 12; m++) {
+          // If in 2026, seed up to current month + 3
+          if (year === currentYear && m > currentMonth + 3) continue;
+
+          const mInfo = monthlyMultipliers[m];
+          const calculatedAvg = Math.round(baseStandard * yMult * mInfo.mult * 100) / 100;
+          const calculatedMin = Math.round(calculatedAvg * 0.78 * 100) / 100;
+          const calculatedMax = Math.round(calculatedAvg * 1.25 * 100) / 100;
+          const volIndex = m === 9 || m === 4 ? 26.5 : 14.0;
+
           await db.query(
-            `INSERT INTO planting_records (farmer_id, crop_id, land_size_acres, expected_yield_kg, planting_date, expected_harvest_date, latitude, longitude, district, division, status)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'Badulla', 'Bandarawela', 'PLANTED')`,
-            [pl.farmer, cropMap[pl.code], pl.acres, pl.yield, pl.pDate, pl.hDate, pl.lat, pl.lng]
+            `INSERT INTO crop_monthly_price_benchmarks (
+              crop_id, market_name, year, month,
+              avg_price_per_kg, min_price_per_kg, max_price_per_kg,
+              volatility_index, cyclical_glut_risk, last_updated
+            ) VALUES ($1, 'Keppetipola Economic Centre', $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)
+            ON CONFLICT (crop_id, market_name, year, month) DO UPDATE SET
+              avg_price_per_kg = EXCLUDED.avg_price_per_kg,
+              min_price_per_kg = EXCLUDED.min_price_per_kg,
+              max_price_per_kg = EXCLUDED.max_price_per_kg,
+              volatility_index = EXCLUDED.volatility_index,
+              cyclical_glut_risk = EXCLUDED.cyclical_glut_risk,
+              last_updated = CURRENT_TIMESTAMP`,
+            [
+              cropId, year, m,
+              calculatedAvg, calculatedMin, calculatedMax,
+              volIndex, mInfo.risk
+            ]
           );
+          totalBenchmarksSeeded++;
         }
       }
-      console.log('✅ Active planting records seeded');
     }
-
-    console.log('🎉 Comprehensive seeding finished successfully!');
+    console.log(`✅ 3-Year Monthly Wholesale Price Benchmarks seeded (${totalBenchmarksSeeded} monthly records across 25 crops)`);
+    console.log('🌱 Master reference crop data & 3-year pricing seeded cleanly (0 dummy users or mock transactions).');
     process.exit(0);
   } catch (error) {
     console.error('❌ Seeding failed:', error);

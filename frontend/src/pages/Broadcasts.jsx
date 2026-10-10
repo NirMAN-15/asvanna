@@ -10,88 +10,13 @@ import {
   Printer, X, Eye, Sparkles, Filter
 } from 'lucide-react';
 
-const SEED_BROADCASTS = [
-  {
-    id: 1,
-    ref_code: 'BW-AGR-2026/09-01',
-    category: 'CULTIVATION_GLUT',
-    severity: 'CRITICAL',
-    crop_code: 'LEEKS',
-    affected_crops: 'Leeks (88% Saturated) & Carrot (85% Saturated)',
-    saturation_pct: 88,
-    title_en: 'Bandarawela Carrot & Leeks Cultivation Warning: Quota Exceeded',
-    title_si: 'බණ්ඩාරවෙල කැරට් සහ ලීක්ස් අධික වගා අනතුරු ඇඟවීම: කෝටාව ඉක්මවා ඇත',
-    title_ta: 'பண்டாரவளை கேரட் மற்றும் லீக்ஸ் அதிக நடவு எச்சரிக்கை: ஒதுக்கீடு மீறல்',
-    message_en: 'Current regional leeks and carrot cultivation has exceeded 85% of market demand quota in the Bandarawela basin. A massive market glut is projected for the November harvest cycle. Farmers must immediately halt new seedings and prioritize smart alternatives to prevent catastrophic farmgate price drops.',
-    message_si: 'වත්මන් කලාපීය ලීක්ස් සහ කැරට් වගාව බණ්ඩාරවෙල නිම්නයේ වෙළෙඳපොළ ඉල්ලුමෙන් 85% ඉක්මවා ඇත. නොවැම්බර් අස්වනු සමයේදී දැඩි අතිරික්තයක් අපේක්ෂා කෙරේ. මිල කඩා වැටීම වැළැක්වීම සඳහා කරුණාකර නව පාත්ති සකස් කිරීම වහාම නවත්වා නිර්දේශිත විකල්ප බෝග වගාවට යොමු වන්න.',
-    message_ta: 'பண்டாரவளையில் லீக்ஸ் மற்றும் கேரட் பயிர்ச்செய்கை சந்தை தேவையை விட 85% அதிகமாகியுள்ளது. நவம்பர் அறுவடை காலத்தில் பெரும் சந்தை வீழ்ச்சி எதிர்பார்க்கப்படுகிறது. புதிய நடவுகளை உடனடியாக நிறுத்துங்கள்.',
-    prescribed_actions: [
-      'Halt new seed nursery preparation for Leeks and Carrots across Bandarawela Central and Kinigama.',
-      'Shift scheduled parcels to high-demand smart alternatives: Beetroot, Radish, or Bush Beans.',
-      'Register existing plantings in ASVANNA portal for priority surplus procurement matching.'
-    ],
-    target_division: 'Bandarawela Division (Kinigama, Bindunuwewa, Dowa)',
-    officer_name: 'Sunil Weerasinghe',
-    officer_designation: 'Divisional Agricultural Instructor (Bandarawela ASC)',
-    sent_count: 142,
-    created_at: '2026-09-24T18:30:00.000Z'
-  },
-  {
-    id: 2,
-    ref_code: 'BW-AGR-2026/09-02',
-    category: 'AGRO_WEATHER',
-    severity: 'WARNING',
-    crop_code: 'POTATO',
-    affected_crops: 'Potato, Tomato & Upcountry Leafy Greens',
-    saturation_pct: null,
-    title_en: 'Agro-Climate Advisory: Monsoonal Showers & Furrow Drainage Directive',
-    title_si: 'කාලගුණ උපදේශය: මධ්‍යම ප්‍රමාණයේ මෝසම් වැසි සහ ජලවහන සූදානම',
-    title_ta: 'வானிலை ஆலோசனை: மிதமான பருவமழை மற்றும் வடிகால் தயாரிப்பு',
-    message_en: 'Bandarawela basin and Haputale slopes are forecasted to receive afternoon showers with rainfall up to 15mm-25mm. High humidity may induce early blight on young potato and tomato foliage. Ensure deep furrow drainage to avoid root rot and damp disease outbreaks.',
-    message_si: 'බණ්ඩාරවෙල නිම්නයට සහ හපුතලේ ඉහළ බෑවුම්වලට මි.මී. 15-25 දක්වා වැසි ඇතිවිය හැක. අර්තාපල් සහ තක්කාලි පාත්තිවල ජලවහන කානු කඩිනමින් සුද්ද කර මුල් කුණුවීම සහ දිලීර රෝග පාලනයට වහාම පියවර ගන්න.',
-    message_ta: 'பண்டாரவளை பகுதியில் 15-25 மி.மீ வரை மழை பெய்யக்கூடும். கிழங்கு மற்றும் தக்காளி பாத்திகளில் வடிகால் வசதிகளை உடனே சரிசெய்யவும்.',
-    prescribed_actions: [
-      'Dig 30cm deep inter-row drainage channels across potato and vegetable plots.',
-      'Delay nitrogen foliar spraying until wet spell ceases to prevent soft rot.',
-      'Inspect underside of tomato leaves for late blight water-soaked spots daily.'
-    ],
-    target_division: 'Bandarawela Basin & Haputale North',
-    officer_name: 'Sunil Weerasinghe',
-    officer_designation: 'Divisional Agricultural Instructor (Bandarawela ASC)',
-    sent_count: 189,
-    created_at: '2026-09-23T10:15:00.000Z'
-  },
-  {
-    id: 3,
-    ref_code: 'BW-AGR-2026/09-03',
-    category: 'MARKET_PRICE',
-    severity: 'ADVISORY',
-    crop_code: 'BEETROOT',
-    affected_crops: 'Beetroot & Radish (35% Supply Deficit)',
-    saturation_pct: 42,
-    title_en: 'Market Opportunity: High Keppetipola Demand for Beetroot & Radish',
-    title_si: 'වෙළෙඳපොළ අවස්ථාව: බීට්රූට් සහ රාබු සඳහා ඉහළ මිලක් සහ ඉල්ලුමක්',
-    title_ta: 'சந்தை வாய்ப்பு: பீட்ரூட் மற்றும் முள்ளங்கிக்கு அதிக தேவை மற்றும் விலை',
-    message_en: 'Keppetipola Wholesale Economic Centre telemetry shows a 35% supply deficit for Grade-A Beetroot and Radish over the coming 60 days. Farmers planting Beetroot or Radish now are guaranteed high farmgate profit margins (Rs. 260-320/kg benchmark).',
-    message_si: 'කැප්පෙටිපොළ ආර්ථික මධ්‍යස්ථානයේ ඉදිරි දින 60 සඳහා බීට්රූට් සහ රාබු සැපයුම 35% කින් පහත වැටී ඇත. දැන් බීට්රූට් හෝ රාබු වගා කරන ගොවීන්ට ඉහළ ලාභාංශ (කිලෝවට රු. 260-320) සහතික කෙරේ.',
-    message_ta: 'கெப்பெட்டிபொல பொருளாதார மையத்தில் பீட்ரூட் மற்றும் முள்ளங்கிக்கான தேவை கணிசமாக அதிகரித்துள்ளது. அதிக லாபம் ஈட்டக்கூடிய வாய்ப்பு.',
-    prescribed_actions: [
-      'Log planned Beetroot parcels in the Crop Advisory system to reserve regional quota allocation.',
-      'Coordinate with the ASVANNA Surplus Produce Hub for pre-harvest forward contracts with local hoteliers.'
-    ],
-    target_division: 'All Bandarawela Agrarian Centres',
-    officer_name: 'Sunil Weerasinghe',
-    officer_designation: 'Divisional Agricultural Instructor (Bandarawela ASC)',
-    sent_count: 215,
-    created_at: '2026-09-21T08:30:00.000Z'
-  }
-];
+const SEED_BROADCASTS = [];
 
 export default function Broadcasts() {
   const { lang, t } = useContext(LanguageContext);
   const { role } = useContext(AuthContext);
 
-  const [broadcasts, setBroadcasts] = useState(SEED_BROADCASTS);
+  const [broadcasts, setBroadcasts] = useState([]);
   const [activeCategory, setActiveCategory] = useState('ALL'); // 'ALL' | 'CULTIVATION_GLUT' | 'AGRO_WEATHER' | 'MARKET_PRICE'
   const [page, setPage] = useState(1);
   const [selectedNoticeForModal, setSelectedNoticeForModal] = useState(null);
@@ -120,11 +45,11 @@ export default function Broadcasts() {
         });
         setBroadcasts(merged);
       } else {
-        setBroadcasts(SEED_BROADCASTS);
+        setBroadcasts([]);
       }
     } catch (err) {
       console.warn('Utilizing Bandarawela seed broadcasts fallback:', err.message);
-      setBroadcasts(SEED_BROADCASTS);
+      setBroadcasts([]);
     }
   };
 
@@ -210,7 +135,7 @@ export default function Broadcasts() {
             </div>
             <div>
               <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('critical_gluts', 'Critical Gluts')}</p>
-              <p className="text-base font-black text-red-700">1 {t('over_planted', 'Over-Planted')}</p>
+              <p className="text-base font-black text-red-700">{broadcasts.filter(b => b.severity === 'CRITICAL' || b.category === 'CULTIVATION_GLUT').length} {t('over_planted', 'Over-Planted')}</p>
             </div>
           </div>
 
@@ -220,7 +145,7 @@ export default function Broadcasts() {
             </div>
             <div>
               <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('connected_farmers', 'Connected Farmers')}</p>
-              <p className="text-base font-black text-slate-900">215 {t('verified', 'Verified')}</p>
+              <p className="text-base font-black text-slate-900">{broadcasts.reduce((acc, b) => acc + (b.sent_count || 0), 0)} {t('verified', 'Verified')}</p>
             </div>
           </div>
 
@@ -409,7 +334,7 @@ export default function Broadcasts() {
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 font-medium">
                     <span className="flex items-center gap-1">
                       <UserCheck className="w-3.5 h-3.5 text-primary" />
-                      <span>{b.officer_name || 'Sunil Weerasinghe'} ({b.officer_designation || 'Agricultural Instructor'})</span>
+                      <span>{b.officer_name || 'Divisional Officer'} ({b.officer_designation || 'Agricultural Instructor'})</span>
                     </span>
                     <span>•</span>
                     <span className="flex items-center gap-1">

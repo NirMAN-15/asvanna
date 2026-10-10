@@ -124,6 +124,82 @@ class PriceService {
 
     return results;
   }
+
+  /**
+   * Get 3-Year Historical Monthly Benchmark & Cyclical Glut Risk for target harvest month
+   */
+  static async getThreeYearMonthlyPriceTrend(cropId, targetMonth = null) {
+    const month = targetMonth || (new Date().getMonth() + 1);
+
+    const benchmarksRes = await db.query(
+      `SELECT * FROM crop_monthly_price_benchmarks
+       WHERE crop_id = $1 AND month = $2
+       ORDER BY year ASC`,
+      [cropId, month]
+    );
+
+    const records = benchmarksRes.rows || [];
+
+    if (records.length === 0) {
+      // Fallback from crops table standard price
+      const cropRes = await db.query('SELECT standard_price_per_kg FROM crops WHERE id = $1', [cropId]);
+      const base = cropRes.rows.length > 0 ? parseFloat(cropRes.rows[0].standard_price_per_kg) : 250.0;
+      return {
+        month,
+        threeYearAveragePrice: base,
+        avg_price_per_kg: base,
+        minHistoricalPrice: Math.round(base * 0.78),
+        maxHistoricalPrice: Math.round(base * 1.25),
+        cyclicalGlutRisk: month === 9 ? 'HIGH' : 'LOW',
+        cyclicalRiskScore: month === 9 ? 80 : (month === 2 ? 55 : 20),
+        dataPointsCount: 0,
+        sample_count: 0
+      };
+    }
+
+    const prices = records.map(r => parseFloat(r.avg_price_per_kg));
+    const avgPrice = Math.round((prices.reduce((a, b) => a + b, 0) / prices.length) * 100) / 100;
+    const minPrice = Math.min(...records.map(r => parseFloat(r.min_price_per_kg || r.avg_price_per_kg * 0.8)));
+    const maxPrice = Math.max(...records.map(r => parseFloat(r.max_price_per_kg || r.avg_price_per_kg * 1.2)));
+
+    // Determine cyclical glut risk
+    let cyclicalRiskScore = 20;
+    const hasCritical = records.some(r => r.cyclical_glut_risk === 'CRITICAL');
+    const hasHigh = records.some(r => r.cyclical_glut_risk === 'HIGH');
+    const hasModerate = records.some(r => r.cyclical_glut_risk === 'MODERATE');
+
+    if (hasCritical || month === 9) cyclicalRiskScore = 85;
+    else if (hasHigh) cyclicalRiskScore = 70;
+    else if (hasModerate || month === 2) cyclicalRiskScore = 50;
+    else cyclicalRiskScore = 15;
+
+    return {
+      month,
+      threeYearAveragePrice: avgPrice,
+      avg_price_per_kg: avgPrice,
+      minHistoricalPrice: minPrice,
+      maxHistoricalPrice: maxPrice,
+      cyclicalGlutRisk: cyclicalRiskScore >= 70 ? 'HIGH' : (cyclicalRiskScore >= 40 ? 'MODERATE' : 'LOW'),
+      cyclicalRiskScore,
+      dataPointsCount: records.length,
+      sample_count: records.length,
+      historicalSeries: records
+    };
+  }
+
+  /**
+   * Get complete rolling 36-month monthly price trend series for chart visualization
+   */
+  static async getRolling36MonthPriceSeries(cropId) {
+    const res = await db.query(
+      `SELECT year, month, avg_price_per_kg, min_price_per_kg, max_price_per_kg, volatility_index, cyclical_glut_risk
+       FROM crop_monthly_price_benchmarks
+       WHERE crop_id = $1
+       ORDER BY year ASC, month ASC`,
+      [cropId]
+    );
+    return res.rows || [];
+  }
 }
 
 module.exports = PriceService;

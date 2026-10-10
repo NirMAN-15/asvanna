@@ -2,7 +2,8 @@ import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import { LanguageContext } from '../../context/LanguageContext';
-import { validateNIC, validatePhone } from '../../utils/validation';
+import { validateNIC, validatePhone, validatePassword } from '../../utils/validation';
+import PasswordStrengthInput from '../../components/PasswordStrengthInput';
 import farmerHeroBg from '../../assets/register-farmer-bg.jpg';
 
 export default function FarmerAuth() {
@@ -67,6 +68,13 @@ export default function FarmerAuth() {
     if (!phoneRes.isValid) {
       setFieldErrors((prev) => ({ ...prev, phone: phoneRes.message }));
       setError(phoneRes.message);
+      return;
+    }
+
+    // Password Complexity Validation
+    const pwdRes = validatePassword(formData.password);
+    if (!pwdRes.isValid) {
+      setError(pwdRes.message);
       return;
     }
 
@@ -475,21 +483,15 @@ export default function FarmerAuth() {
 
             {/* Two-col: Password & Confirm Password */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1">
-                <label className="font-label-md text-label-md text-on-surface-variant font-semibold" htmlFor="password">
-                  Password
-                </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="••••••••"
-                  className="w-full h-11 px-4 font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition outline-none"
-                />
-              </div>
+              <PasswordStrengthInput
+                id="password"
+                name="password"
+                label="Password"
+                required
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="••••••••"
+              />
 
               <div className="flex flex-col gap-1">
                 <label className="font-label-md text-label-md text-on-surface-variant font-semibold" htmlFor="confirm_password">

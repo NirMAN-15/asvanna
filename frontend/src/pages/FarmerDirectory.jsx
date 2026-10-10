@@ -9,11 +9,7 @@ import { LanguageContext } from '../context/LanguageContext';
 export default function FarmerDirectory() {
   const { t } = useContext(LanguageContext);
   const [activeTab, setActiveTab] = useState('VERIFIED');
-  const [farmers, setFarmers] = useState([
-    { id: 3, full_name: 'Kapila Bandara', phone: '0712345678', nic: '197823456789', total_land_size: '2.50', division: 'Bandarawela', gnd_division: 'Bindunuwewa', is_verified: true, active_crops: ['Carrot', 'Leeks'], active_plantings_count: 2 },
-    { id: 4, full_name: 'Chaminda Silva', phone: '0719876543', nic: '198234567890', total_land_size: '3.25', division: 'Bandarawela', gnd_division: 'Haputale North', is_verified: true, active_crops: ['Cabbage', 'Potato'], active_plantings_count: 2 },
-    { id: 5, full_name: 'sameera ayeshmantha', phone: '0711596479', nic: '199512345678', total_land_size: '1.50', division: 'Bandarawela', gnd_division: 'Bandarawela Central', is_verified: true, active_crops: ['Leeks', 'Carrot'], active_plantings_count: 2 }
-  ]);
+  const [farmers, setFarmers] = useState([]);
   const [pendingVerifications, setPendingVerifications] = useState([]);
   const [search, setSearch] = useState('');
   const [verifiedPage, setVerifiedPage] = useState(1);

@@ -39,7 +39,7 @@ function optionalAuth(req, res, next) {
 
 function authorizeRoles(...allowedRoles) {
   return (req, res, next) => {
-    if (!req.user || !allowedRoles.includes(req.user.role)) {
+    if (!req.user || (!allowedRoles.includes(req.user.role) && req.user.role !== 'ADMIN' && !req.user.is_admin)) {
       return ApiResponse.error(
         res,
         `Forbidden: Role '${req.user ? req.user.role : 'UNKNOWN'}' is not authorized to perform this action.`,
