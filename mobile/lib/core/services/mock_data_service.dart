@@ -18,6 +18,7 @@ class MockDataService {
         currentMarketPricePerKg: 220.0,
         historicalAveragePricePerKg: 180.0,
         iconEmoji: '🥬',
+        imageUrl: 'https://images.unsplash.com/photo-1592417817098-8f3d6eb22509?w=600&auto=format&fit=crop&q=80',
       ),
       const Crop(
         id: 'crop_cabbage',
@@ -29,6 +30,7 @@ class MockDataService {
         currentMarketPricePerKg: 140.0,
         historicalAveragePricePerKg: 130.0,
         iconEmoji: '🥗',
+        imageUrl: 'https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?w=600&auto=format&fit=crop&q=80',
       ),
       const Crop(
         id: 'crop_carrot',
@@ -40,6 +42,7 @@ class MockDataService {
         currentMarketPricePerKg: 310.0,
         historicalAveragePricePerKg: 240.0,
         iconEmoji: '🥕',
+        imageUrl: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=600&auto=format&fit=crop&q=80',
       ),
       const Crop(
         id: 'crop_beetroot',
@@ -51,6 +54,7 @@ class MockDataService {
         currentMarketPricePerKg: 280.0,
         historicalAveragePricePerKg: 220.0,
         iconEmoji: '🟣',
+        imageUrl: 'https://images.unsplash.com/photo-1593105544559-ecb03bf76f82?w=600&auto=format&fit=crop&q=80',
       ),
       const Crop(
         id: 'crop_beans',
@@ -62,6 +66,7 @@ class MockDataService {
         currentMarketPricePerKg: 340.0,
         historicalAveragePricePerKg: 260.0,
         iconEmoji: '🫘',
+        imageUrl: 'https://images.unsplash.com/photo-1551462147-ff29053bfc14?w=600&auto=format&fit=crop&q=80',
       ),
       const Crop(
         id: 'crop_tomato',
@@ -73,6 +78,7 @@ class MockDataService {
         currentMarketPricePerKg: 190.0,
         historicalAveragePricePerKg: 175.0,
         iconEmoji: '🍅',
+        imageUrl: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&auto=format&fit=crop&q=80',
       ),
       const Crop(
         id: 'crop_bellpepper',
@@ -84,6 +90,7 @@ class MockDataService {
         currentMarketPricePerKg: 480.0,
         historicalAveragePricePerKg: 380.0,
         iconEmoji: '🫑',
+        imageUrl: 'https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=600&auto=format&fit=crop&q=80',
       ),
     ];
   }

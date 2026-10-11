@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/app_state_provider.dart';
-import '../../../core/localization/app_translations.dart';
 import 'planting_entry_screen.dart';
 import 'crop_detail_screen.dart';
 
@@ -14,9 +13,6 @@ class FarmLandMapScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppStateProvider>(context);
-    final lang = appState.currentLanguage;
-    String tr(String key) => AppTranslations.tr(lang, key);
-
     final farmer = appState.farmerProfile;
     final plantings = farmer.activePlantings;
 

@@ -30,30 +30,48 @@ class Crop {
     final rawId = json['id']?.toString() ?? code.toLowerCase();
     final normalizedId = rawId.startsWith('crop_') ? rawId : (code.isNotEmpty ? 'crop_${code.toLowerCase()}' : rawId);
 
-    final name = json['name_en'] ?? json['nameEn'] ?? json['name'] ?? 'Crop';
-    final sinhala = json['name_si'] ?? json['nameSi'] ?? json['sinhalaName'] ?? name;
+    final name = json['name_en']?.toString() ?? json['nameEn']?.toString() ?? json['name']?.toString() ?? 'Crop';
+    final sinhala = json['name_si']?.toString() ?? json['nameSi']?.toString() ?? json['sinhalaName']?.toString() ?? name;
     
     // Auto map emoji
     final lower = (code.isNotEmpty ? code : name).toLowerCase();
-    String emoji = json['iconEmoji'] ?? '🌱';
+    String emoji = json['iconEmoji']?.toString() ?? '🌱';
     if (emoji == '🌱') {
-      if (lower.contains('leek')) emoji = '🥬';
-      else if (lower.contains('cabbage')) emoji = '🥗';
-      else if (lower.contains('carrot')) emoji = '🥕';
-      else if (lower.contains('beet')) emoji = '🟣';
-      else if (lower.contains('potato')) emoji = '🥔';
-      else if (lower.contains('bean')) emoji = '🫘';
-      else if (lower.contains('tomato')) emoji = '🍅';
-      else if (lower.contains('capsicum') || lower.contains('pepper') || lower.contains('bell')) emoji = '🫑';
-      else if (lower.contains('radish')) emoji = '🥢';
-      else if (lower.contains('knol')) emoji = '🥦';
-      else if (lower.contains('onion') || lower.contains('spring')) emoji = '🧅';
-      else if (lower.contains('lettuce')) emoji = '🥬';
-      else if (lower.contains('celery')) emoji = '🌿';
-      else if (lower.contains('broccoli') || lower.contains('cauliflower')) emoji = '🥦';
-      else if (lower.contains('pumpkin')) emoji = '🎃';
-      else if (lower.contains('gourd') || lower.contains('cucumber')) emoji = '🥒';
-      else if (lower.contains('chili')) emoji = '🌶️';
+      if (lower.contains('leek')) {
+        emoji = '🥬';
+      } else if (lower.contains('cabbage')) {
+        emoji = '🥗';
+      } else if (lower.contains('carrot')) {
+        emoji = '🥕';
+      } else if (lower.contains('beet')) {
+        emoji = '🟣';
+      } else if (lower.contains('potato')) {
+        emoji = '🥔';
+      } else if (lower.contains('bean')) {
+        emoji = '🫘';
+      } else if (lower.contains('tomato')) {
+        emoji = '🍅';
+      } else if (lower.contains('capsicum') || lower.contains('pepper') || lower.contains('bell')) {
+        emoji = '🫑';
+      } else if (lower.contains('radish')) {
+        emoji = '🥢';
+      } else if (lower.contains('knol')) {
+        emoji = '🥦';
+      } else if (lower.contains('onion') || lower.contains('spring')) {
+        emoji = '🧅';
+      } else if (lower.contains('lettuce')) {
+        emoji = '🥬';
+      } else if (lower.contains('celery')) {
+        emoji = '🌿';
+      } else if (lower.contains('broccoli') || lower.contains('cauliflower')) {
+        emoji = '🥦';
+      } else if (lower.contains('pumpkin')) {
+        emoji = '🎃';
+      } else if (lower.contains('gourd') || lower.contains('cucumber')) {
+        emoji = '🥒';
+      } else if (lower.contains('chili')) {
+        emoji = '🌶️';
+      }
     }
 
     final price = (json['standard_price_per_kg'] as num?)?.toDouble() ??
@@ -69,19 +87,58 @@ class Crop {
     final maturity = (json['growth_duration_days'] as num?)?.toInt() ??
         (json['maturityDays'] as num?)?.toInt() ?? 90;
 
+    String imageUrl = json['image_url']?.toString() ?? json['imageUrl']?.toString() ?? '';
+    if (imageUrl.isEmpty) {
+      if (lower.contains('leek')) {
+        imageUrl = 'https://images.unsplash.com/photo-1592417817098-8f3d6eb22509?w=600&auto=format&fit=crop&q=80';
+      } else if (lower.contains('cabbage')) {
+        imageUrl = 'https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?w=600&auto=format&fit=crop&q=80';
+      } else if (lower.contains('carrot')) {
+        imageUrl = 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=600&auto=format&fit=crop&q=80';
+      } else if (lower.contains('beet')) {
+        imageUrl = 'https://images.unsplash.com/photo-1593105544559-ecb03bf76f82?w=600&auto=format&fit=crop&q=80';
+      } else if (lower.contains('bean')) {
+        imageUrl = 'https://images.unsplash.com/photo-1551462147-ff29053bfc14?w=600&auto=format&fit=crop&q=80';
+      } else if (lower.contains('tomato')) {
+        imageUrl = 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&auto=format&fit=crop&q=80';
+      } else if (lower.contains('capsicum') || lower.contains('pepper') || lower.contains('bell')) {
+        imageUrl = 'https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=600&auto=format&fit=crop&q=80';
+      } else if (lower.contains('radish')) {
+        imageUrl = 'https://images.unsplash.com/photo-1590779033100-9f60a05a013d?w=600&auto=format&fit=crop&q=80';
+      } else if (lower.contains('onion') || lower.contains('spring')) {
+        imageUrl = 'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=600&auto=format&fit=crop&q=80';
+      } else if (lower.contains('potato')) {
+        imageUrl = 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=600&auto=format&fit=crop&q=80';
+      } else if (lower.contains('pumpkin')) {
+        imageUrl = 'https://images.unsplash.com/photo-1506917728037-b6af01a7d403?w=600&auto=format&fit=crop&q=80';
+      } else if (lower.contains('gourd') || lower.contains('cucumber')) {
+        imageUrl = 'https://images.unsplash.com/photo-1449300079323-02e209d9d3a6?w=600&auto=format&fit=crop&q=80';
+      } else if (lower.contains('chili')) {
+        imageUrl = 'https://images.unsplash.com/photo-1588252303782-cb80119abd6d?w=600&auto=format&fit=crop&q=80';
+      }
+    }
+
     return Crop(
-      id: normalizedId,
+      id: normalizedId.isNotEmpty ? normalizedId : 'crop_unknown',
       name: name,
       sinhalaName: sinhala,
-      category: json['category'] ?? 'Upcountry Vegetable',
+      category: json['category']?.toString() ?? 'Upcountry Vegetable',
       maturityDays: maturity,
       expectedYieldKgPerAcre: yieldKg,
       currentMarketPricePerKg: price,
       historicalAveragePricePerKg: histPrice,
       iconEmoji: emoji,
-      imageUrl: json['image_url'] ?? json['imageUrl'] ?? '',
+      imageUrl: imageUrl,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Crop && runtimeType == other.runtimeType && id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class PlantedCropEntry {
