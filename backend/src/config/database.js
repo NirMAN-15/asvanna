@@ -734,14 +734,23 @@ module.exports = {
 
     if (lower.includes('insert into farmer_verifications')) {
       const newVerif = {
-        farmer_id: params[0],
-        verification_status: 'APPROVED',
-        verified_by: params[1],
-        verified_at: new Date().toISOString()
+        id: Date.now(),
+        farmer_id: Number(params[0]),
+        verification_status: params[1] || 'PENDING',
+        nic_verified: params[2] !== undefined ? params[2] : false,
+        land_gps_verified: params[3] !== undefined ? params[3] : false,
+        land_size_verified: params[4] !== undefined ? params[4] : false,
+        verified_by: null,
+        rejection_reason: null,
+        created_at: new Date().toISOString()
       };
       if (!fileDb.farmer_verifications) fileDb.farmer_verifications = [];
-      fileDb.farmer_verifications.push(newVerif);
-      saveDb(fileDb);
+      // ON CONFLICT DO NOTHING equivalent — skip if already exists for this farmer
+      const alreadyExists = fileDb.farmer_verifications.some(fv => Number(fv.farmer_id) === newVerif.farmer_id);
+      if (!alreadyExists) {
+        fileDb.farmer_verifications.push(newVerif);
+        saveDb(fileDb);
+      }
       return { rows: [newVerif] };
     }
 
