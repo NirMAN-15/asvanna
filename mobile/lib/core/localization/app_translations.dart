@@ -389,7 +389,6 @@ class AppTranslations {
       'produce_notes_title': 'එළවළු තත්ත්වය සහ ඇසුරුම් විස්තර',
       'produce_notes_hint': 'උදා: අද උදෑසන නෙළන ලද නැවුම් එළවළු, කිලෝ 25 මළුවල අසුරා ඇත.',
       'total_listing_value': 'මුළු අලෙවි වටිනාකම:',
-      'publish_surplus_btn': 'කි.මී. 5 වෙළඳපොළට යොමු කරන්න',
 
       // Price Trends
       'price_intel_title': 'වෙළඳපොළ සහ මිල විශ්ලේෂණය',
@@ -601,7 +600,6 @@ class AppTranslations {
       'produce_notes_title': 'தயாரிப்பு நிலை மற்றும் பேக்கேஜிங் குறிப்புகள்',
       'produce_notes_hint': 'எ.கா: இன்று காலை அறுவடை செய்யப்பட்டது, 25 கிலோ பைகளில் பேக் செய்யப்பட்டது.',
       'total_listing_value': 'மொத்த பட்டியல் மதிப்பு:',
-      'publish_surplus_btn': '5 கி.மீ சந்தையில் வெளியிடவும்',
 
       // Price Trends
       'price_intel_title': 'சந்தை மற்றும் விலை பகுப்பாய்வு',

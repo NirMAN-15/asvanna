@@ -91,6 +91,216 @@ class OfficerController {
   }
 
   /**
+   * GET /api/v1/officer/farmer-updates/pending
+   * List pending farmer profile updates awaiting divisional officer approval
+   */
+  static async getFarmerProfileRequests(req, res, next) {
+    try {
+      const result = await db.query(
+        `SELECT id, first_name, middle_name, last_name, full_name, phone, nic, email,
+                district, division, gnd_division, address_line1, address_line2, city, postal_code, address,
+                total_land_size, last_profile_update_at, pending_profile_updates, profile_update_status
+         FROM users
+         WHERE role = 'FARMER' AND profile_update_status = 'PENDING'
+         ORDER BY last_profile_update_at DESC`
+      );
+      return ApiResponse.success(res, result.rows || [], 'Pending profile change requests retrieved');
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * POST /api/v1/officer/farmer-updates/:farmerId/review
+   * Approve or reject farmer profile details change
+   */
+  static async reviewFarmerProfileRequest(req, res, next) {
+    try {
+      const { farmerId } = req.params;
+      const { approved, rejectionReason } = req.body;
+
+      const userRes = await db.query('SELECT * FROM users WHERE id = $1', [farmerId]);
+      if (userRes.rows.length === 0) return ApiResponse.error(res, 'Farmer not found', 404);
+      const farmer = userRes.rows[0];
+
+      if (approved) {
+        let pending = farmer.pending_profile_updates;
+        if (typeof pending === 'string') {
+          try { pending = JSON.parse(pending); } catch (e) {}
+        }
+        pending = pending || {};
+
+        const updateRes = await db.query(
+          `UPDATE users
+           SET full_name = COALESCE($1, full_name),
+               first_name = COALESCE($2, first_name),
+               middle_name = COALESCE($3, middle_name),
+               last_name = COALESCE($4, last_name),
+               gnd_division = COALESCE($5, gnd_division),
+               total_land_size = COALESCE($6, total_land_size),
+               address_line1 = COALESCE($7, address_line1),
+               address_line2 = COALESCE($8, address_line2),
+               city = COALESCE($9, city),
+               postal_code = COALESCE($10, postal_code),
+               address = COALESCE($11, address),
+               profile_update_status = 'APPROVED',
+               pending_profile_updates = NULL,
+               updated_at = CURRENT_TIMESTAMP
+           WHERE id = $12
+           RETURNING *`,
+          [
+            pending.full_name || null,
+            pending.first_name || null,
+            pending.middle_name || null,
+            pending.last_name || null,
+            pending.gnd_division || null,
+            pending.total_land_size !== undefined ? parseFloat(pending.total_land_size) : null,
+            pending.address_line1 || null,
+            pending.address_line2 || null,
+            pending.city || null,
+            pending.postal_code || null,
+            pending.address || null,
+            farmerId
+          ]
+        );
+
+        return ApiResponse.success(res, updateRes.rows[0], 'Farmer profile updates approved and officially synchronized');
+      } else {
+        const updateRes = await db.query(
+          `UPDATE users
+           SET profile_update_status = 'REJECTED',
+               pending_profile_updates = NULL,
+               updated_at = CURRENT_TIMESTAMP
+           WHERE id = $1
+           RETURNING *`,
+          [farmerId]
+        );
+        return ApiResponse.success(res, updateRes.rows[0], 'Farmer profile updates rejected');
+      }
+    } catch (err) {
+      next(err);
+    }
+  }
+
+
+  /**
+   * PUT /api/v1/officer/farmers/:farmerId
+   * Update farmer details by Divisional Officer
+   */
+  static async updateFarmerDetails(req, res, next) {
+    try {
+      const { farmerId } = req.params;
+      const {
+        first_name, middle_name, last_name, full_name,
+        phone, nic, district, division, gnd_division,
+        address_line1, address_line2, city, postal_code, address,
+        total_land_size, latitude, longitude,
+        verification_status, is_active, password
+      } = req.body;
+
+      // Check if farmer exists
+      const userRes = await db.query("SELECT * FROM users WHERE id = $1 AND role = 'FARMER'", [farmerId]);
+      if (userRes.rows.length === 0) {
+        return ApiResponse.error(res, 'Farmer not found.', 404);
+      }
+      const existing = userRes.rows[0];
+
+      // Resolve name
+      let resolvedFirst = first_name !== undefined ? (first_name || null) : existing.first_name;
+      let resolvedMiddle = middle_name !== undefined ? (middle_name || null) : existing.middle_name;
+      let resolvedLast = last_name !== undefined ? (last_name || null) : existing.last_name;
+      let resolvedFull = full_name !== undefined ? (full_name || null) : existing.full_name;
+
+      if ((!resolvedFirst || !resolvedLast) && resolvedFull) {
+        const nameParts = splitFullName(resolvedFull);
+        resolvedFirst = resolvedFirst || nameParts.first_name;
+        resolvedMiddle = resolvedMiddle !== null ? resolvedMiddle : nameParts.middle_name;
+        resolvedLast = resolvedLast || nameParts.last_name;
+      }
+      if (resolvedFirst || resolvedLast) {
+        resolvedFull = formatFullName(resolvedFirst, resolvedMiddle, resolvedLast);
+      }
+
+      // Resolve address
+      let resolvedCity = city !== undefined ? city : (existing.city || existing.division || 'Bandarawela');
+      let resolvedPostal = postal_code !== undefined ? postal_code : (existing.postal_code || '90100');
+      let resolvedAddr1 = address_line1 !== undefined ? (address_line1 || null) : existing.address_line1;
+      let resolvedAddr2 = address_line2 !== undefined ? (address_line2 || null) : existing.address_line2;
+      let resolvedAddr = address !== undefined ? (address || null) : existing.address;
+
+      if (!resolvedAddr1 && resolvedAddr) {
+        const addrParts = splitAddress(resolvedAddr, resolvedCity, resolvedPostal);
+        resolvedAddr1 = addrParts.address_line1;
+        resolvedAddr2 = addrParts.address_line2;
+        resolvedCity = addrParts.city;
+        resolvedPostal = addrParts.postal_code;
+      }
+      if (resolvedAddr1) {
+        resolvedAddr = formatAddress(resolvedAddr1, resolvedAddr2, resolvedCity, resolvedPostal);
+      }
+
+      // Password update if provided
+      let passwordHash = existing.password_hash;
+      if (password && password.trim().length > 0) {
+        const salt = await bcrypt.genSalt(10);
+        passwordHash = await bcrypt.hash(password.trim(), salt);
+      }
+
+      const updateRes = await db.query(
+        `UPDATE users
+         SET
+           first_name = $1,
+           middle_name = $2,
+           last_name = $3,
+           full_name = $4,
+           phone = COALESCE($5, phone),
+           nic = COALESCE($6, nic),
+           district = COALESCE($7, district),
+           division = COALESCE($8, division),
+           gnd_division = COALESCE($9, gnd_division),
+           address_line1 = $10,
+           address_line2 = $11,
+           city = $12,
+           postal_code = $13,
+           address = $14,
+           total_land_size = COALESCE($15, total_land_size),
+           latitude = COALESCE($16, latitude),
+           longitude = COALESCE($17, longitude),
+           verification_status = COALESCE($18, verification_status),
+           is_active = COALESCE($19, is_active),
+           password_hash = $20,
+           updated_at = CURRENT_TIMESTAMP
+         WHERE id = $21
+         RETURNING id, first_name, middle_name, last_name, full_name, phone, nic, email,
+                   district, division, gnd_division,
+                   address_line1, address_line2, city, postal_code, address,
+                   total_land_size, latitude, longitude,
+                   verification_status, is_verified, is_active, created_at, updated_at`,
+        [
+          resolvedFirst, resolvedMiddle, resolvedLast, resolvedFull,
+          phone !== undefined ? phone.trim() : null,
+          nic !== undefined ? nic.trim().toUpperCase() : null,
+          district || null,
+          division || null,
+          gnd_division || null,
+          resolvedAddr1, resolvedAddr2, resolvedCity, resolvedPostal, resolvedAddr,
+          total_land_size !== undefined && total_land_size !== null ? parseFloat(total_land_size) : null,
+          latitude !== undefined && latitude !== null ? parseFloat(latitude) : null,
+          longitude !== undefined && longitude !== null ? parseFloat(longitude) : null,
+          verification_status || null,
+          is_active !== undefined ? Boolean(is_active) : null,
+          passwordHash,
+          farmerId
+        ]
+      );
+
+      return ApiResponse.success(res, updateRes.rows[0], 'Farmer details updated successfully by officer');
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
    * POST /api/v1/officer/proxy-register
    * Officer registers a farmer on their behalf (verified immediately)
    */
@@ -100,7 +310,7 @@ class OfficerController {
         first_name, middle_name, last_name, full_name,
         phone, nic, district = 'Badulla', division = 'Bandarawela',
         gnd_division, address_line1, address_line2, city, postal_code, address,
-        total_land_size, latitude, longitude
+        total_land_size, latitude, longitude, password
       } = req.body;
       const officerId = req.user ? req.user.id : 1;
 
@@ -139,8 +349,9 @@ class OfficerController {
         resolvedAddr = formatAddress(resolvedAddr1, resolvedAddr2, resolvedCity, resolvedPostal);
       }
 
+      const rawPassword = password && password.trim() ? password.trim() : 'asvanna123';
       const salt = await bcrypt.genSalt(10);
-      const defaultPassword = await bcrypt.hash('asvanna123', salt);
+      const defaultPassword = await bcrypt.hash(rawPassword, salt);
 
       const result = await db.query(
         `INSERT INTO users (
@@ -174,7 +385,15 @@ class OfficerController {
         [newFarmer.id, officerId]
       );
 
-      return ApiResponse.success(res, newFarmer, 'Farmer registered and approved via proxy by Divisional Officer', 201);
+      return ApiResponse.success(res, {
+        ...newFarmer,
+        credentials: {
+          identifier: newFarmer.nic || newFarmer.phone,
+          nic: newFarmer.nic,
+          phone: newFarmer.phone,
+          password: rawPassword
+        }
+      }, 'Farmer registered and approved via proxy by Divisional Officer', 201);
     } catch (err) {
       next(err);
     }

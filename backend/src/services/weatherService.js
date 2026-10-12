@@ -6,22 +6,164 @@ const config = require('../config/config');
 // In-memory cache with 6-hour TTL
 const memoryCache = new NodeCache({ stdTTL: config.weather.cacheTtlSeconds, checkperiod: 600 });
 
+// Known Upcountry Vegetable Cultivation Zones & Agrarian Divisions
+const KNOWN_LOCATIONS = {
+  bandarawela: {
+    name: 'Bandarawela',
+    district: 'Badulla',
+    province: 'Uva',
+    elevationMeters: 1230,
+    elevationText: '1,230m • Badulla District',
+    latitude: 6.8304,
+    longitude: 80.9878
+  },
+  'nuwara eliya': {
+    name: 'Nuwara Eliya',
+    district: 'Nuwara Eliya',
+    province: 'Central',
+    elevationMeters: 1868,
+    elevationText: '1,868m • Central Province',
+    latitude: 6.9497,
+    longitude: 80.7891
+  },
+  welimada: {
+    name: 'Welimada',
+    district: 'Badulla',
+    province: 'Uva',
+    elevationMeters: 1060,
+    elevationText: '1,060m • Uva Province',
+    latitude: 6.9033,
+    longitude: 80.9022
+  },
+  badulla: {
+    name: 'Badulla',
+    district: 'Badulla',
+    province: 'Uva',
+    elevationMeters: 680,
+    elevationText: '680m • Badulla District',
+    latitude: 6.9895,
+    longitude: 81.0557
+  },
+  keppetipola: {
+    name: 'Keppetipola',
+    district: 'Badulla',
+    province: 'Uva',
+    elevationMeters: 1220,
+    elevationText: '1,220m • Badulla District',
+    latitude: 6.8911,
+    longitude: 80.8656
+  }
+};
+
 class WeatherService {
   /**
-   * Fetch live 14-day weather forecast for Bandarawela from Open-Meteo
+   * Helper to resolve coordinates & location metadata from division name or lat/lng
    */
-  static async getForecast(lat = config.weather.bandarawelaLat, lng = config.weather.bandarawelaLng) {
-    const cacheKey = `forecast_${lat}_${lng}`;
+  static resolveLocation(lat, lng, divisionName) {
+    if (divisionName) {
+      const key = divisionName.trim().toLowerCase();
+      if (KNOWN_LOCATIONS[key]) {
+        return { ...KNOWN_LOCATIONS[key] };
+      }
+      for (const [k, loc] of Object.entries(KNOWN_LOCATIONS)) {
+        if (key.includes(k) || k.includes(key)) {
+          return { ...loc, name: divisionName };
+        }
+      }
+    }
+
+    if (lat && lng) {
+      // Find closest known location or default
+      let closest = KNOWN_LOCATIONS.bandarawela;
+      let minDistance = Infinity;
+
+      for (const loc of Object.values(KNOWN_LOCATIONS)) {
+        const d = Math.hypot(loc.latitude - lat, loc.longitude - lng);
+        if (d < minDistance) {
+          minDistance = d;
+          closest = loc;
+        }
+      }
+
+      if (minDistance < 0.2) {
+        return { ...closest, latitude: lat, longitude: lng };
+      }
+
+      return {
+        name: divisionName || closest.name,
+        district: closest.district,
+        province: closest.province,
+        elevationMeters: closest.elevationMeters,
+        elevationText: `${closest.elevationMeters}m • ${closest.district} District`,
+        latitude: lat,
+        longitude: lng
+      };
+    }
+
+    return { ...KNOWN_LOCATIONS.bandarawela };
+  }
+
+  /**
+   * Map WMO Weather Interpretation Codes to readable descriptions and emojis
+   */
+  static parseWmoWeather(code, isNight = false) {
+    switch (code) {
+      case 0:
+        return { condition: 'Clear Sky', emoji: isNight ? '🌙' : '☀️' };
+      case 1:
+        return { condition: 'Mainly Clear', emoji: isNight ? '🌤️' : '🌤️' };
+      case 2:
+        return { condition: 'Partly Cloudy', emoji: '⛅' };
+      case 3:
+        return { condition: 'Overcast', emoji: '☁️' };
+      case 45:
+      case 48:
+        return { condition: 'Mist & Fog', emoji: '🌫️' };
+      case 51:
+      case 53:
+      case 55:
+        return { condition: 'Light Drizzle', emoji: '🌦️' };
+      case 61:
+      case 63:
+        return { condition: 'Scattered Afternoon Showers', emoji: '🌧️' };
+      case 65:
+        return { condition: 'Heavy Rain', emoji: '🌧️' };
+      case 71:
+      case 73:
+      case 75:
+        return { condition: 'Ground Frost Hazard', emoji: '❄️' };
+      case 80:
+      case 81:
+      case 82:
+        return { condition: 'Rain Showers', emoji: '🌧️' };
+      case 95:
+      case 96:
+      case 99:
+        return { condition: 'Thunderstorm', emoji: '⛈️' };
+      default:
+        return { condition: 'Partly Cloudy', emoji: '⛅' };
+    }
+  }
+
+  /**
+   * Fetch live 14-day weather forecast with hourly projections from Open-Meteo
+   */
+  static async getForecast(lat = null, lng = null, divisionName = null) {
+    const loc = this.resolveLocation(lat, lng, divisionName);
+    const resolvedLat = loc.latitude;
+    const resolvedLng = loc.longitude;
+    const cacheKey = `forecast_${resolvedLat}_${resolvedLng}`;
+
     const cached = memoryCache.get(cacheKey);
     if (cached) return cached;
 
     try {
       const response = await axios.get(config.weather.openMeteoForecastUrl, {
         params: {
-          latitude: lat,
-          longitude: lng,
-          hourly: 'temperature_2m,relative_humidity_2m,rain,wind_speed_10m',
-          daily: 'temperature_2m_max,temperature_2m_min,rain_sum,precipitation_probability_max,wind_speed_10m_max',
+          latitude: resolvedLat,
+          longitude: resolvedLng,
+          hourly: 'temperature_2m,relative_humidity_2m,rain,precipitation_probability,wind_speed_10m,weather_code',
+          daily: 'temperature_2m_max,temperature_2m_min,rain_sum,precipitation_probability_max,wind_speed_10m_max,weather_code',
           forecast_days: 14,
           timezone: 'Asia/Colombo'
         },
@@ -33,14 +175,16 @@ class WeatherService {
 
       for (let i = 0; i < data.daily.time.length; i++) {
         const dateStr = data.daily.time[i];
-        const tempMax = data.daily.temperature_2m_max[i];
-        const tempMin = data.daily.temperature_2m_min[i];
+        const tempMax = Math.round(data.daily.temperature_2m_max[i] * 10) / 10;
+        const tempMin = Math.round(data.daily.temperature_2m_min[i] * 10) / 10;
         const tempAvg = Math.round(((tempMax + tempMin) / 2) * 10) / 10;
-        const rainMm = data.daily.rain_sum[i] || 0;
-        const windMax = data.daily.wind_speed_10m_max[i] || 0;
-        const precipProb = data.daily.precipitation_probability_max[i] || 0;
+        const rainMm = Math.round((data.daily.rain_sum[i] || 0) * 10) / 10;
+        const windMax = Math.round((data.daily.wind_speed_10m_max[i] || 0) * 10) / 10;
+        const precipProb = Math.round(data.daily.precipitation_probability_max[i] || 0);
+        const dailyCode = data.daily.weather_code ? data.daily.weather_code[i] : 2;
+        const { condition, emoji } = this.parseWmoWeather(dailyCode);
 
-        // Extract approximate daily humidity from hourly readings for that day
+        // Calculate approximate daily humidity from hourly readings for that day
         const dayStartIndex = i * 24;
         const dayHourlyHum = data.hourly.relative_humidity_2m.slice(dayStartIndex, dayStartIndex + 24);
         const humidityAvg = dayHourlyHum.length > 0
@@ -52,6 +196,7 @@ class WeatherService {
 
         const dayRecord = {
           date: dateStr,
+          temp: `${Math.round(tempAvg)}°C`,
           tempMin,
           tempMax,
           tempAvg,
@@ -59,42 +204,160 @@ class WeatherService {
           rainfallMm: rainMm,
           windSpeedMax: windMax,
           precipitationProbability: precipProb,
+          rainProb: `${precipProb}%`,
+          condition,
+          emoji,
           agriculturalScores: agScores
         };
 
         forecastDays.push(dayRecord);
 
         // Persist/Update to weather_cache table
-        await this.persistWeatherCache(lat, lng, dayRecord);
+        await this.persistWeatherCache(loc.name.toLowerCase(), resolvedLat, resolvedLng, dayRecord);
       }
 
+      // Generate current day hourly timeline (Next 24h intervals: 06:00, 09:00, 12:00, 15:00, 18:00, 21:00)
+      const hourlyForecast = [];
+      const hourlyTimes = data.hourly.time;
+      const hourlyTemps = data.hourly.temperature_2m;
+      const hourlyRains = data.hourly.rain;
+      const hourlyProb = data.hourly.precipitation_probability || [];
+      const hourlyCodes = data.hourly.weather_code || [];
+      const hourlyHums = data.hourly.relative_humidity_2m || [];
+
+      // Take first 24 hours
+      for (let h = 0; h < Math.min(24, hourlyTimes.length); h++) {
+        const timeIso = hourlyTimes[h];
+        const timePart = timeIso.includes('T') ? timeIso.split('T')[1].substring(0, 5) : `${h.toString().padStart(2, '0')}:00`;
+        const hTemp = Math.round(hourlyTemps[h]);
+        const hProb = hourlyProb[h] !== undefined ? hourlyProb[h] : (hourlyRains[h] > 0 ? 70 : 10);
+        const hCode = hourlyCodes[h] !== undefined ? hourlyCodes[h] : 2;
+        const isNight = h < 6 || h >= 19;
+        const { emoji } = this.parseWmoWeather(hCode, isNight);
+
+        hourlyForecast.push({
+          time: timePart,
+          temp: `${hTemp}°C`,
+          tempValue: hourlyTemps[h],
+          icon: emoji,
+          rain: `${hProb}%`,
+          rainProb: hProb,
+          humidity: hourlyHums[h] || 75
+        });
+      }
+
+      // Filter hourly slots to common agricultural checkpoints (06:00, 09:00, 12:00, 15:00, 18:00, 21:00)
+      const checkpointHours = ['06:00', '09:00', '12:00', '15:00', '18:00', '21:00'];
+      const filteredHourly = hourlyForecast.filter(item => checkpointHours.includes(item.time));
+      const finalHourly = filteredHourly.length >= 4 ? filteredHourly : hourlyForecast.slice(0, 8);
+
+      // Current Day Info
+      const currentDay = forecastDays[0] || {};
+      const isFrostRisk = currentDay.tempMin <= 8.5;
+      const frostRiskText = isFrostRisk ? `HIGH RISK (Night: ${currentDay.tempMin}°C)` : 'None';
+
+      const current = {
+        ...currentDay,
+        elevation: loc.elevationText,
+        humidity: `${currentDay.humidityAvg}%`,
+        wind: `${Math.round(currentDay.windSpeedMax)} km/h`,
+        agScore: `${currentDay.agriculturalScores.suitabilityScore}/100 (${currentDay.agriculturalScores.suitabilityScore >= 75 ? 'Safe' : 'Caution'})`,
+        frostRisk: isFrostRisk ? frostRiskText : undefined
+      };
+
+      // Generate Dynamic Disease & Agricultural Advisories
+      const diseases = this.generateDiseaseAdvisories(loc, currentDay, forecastDays);
+
       const result = {
-        location: {
-          name: 'Bandarawela',
-          district: 'Badulla',
-          province: 'Uva',
-          elevationMeters: 1216,
-          latitude: lat,
-          longitude: lng
-        },
+        location: loc,
+        current,
+        hourly: finalHourly,
         forecast: forecastDays,
-        current: forecastDays[0],
-        fetchedAt: new Date().toISOString()
+        diseases,
+        fetchedAt: new Date().toISOString(),
+        source: 'OPEN_METEO_LIVE'
       };
 
       memoryCache.set(cacheKey, result);
       return result;
     } catch (err) {
-      console.warn('⚠️ Open-Meteo live fetch failed, querying weather_cache database:', err.message);
-      return await this.getCachedForecastFromDb(lat, lng);
+      console.warn(`⚠️ Open-Meteo live fetch failed for ${loc.name}, querying database cache:`, err.message);
+      return await this.getCachedForecastFromDb(loc);
     }
   }
 
   /**
-   * Bandarawela-calibrated agricultural scoring rules:
-   * - Elevation: ~1,216m
-   * - Temperatures stay between 10°C and 28°C (no frost risk)
-   * - Rainfall & high humidity fungal pressures are dominant risks
+   * Generate dynamic agricultural disease advisories calibrated to live weather
+   */
+  static generateDiseaseAdvisories(loc, currentDay, forecast) {
+    const diseases = [];
+    const humidity = currentDay.humidityAvg || 80;
+    const tempMin = currentDay.tempMin || 14;
+    const tempAvg = currentDay.tempAvg || 20;
+    const rainMm = currentDay.rainfallMm || 0;
+
+    // 1. Ground Frost Damage (For high altitude Nuwara Eliya / Welimada)
+    if (tempMin <= 8.5 || loc.elevationMeters >= 1600) {
+      diseases.push({
+        name: 'Ground Frost Damage (මල් තුෂාර හානිය)',
+        risk: tempMin <= 8.0 ? 'Severe Frost Alert' : 'Moderate Frost Warning',
+        color: '#DC2626', // AppColors.riskCritical
+        advice: `Night temperatures dropping to ${tempMin}°C. Cover sensitive potato & leek beds with polythene mulch or frost sheets.`
+      });
+    }
+
+    // 2. Late Blight (Phytophthora infestans) - High risk when humidity > 80% and temp 14-22°C
+    if (humidity >= 80 && tempAvg >= 14 && tempAvg <= 24) {
+      diseases.push({
+        name: 'Late Blight (තක්කාලි/අල පාළු රෝගය)',
+        risk: humidity >= 88 ? 'Critical Risk' : 'High Risk',
+        color: '#DC2626',
+        advice: `High humidity (${humidity}%) + ${tempMin}°C night temp. Persistent leaf wetness detected. Avoid sprinkler irrigation after 2 PM.`
+      });
+    }
+
+    // 3. Downy Mildew / Cabbage Mold
+    if (humidity >= 75) {
+      diseases.push({
+        name: 'Downy Mildew (ගෝවා පුස් රෝගය)',
+        risk: 'Moderate',
+        color: '#D97706', // AppColors.riskModerate
+        advice: `Ensure adequate row ventilation and raised bed drainage in cabbage and broccoli nurseries.`
+      });
+    }
+
+    // 4. Powdery Mildew
+    if (rainMm < 5 && humidity <= 75) {
+      diseases.push({
+        name: 'Powdery Mildew (අළු පුස්)',
+        risk: 'Low Risk',
+        color: '#16A34A', // AppColors.riskSafe
+        advice: `Favorable growing conditions across ${loc.name} valley for beans and capsicum.`
+      });
+    }
+
+    // 5. Root Rot & Soil Drainage
+    if (rainMm > 30) {
+      diseases.push({
+        name: 'Root Rot (මුල් කුණුවීම)',
+        risk: 'Moderate Warning',
+        color: '#D97706',
+        advice: `Heavy precipitation (${rainMm}mm) expected. Deepen drainage furrows to avoid root waterlogging.`
+      });
+    } else {
+      diseases.push({
+        name: 'Root Rot (මුල් කුණුවීම)',
+        risk: 'Safe',
+        color: '#16A34A',
+        advice: `Soil moisture in ${loc.name} cultivation zones remains within healthy thresholds.`
+      });
+    }
+
+    return diseases;
+  }
+
+  /**
+   * Agricultural scoring calibrated for Upcountry Sri Lanka
    */
   static calculateAgScores(tempAvg, tempMin, tempMax, rainDailyMm, humidityAvg) {
     // 1. Temperature Suitability Score (0-100, 100 = optimum)
@@ -228,7 +491,7 @@ class WeatherService {
   /**
    * Persist weather data into PostgreSQL weather_cache table
    */
-  static async persistWeatherCache(lat, lng, dayRecord) {
+  static async persistWeatherCache(locationKey, lat, lng, dayRecord) {
     try {
       await db.query(
         `INSERT INTO weather_cache (
@@ -245,7 +508,7 @@ class WeatherService {
           weather_risk_score = EXCLUDED.weather_risk_score,
           fetched_at = CURRENT_TIMESTAMP`,
         [
-          'bandarawela', lat, lng, dayRecord.date, dayRecord.tempMin, dayRecord.tempMax,
+          locationKey, lat, lng, dayRecord.date, dayRecord.tempMin, dayRecord.tempMax,
           dayRecord.tempAvg, dayRecord.humidityAvg, dayRecord.rainfallMm, dayRecord.windSpeedMax,
           dayRecord.precipitationProbability, dayRecord.agriculturalScores.weatherRiskScore,
           JSON.stringify(dayRecord)
@@ -259,34 +522,58 @@ class WeatherService {
   /**
    * Database fallback if live API is temporarily unreachable
    */
-  static async getCachedForecastFromDb(lat = config.weather.bandarawelaLat, lng = config.weather.bandarawelaLng) {
+  static async getCachedForecastFromDb(loc = KNOWN_LOCATIONS.bandarawela) {
+    const locKey = loc.name.toLowerCase();
     try {
       const res = await db.query(
         `SELECT * FROM weather_cache
-         WHERE location_key = 'bandarawela' AND forecast_date >= CURRENT_DATE
-         ORDER BY forecast_date ASC LIMIT 14`
+         WHERE location_key = $1 AND forecast_date >= CURRENT_DATE
+         ORDER BY forecast_date ASC LIMIT 14`,
+        [locKey]
       );
 
       if (res && res.rows && res.rows.length > 0) {
         const forecastDays = res.rows.map(r => ({
           date: r.forecast_date.toISOString().split('T')[0],
+          temp: `${Math.round(parseFloat(r.temp_avg))}°C`,
           tempMin: parseFloat(r.temp_min),
           tempMax: parseFloat(r.temp_max),
           tempAvg: parseFloat(r.temp_avg),
           humidityAvg: parseFloat(r.humidity_avg),
           rainfallMm: parseFloat(r.rainfall_mm),
-          windSpeedMax: parseFloat(r.wind_speed_avg || 10),
-          precipitationProbability: r.precipitation_probability || 0,
+          windSpeedMax: parseFloat(r.wind_speed_avg || 12),
+          precipitationProbability: r.precipitation_probability || 40,
+          rainProb: `${r.precipitation_probability || 40}%`,
+          condition: 'Scattered Afternoon Showers',
+          emoji: '⛅',
           agriculturalScores: {
             weatherRiskScore: parseFloat(r.weather_risk_score || 20),
             suitabilityScore: 100 - parseFloat(r.weather_risk_score || 20)
           }
         }));
 
+        const currentDay = forecastDays[0];
+        const current = {
+          ...currentDay,
+          elevation: loc.elevationText,
+          humidity: `${currentDay.humidityAvg}%`,
+          wind: `${Math.round(currentDay.windSpeedMax)} km/h`,
+          agScore: `${currentDay.agriculturalScores.suitabilityScore}/100 (Safe)`
+        };
+
         return {
-          location: { name: 'Bandarawela', district: 'Badulla', elevationMeters: 1216, latitude: lat, longitude: lng },
+          location: loc,
           forecast: forecastDays,
-          current: forecastDays[0],
+          current,
+          hourly: [
+            { time: '06:00', temp: '15°C', tempValue: 15, icon: '⛅', rain: '10%', rainProb: 10, humidity: 85 },
+            { time: '09:00', temp: '19°C', tempValue: 19, icon: '☀️', rain: '15%', rainProb: 15, humidity: 80 },
+            { time: '12:00', temp: '23°C', tempValue: 23, icon: '⛅', rain: '35%', rainProb: 35, humidity: 72 },
+            { time: '15:00', temp: '21°C', tempValue: 21, icon: '🌧️', rain: '80%', rainProb: 80, humidity: 85 },
+            { time: '18:00', temp: '18°C', tempValue: 18, icon: '🌧️', rain: '70%', rainProb: 70, humidity: 90 },
+            { time: '21:00', temp: '16°C', tempValue: 16, icon: '☁️', rain: '30%', rainProb: 30, humidity: 88 }
+          ],
+          diseases: this.generateDiseaseAdvisories(loc, currentDay, forecastDays),
           source: 'DATABASE_CACHE'
         };
       }
@@ -294,20 +581,41 @@ class WeatherService {
       // Fall through to hard fallback
     }
 
-    // Default emergency fallback (Bandarawela historical averages)
+    // Default emergency fallback
     const today = new Date().toISOString().split('T')[0];
+    const current = {
+      date: today,
+      temp: '21°C',
+      tempMin: 15.5,
+      tempMax: 24.2,
+      tempAvg: 19.8,
+      humidityAvg: 75,
+      humidity: '75%',
+      rainfallMm: 5.0,
+      wind: '14 km/h',
+      windSpeedMax: 14,
+      rainProb: '40%',
+      precipitationProbability: 40,
+      condition: 'Scattered Afternoon Showers',
+      emoji: '⛅',
+      elevation: loc.elevationText,
+      agScore: '88/100 (Safe)',
+      agriculturalScores: { suitabilityScore: 88, weatherRiskScore: 12 }
+    };
+
     return {
-      location: { name: 'Bandarawela', district: 'Badulla', elevationMeters: 1216, latitude: lat, longitude: lng },
-      current: {
-        date: today,
-        tempMin: 15.5,
-        tempMax: 24.2,
-        tempAvg: 19.8,
-        humidityAvg: 75,
-        rainfallMm: 5.0,
-        agriculturalScores: { suitabilityScore: 92, weatherRiskScore: 8 }
-      },
-      forecast: [],
+      location: loc,
+      current,
+      hourly: [
+        { time: '06:00', temp: '15°C', tempValue: 15, icon: '⛅', rain: '10%', rainProb: 10, humidity: 85 },
+        { time: '09:00', temp: '19°C', tempValue: 19, icon: '☀️', rain: '15%', rainProb: 15, humidity: 80 },
+        { time: '12:00', temp: '23°C', tempValue: 23, icon: '⛅', rain: '35%', rainProb: 35, humidity: 72 },
+        { time: '15:00', temp: '21°C', tempValue: 21, icon: '🌧️', rain: '80%', rainProb: 80, humidity: 85 },
+        { time: '18:00', temp: '18°C', tempValue: 18, icon: '🌧️', rain: '70%', rainProb: 70, humidity: 90 },
+        { time: '21:00', temp: '16°C', tempValue: 16, icon: '☁️', rain: '30%', rainProb: 30, humidity: 88 }
+      ],
+      forecast: [current],
+      diseases: this.generateDiseaseAdvisories(loc, current, [current]),
       source: 'OFFLINE_BANDARAWELA_BASELINE'
     };
   }

@@ -21,6 +21,25 @@ class CropController {
       next(err);
     }
   }
+
+  static async createCrop(req, res, next) {
+    try {
+      const newCrop = await CropService.createCrop(req.body);
+      return ApiResponse.success(res, newCrop, 'Crop created successfully', 201);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async updateCrop(req, res, next) {
+    try {
+      const { cropId } = req.params;
+      const updated = await CropService.updateCrop(cropId, req.body);
+      return ApiResponse.success(res, updated, 'Crop updated successfully');
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 module.exports = CropController;

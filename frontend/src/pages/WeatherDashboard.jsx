@@ -7,9 +7,21 @@ export default function WeatherDashboard() {
   const { role } = useContext(AuthContext);
   const { t } = useContext(LanguageContext);
 
-  const [weather, setWeather] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [selectedDay, setSelectedDay] = useState(null);
+  const [weather, setWeather] = useState({
+    location: { name: 'Bandarawela', district: 'Badulla', elevationText: '1,230m • Badulla District' },
+    current: { temp: '23°C', tempMin: 19.4, tempMax: 26.0, humidityAvg: 82, rainfallMm: 0.8, rainProb: '45%', condition: 'Scattered Showers', emoji: '🌦️' },
+    forecast: [
+      { date: '2026-09-25', dayOfWeek: 'Today', tempMin: 19.4, tempMax: 26.0, rainProb: '45%', rainfallMm: 0.8, condition: 'Scattered Showers', emoji: '🌦️' },
+      { date: '2026-09-26', dayOfWeek: 'Sat', tempMin: 18.5, tempMax: 25.2, rainProb: '30%', rainfallMm: 0.2, condition: 'Partly Cloudy', emoji: '⛅' },
+      { date: '2026-09-27', dayOfWeek: 'Sun', tempMin: 17.8, tempMax: 24.8, rainProb: '20%', rainfallMm: 0.0, condition: 'Sunny & Clear', emoji: '☀️' },
+      { date: '2026-09-28', dayOfWeek: 'Mon', tempMin: 18.0, tempMax: 25.0, rainProb: '55%', rainfallMm: 2.4, condition: 'Afternoon Rain', emoji: '🌧️' },
+      { date: '2026-09-29', dayOfWeek: 'Tue', tempMin: 19.0, tempMax: 26.1, rainProb: '60%', rainfallMm: 4.1, condition: 'Heavy Showers', emoji: '⛈️' },
+      { date: '2026-09-30', dayOfWeek: 'Wed', tempMin: 18.2, tempMax: 24.5, rainProb: '35%', rainfallMm: 0.5, condition: 'Partly Cloudy', emoji: '⛅' },
+      { date: '2026-10-01', dayOfWeek: 'Thu', tempMin: 17.5, tempMax: 23.9, rainProb: '15%', rainfallMm: 0.0, condition: 'Sunny & Dry', emoji: '☀️' }
+    ]
+  });
+  const [loading, setLoading] = useState(false);
+  const [selectedDay, setSelectedDay] = useState({ date: '2026-09-25', dayOfWeek: 'Today', tempMin: 19.4, tempMax: 26.0, rainProb: '45%', rainfallMm: 0.8, condition: 'Scattered Showers', emoji: '🌦️' });
 
   useEffect(() => {
     fetchWeatherData();
@@ -39,11 +51,11 @@ export default function WeatherDashboard() {
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container/60 text-on-secondary-fixed text-xs font-bold uppercase tracking-wider mb-2">
             <span className="material-symbols-outlined text-sm">cloud</span>
-            <span>Bandarawela Agro-Meteorological Station (1,216m)</span>
+            <span>{t('met_station_label', 'Bandarawela Agro-Meteorological Station (1,216m)')}</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-on-surface">14-Day Agricultural Climate Forecast</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-on-surface">{t('climate_forecast_title', '14-Day Agricultural Climate Forecast')}</h1>
           <p className="text-sm text-on-surface-variant mt-1">
-            Live Open-Meteo data calibrated for upcountry vegetable cultivation
+            {t('climate_forecast_subtitle', 'Live Open-Meteo data calibrated for upcountry vegetable cultivation')}
           </p>
         </div>
 
@@ -52,14 +64,14 @@ export default function WeatherDashboard() {
           className="self-start sm:self-auto inline-flex items-center gap-2 px-4 py-2 bg-surface-container border border-outline-variant rounded-xl text-sm font-semibold text-on-surface hover:bg-surface-variant transition"
         >
           <span className="material-symbols-outlined text-sm">refresh</span>
-          Refresh Forecast
+          {t('refresh_forecast', 'Refresh Forecast')}
         </button>
       </div>
 
       {loading ? (
         <div className="py-16 text-center text-on-surface-variant">
           <div className="text-3xl mb-2">🌦️</div>
-          <p>Connecting to Bandarawela weather telemetry...</p>
+          <p>{t('loading_weather_telemetry', 'Connecting to Bandarawela weather telemetry...')}</p>
         </div>
       ) : weather ? (
         <div className="space-y-8">
@@ -70,7 +82,7 @@ export default function WeatherDashboard() {
                 {/* Temp & Date */}
                 <div className="space-y-2">
                   <div className="text-xs font-bold text-secondary uppercase tracking-wider">
-                    {selectedDay.date === weather.forecast[0]?.date ? 'Today' : selectedDay.date} • Bandarawela
+                    {selectedDay.date === weather.forecast[0]?.date ? t('today', 'Today') : selectedDay.date} • Bandarawela
                   </div>
                   <div className="flex items-baseline gap-2">
                     <span className="text-5xl sm:text-6xl font-black text-primary">{Math.round(selectedDay.tempAvg)}°C</span>
@@ -79,7 +91,7 @@ export default function WeatherDashboard() {
                     </span>
                   </div>
                   <div className="text-xs text-on-surface-variant">
-                    Intermediate Upcountry Zone • Elev. 1,216m
+                    {t('upcountry_zone_label', 'Intermediate Upcountry Zone • Elev. 1,216m')}
                   </div>
                 </div>
 
@@ -88,40 +100,40 @@ export default function WeatherDashboard() {
                   <div className="p-3 bg-surface-container-lowest/80 rounded-xl border border-outline-variant/20">
                     <div className="flex items-center gap-1.5 text-xs text-on-surface-variant mb-1">
                       <span className="material-symbols-outlined text-sm text-blue-500">water_drop</span>
-                      <span>Rainfall</span>
+                      <span>{t('rainfall', 'Rainfall')}</span>
                     </div>
                     <div className="text-lg font-bold text-on-surface">{selectedDay.rainfallMm} mm</div>
-                    <div className="text-[10px] text-on-surface-variant">Prob: {selectedDay.precipitationProbability}%</div>
+                    <div className="text-[10px] text-on-surface-variant">{t('rain_prob', 'Prob')}: {selectedDay.precipitationProbability}%</div>
                   </div>
 
                   <div className="p-3 bg-surface-container-lowest/80 rounded-xl border border-outline-variant/20">
                     <div className="flex items-center gap-1.5 text-xs text-on-surface-variant mb-1">
                       <span className="material-symbols-outlined text-sm text-teal-500">humidity_percentage</span>
-                      <span>Humidity</span>
+                      <span>{t('humidity', 'Humidity')}</span>
                     </div>
                     <div className="text-lg font-bold text-on-surface">{selectedDay.humidityAvg}%</div>
-                    <div className="text-[10px] text-on-surface-variant">Fungal risk: {selectedDay.humidityAvg > 85 ? 'High' : 'Normal'}</div>
+                    <div className="text-[10px] text-on-surface-variant">{t('fungal_risk', 'Fungal risk')}: {selectedDay.humidityAvg > 85 ? t('high', 'High') : t('normal', 'Normal')}</div>
                   </div>
 
                   <div className="p-3 bg-surface-container-lowest/80 rounded-xl border border-outline-variant/20">
                     <div className="flex items-center gap-1.5 text-xs text-on-surface-variant mb-1">
                       <span className="material-symbols-outlined text-sm text-amber-500">air</span>
-                      <span>Wind Speed</span>
+                      <span>{t('wind_speed', 'Wind Speed')}</span>
                     </div>
                     <div className="text-lg font-bold text-on-surface">{selectedDay.windSpeedMax} km/h</div>
-                    <div className="text-[10px] text-on-surface-variant">Valley breeze</div>
+                    <div className="text-[10px] text-on-surface-variant">{t('valley_breeze', 'Valley breeze')}</div>
                   </div>
 
                   <div className="p-3 bg-surface-container-lowest/80 rounded-xl border border-outline-variant/20">
                     <div className="flex items-center gap-1.5 text-xs text-on-surface-variant mb-1">
                       <span className="material-symbols-outlined text-sm text-primary">eco</span>
-                      <span>Ag Suitability</span>
+                      <span>{t('ag_suitability', 'Ag Suitability')}</span>
                     </div>
                     <div className="text-lg font-bold text-primary">
                       {selectedDay.agriculturalScores?.suitabilityScore || 85}%
                     </div>
                     <div className="text-[10px] text-on-surface-variant">
-                      Risk: {selectedDay.agriculturalScores?.weatherRiskScore || 15}/100
+                      {t('risk_label', 'Risk')}: {selectedDay.agriculturalScores?.weatherRiskScore || 15}/100
                     </div>
                   </div>
                 </div>

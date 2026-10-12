@@ -397,6 +397,13 @@ class MarketplaceController {
 
       if (action === 'ACCEPT') {
         newStatus = 'ACCEPTED';
+        await db.query(
+          `UPDATE marketplace_listings
+           SET quantity_kg = CASE WHEN quantity_kg - $1 > 0 THEN quantity_kg - $1 ELSE quantity_kg END,
+               status = CASE WHEN quantity_kg - $1 <= 0 THEN 'SOLD' ELSE status END
+           WHERE id = $2`,
+          [order.requested_quantity_kg, order.listing_id]
+        );
       } else if (action === 'DECLINE') {
         newStatus = 'DECLINED';
       } else if (action === 'COUNTER_OFFER') {
@@ -431,6 +438,16 @@ class MarketplaceController {
   static async getMessages(req, res, next) {
     try {
       const { orderId } = req.params;
+      // Fetch persisted history from DB first
+      const dbRes = await db.query(
+        'SELECT * FROM chat_messages WHERE order_id = $1 ORDER BY created_at ASC',
+        [orderId]
+      );
+      if (dbRes.rows && dbRes.rows.length > 0) {
+        return ApiResponse.success(res, dbRes.rows, 'Chat history retrieved from DB');
+      }
+
+      // Fallback to real-time store
       const history = realtimeStore.getChatHistory(orderId);
       return ApiResponse.success(res, history, 'Chat history retrieved');
     } catch (err) {
@@ -447,7 +464,20 @@ class MarketplaceController {
       const { text, listingId = 1 } = req.body;
       const user = req.user || { id: 1, full_name: 'User', role: 'BUYER' };
 
+      // 1. Sync to real-time memory store & Firebase RTDB
       const msg = realtimeStore.addChatMessage(listingId, orderId, user.id, user.full_name, user.role, text);
+
+      // 2. Persist to chat_messages table in database (PostgreSQL / JSON fileDb)
+      try {
+        await db.query(
+          `INSERT INTO chat_messages (order_id, listing_id, sender_id, sender_name, sender_role, message_text)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [orderId, listingId, user.id, user.full_name, user.role, text]
+        );
+      } catch (dbErr) {
+        console.warn('⚠️ Note on persisting chat message to DB:', dbErr.message);
+      }
+
       return ApiResponse.success(res, msg, 'Message sent', 201);
     } catch (err) {
       next(err);

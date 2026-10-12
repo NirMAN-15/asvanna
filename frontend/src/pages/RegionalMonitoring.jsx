@@ -10,7 +10,7 @@ export default function RegionalMonitoring() {
   React.useEffect(() => {
     // Attempt to fetch real planting data
     import('../services/api').then(({ default: API }) => {
-      API.get('/planting/logs?district=Badulla')
+      API.get('/planting/regional-map?district=Badulla')
         .then(res => {
           if (res.data?.data) {
             setPlantings(res.data.data);

@@ -50,7 +50,9 @@ export default function FarmerPlantingModal({ isOpen, onClose, onPlantingAdded, 
     if (isOpen && user?.id) {
       API.get(`/planting/farmer/${user.id}`)
         .then(res => {
-          const totalLand = user?.total_land_size || 5;
+          const totalLand = user?.has_pending_profile_updates && user?.pending_profile_details?.previous_values?.total_land_size
+            ? parseFloat(user.pending_profile_details.previous_values.total_land_size)
+            : parseFloat(user?.total_land_size) || 5;
           const utilizedLand = res.data.data.reduce((sum, crop) => sum + (parseFloat(crop.land_size_acres) || 0), 0);
           setAvailableLand(Math.max(0, totalLand - utilizedLand));
         })
@@ -158,11 +160,14 @@ export default function FarmerPlantingModal({ isOpen, onClose, onPlantingAdded, 
               onChange={(e) => setCropId(e.target.value)}
               className="w-full bg-white border border-outline-variant rounded-xl px-3.5 py-2.5 text-xs text-on-surface focus:outline-none focus:border-primary font-semibold"
             >
-              {MASTER_CROPS.map(c => (
-                <option key={c.id} value={c.id}>
-                  {c.nameEn} ({c.nameSi}) — {c.days} Days to Harvest
-                </option>
-              ))}
+              {MASTER_CROPS.map(c => {
+                const cName = lang === 'si' ? c.nameSi : lang === 'ta' ? c.nameTa : c.nameEn;
+                return (
+                  <option key={c.id} value={c.id}>
+                    {cName} — {t('days_to_harvest_val', '{days} Days to Harvest', { days: c.days }).replace('{days}', c.days)}
+                  </option>
+                );
+              })}
             </select>
           </div>
 
@@ -218,11 +223,11 @@ export default function FarmerPlantingModal({ isOpen, onClose, onPlantingAdded, 
           {/* Harvest Projection Summary */}
           <div className="p-3.5 bg-surface-container rounded-xl border border-outline-variant/30 flex items-center justify-between">
             <div>
-              <span className="text-[10px] uppercase font-bold text-outline block">Growth Duration</span>
-              <span className="font-extrabold text-sm text-primary">{selectedCrop.days} Days</span>
+              <span className="text-[10px] uppercase font-bold text-outline block">{t('growth_duration', 'Growth Duration')}</span>
+              <span className="font-extrabold text-sm text-primary">{t('days_count', '{days} Days', { days: selectedCrop.days }).replace('{days}', selectedCrop.days)}</span>
             </div>
             <div className="text-right">
-              <span className="text-[10px] uppercase font-bold text-outline block">Estimated Harvest Window</span>
+              <span className="text-[10px] uppercase font-bold text-outline block">{t('est_harvest_window', 'Estimated Harvest Window')}</span>
               <span className="font-bold text-xs text-secondary">
                 {new Date(new Date(plantingDate).getTime() + selectedCrop.days * 86400000).toLocaleDateString()}
               </span>
@@ -243,7 +248,7 @@ export default function FarmerPlantingModal({ isOpen, onClose, onPlantingAdded, 
               disabled={submitting}
               className="px-6 py-2.5 bg-primary hover:bg-primary-container text-white rounded-xl text-xs font-bold shadow-md hover:scale-105 transition"
             >
-              {submitting ? 'Logging...' : (t('btn_confirm_planting') || 'Confirm & Log Plot')}
+              {submitting ? t('logging', 'Logging...') : (t('btn_confirm_planting', 'Confirm & Log Plot'))}
             </button>
           </div>
         </form>
