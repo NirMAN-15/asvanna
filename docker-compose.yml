@@ -38,22 +38,24 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-postgres123}
       DB_NAME: ${DB_NAME:-asvanna_db}
       DB_SSL: "false"
-      JWT_SECRET: ${JWT_SECRET:-asvanna_jwt_secret_key_2026}
+      JWT_SECRET: ${JWT_SECRET:-asvanna_super_secure_jwt_moratuwa_2026_key}
       JWT_EXPIRES_IN_FARMER: 24h
       JWT_EXPIRES_IN_OFFICER: 8h
-      RISK_SAFE_THRESHOLD: 70
-      RISK_WARNING_THRESHOLD: 85
+      JWT_EXPIRES_IN_BUYER: 24h
+      JWT_EXPIRES_IN_ADMIN: 8h
+      ADMIN_CREATION_KEY: ${ADMIN_CREATION_KEY:-asvanna#2026}
+      RISK_SAFE_THRESHOLD: 40.0
+      RISK_WARNING_THRESHOLD: 65.0
+      ENABLE_SCHEDULED_JOBS: "true"
     command: sh -c "node src/database/migrate.js && node src/server.js"
     ports:
+      # Exposed to host for debugging; nginx reaches backend via Docker internal network
       - "127.0.0.1:5000:5000"
-    # NOTE: We do NOT bind-mount ./backend:/app here anymore.
-    # A bind-mount of the full backend folder would shadow the container's
-    # data/ directory and cause the fallback JSON DB to be lost on restart.
-    # Instead, use a named volume just for the persistent data folder.
     volumes:
       - backend_data:/app/data
 
   # 3. React.js Multi-User Web Dashboard (Nginx)
+  # Nginx serves the React SPA and reverse-proxies /api/* to the backend container
   web-admin:
     build:
       context: ./frontend

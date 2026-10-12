@@ -13,7 +13,10 @@ RUN npm install --no-audit --no-fund
 
 COPY . .
 
-RUN npm run build
+# Use the Docker-specific env file so VITE_API_BASE_URL=/api/v1
+# This makes the built JS call /api/v1/... which nginx proxies to the backend container.
+# Without this, VITE_API_BASE_URL would fall back to localhost and break on any server.
+RUN cp .env.docker .env && npm run build
 
 FROM nginx:alpine
 
