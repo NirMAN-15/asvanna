@@ -1,5 +1,7 @@
 try {
-  require('dotenv').config();
+  // override: false ensures Docker-injected env vars (e.g. DB_HOST=postgres)
+  // are NOT overwritten by values in the local .env file.
+  require('dotenv').config({ override: false });
 } catch (e) {
   // Fallback to process.env or defaults if dotenv module is not installed
 }

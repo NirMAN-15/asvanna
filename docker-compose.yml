@@ -30,13 +30,14 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      NODE_ENV: development
+      NODE_ENV: production
       PORT: 5000
       DB_HOST: postgres
       DB_PORT: 5432
       DB_USER: ${DB_USER:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-postgres123}
       DB_NAME: ${DB_NAME:-asvanna_db}
+      DB_SSL: "false"
       JWT_SECRET: ${JWT_SECRET:-asvanna_jwt_secret_key_2026}
       JWT_EXPIRES_IN_FARMER: 24h
       JWT_EXPIRES_IN_OFFICER: 8h
@@ -45,9 +46,12 @@ services:
     command: sh -c "node src/database/migrate.js && node src/server.js"
     ports:
       - "127.0.0.1:5000:5000"
+    # NOTE: We do NOT bind-mount ./backend:/app here anymore.
+    # A bind-mount of the full backend folder would shadow the container's
+    # data/ directory and cause the fallback JSON DB to be lost on restart.
+    # Instead, use a named volume just for the persistent data folder.
     volumes:
-      - ./backend:/app
-      - /app/node_modules
+      - backend_data:/app/data
 
   # 3. React.js Multi-User Web Dashboard (Nginx)
   web-admin:
@@ -60,10 +64,9 @@ services:
       - backend
     ports:
       - "3000:80"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
 
 volumes:
   postgres_data:
+    driver: local
+  backend_data:
     driver: local
