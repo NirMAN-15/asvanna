@@ -76,14 +76,17 @@ export default function Dashboard() {
   const [vegetableModalState, setVegetableModalState] = useState({ isOpen: false, vegetable: null });
 
   const [regionalVegetables, setRegionalVegetables] = useState([
-    { id: 3, crop_code: 'VEG_CARROT', name_en: 'Carrots', name_si: 'කැරට්', name_ta: 'கேரட்', planted_ha: 285, quota_ha: 310, pct: 92, yield_mt: '4,275 MT', plots: 94, status: 'CRITICAL', barColor: 'bg-red-500', badgeColor: 'bg-red-100 text-red-800 border-red-200', image_url: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=300&auto=format&fit=crop&q=60' },
-    { id: 1, crop_code: 'CROP_PADDY', name_en: 'Paddy', name_si: 'වී', name_ta: 'நெல்', planted_ha: 420, quota_ha: 500, pct: 84, yield_mt: '1,680 MT', plots: 142, status: 'OPTIMAL', barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=300&auto=format&fit=crop&q=60' },
-    { id: 2, crop_code: 'VEG_LEEKS', name_en: 'Leeks', name_si: 'ලීක්ස්', name_ta: 'லீக்ஸ்', planted_ha: 140, quota_ha: 180, pct: 78, yield_mt: '2,520 MT', plots: 58, status: 'WARNING', barColor: 'bg-amber-500', badgeColor: 'bg-amber-100 text-amber-900 border-amber-200', image_url: 'https://images.unsplash.com/photo-1588879460618-9249e7d947d1?w=300&auto=format&fit=crop&q=60' },
-    { id: 4, crop_code: 'VEG_CABBAGE', name_en: 'Cabbage', name_si: 'ගෝවා', name_ta: 'முட்டைக்கோஸ்', planted_ha: 210, quota_ha: 270, pct: 78, yield_mt: '5,250 MT', plots: 82, status: 'WARNING', barColor: 'bg-amber-500', badgeColor: 'bg-amber-100 text-amber-900 border-amber-200', image_url: 'https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?w=300&auto=format&fit=crop&q=60' },
-    { id: 5, crop_code: 'VEG_POTATO', name_en: 'Potatoes', name_si: 'අර්තාපල්', name_ta: 'உருளைக்கிழங்கு', planted_ha: 95, quota_ha: 150, pct: 63, yield_mt: '1,425 MT', plots: 41, status: 'SAFE', barColor: 'bg-teal-600', badgeColor: 'bg-teal-100 text-teal-800 border-teal-200', image_url: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=300&auto=format&fit=crop&q=60' },
-    { id: 6, crop_code: 'VEG_BEETROOT', name_en: 'Beetroot', name_si: 'බීට්රූට්', name_ta: 'பீட்ரூட்', planted_ha: 110, quota_ha: 160, pct: 68, yield_mt: '1,870 MT', plots: 49, status: 'SAFE', barColor: 'bg-teal-600', badgeColor: 'bg-teal-100 text-teal-800 border-teal-200', image_url: 'https://images.unsplash.com/photo-1593105544559-ecb03bf76f82?w=300&auto=format&fit=crop&q=60' },
-    { id: 7, crop_code: 'VEG_TOMATO', name_en: 'Tomatoes', name_si: 'තක්කාලි', name_ta: 'தக்காளி', planted_ha: 80, quota_ha: 140, pct: 57, yield_mt: '1,200 MT', plots: 36, status: 'SAFE', barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=300&auto=format&fit=crop&q=60' },
-    { id: 8, crop_code: 'VEG_CAPSICUM', name_en: 'Bell Pepper', name_si: 'මාළු මිරිස්', name_ta: 'குடைமிளகாய்', planted_ha: 65, quota_ha: 120, pct: 54, yield_mt: '780 MT', plots: 28, status: 'SAFE', barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=300&auto=format&fit=crop&q=60' }
+    { id: 1, crop_code: 'BEANS', name_en: 'Green Beans', name_si: 'බෝංචි', name_ta: 'போஞ்சி', planted_ha: 110, quota_ha: 160, pct: 68, yield_mt: '1,870 MT', plots: 49, status: 'SAFE', barColor: 'bg-teal-600', badgeColor: 'bg-teal-100 text-teal-800 border-teal-200', image_url: '/crops/bush_beans.jpg' },
+    { id: 2, crop_code: 'CARROT', name_en: 'Carrot', name_si: 'කැරට්', name_ta: 'கேரட்', planted_ha: 285, quota_ha: 310, pct: 92, yield_mt: '4,275 MT', plots: 94, status: 'CRITICAL', barColor: 'bg-red-500', badgeColor: 'bg-red-100 text-red-800 border-red-200', image_url: '/crops/carrot.jpg' },
+    { id: 3, crop_code: 'LEEKS', name_en: 'Leeks', name_si: 'ලීක්ස්', name_ta: 'லீக்ஸ்', planted_ha: 140, quota_ha: 180, pct: 78, yield_mt: '2,520 MT', plots: 58, status: 'WARNING', barColor: 'bg-amber-500', badgeColor: 'bg-amber-100 text-amber-900 border-amber-200', image_url: '/crops/leek.jpg' },
+    { id: 4, crop_code: 'CABBAGE', name_en: 'Cabbage', name_si: 'ගෝවා', name_ta: 'முட்டைக்கோஸ்', planted_ha: 210, quota_ha: 270, pct: 78, yield_mt: '5,250 MT', plots: 82, status: 'WARNING', barColor: 'bg-amber-500', badgeColor: 'bg-amber-100 text-amber-900 border-amber-200', image_url: 'https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?w=300&auto=format&fit=crop&q=60' },
+    { id: 5, crop_code: 'TOMATO', name_en: 'Tomato', name_si: 'තක්කාලි', name_ta: 'தக்காளி', planted_ha: 80, quota_ha: 140, pct: 57, yield_mt: '1,200 MT', plots: 36, status: 'SAFE', barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=300&auto=format&fit=crop&q=60' },
+    { id: 6, crop_code: 'CAULIFLOWER', name_en: 'Cauliflower', name_si: 'මල් ගෝවා', name_ta: 'காலிஃபிளவர்', planted_ha: 52, quota_ha: 75, pct: 69, yield_mt: '680 MT', plots: 24, status: 'SAFE', barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1568584711075-3d021a7c3ca3?w=300&auto=format&fit=crop&q=60' },
+    { id: 7, crop_code: 'CAPSICUM', name_en: 'Capsicum', name_si: 'මාළු මිරිස්', name_ta: 'குடை மிளகாய்', planted_ha: 65, quota_ha: 120, pct: 54, yield_mt: '780 MT', plots: 28, status: 'SAFE', barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=300&auto=format&fit=crop&q=60' },
+    { id: 8, crop_code: 'BEETROOT', name_en: 'Beetroot', name_si: 'බීට්රූට්', name_ta: 'பீட்ரூட்', planted_ha: 110, quota_ha: 160, pct: 68, yield_mt: '1,870 MT', plots: 49, status: 'SAFE', barColor: 'bg-teal-600', badgeColor: 'bg-teal-100 text-teal-800 border-teal-200', image_url: '/crops/beetroot.jpg' },
+    { id: 9, crop_code: 'KNOLKHOL', name_en: 'Knolkhol', name_si: 'නෝල්කෝල්', name_ta: 'நூல்கோல்', planted_ha: 38, quota_ha: 50, pct: 76, yield_mt: '420 MT', plots: 18, status: 'WARNING', barColor: 'bg-amber-500', badgeColor: 'bg-amber-100 text-amber-900 border-amber-200', image_url: '/crops/knol_khol.jpg' },
+    { id: 10, crop_code: 'RADISH', name_en: 'Radish', name_si: 'රාබු', name_ta: 'முள்ளங்கி', planted_ha: 45, quota_ha: 90, pct: 50, yield_mt: '540 MT', plots: 22, status: 'SAFE', barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: '/crops/radish.jpg' },
+    { id: 11, crop_code: 'POTATO', name_en: 'Potato (Welimada)', name_si: 'අර්තාපල්', name_ta: 'உருளைக்கிழங்கு', planted_ha: 95, quota_ha: 150, pct: 63, yield_mt: '1,425 MT', plots: 41, status: 'SAFE', barColor: 'bg-teal-600', badgeColor: 'bg-teal-100 text-teal-800 border-teal-200', image_url: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=300&auto=format&fit=crop&q=60' }
   ]);
 
   const fetchRegionalVegetables = async () => {
@@ -91,29 +94,30 @@ export default function Dashboard() {
       const res = await API.get('/crops');
       if (res.data?.data && res.data.data.length > 0) {
         setRegionalVegetables(prev => {
-          const map = new Map(prev.map(c => [c.id, c]));
-          res.data.data.forEach(dbCrop => {
-            const existing = map.get(dbCrop.id);
-            if (existing) {
-              map.set(dbCrop.id, { ...existing, ...dbCrop });
-            } else {
-              const quota = dbCrop.standard_demand_kg ? Math.round(dbCrop.standard_demand_kg / 1000) : 120;
-              const planted = Math.round(quota * 0.45);
-              const pct = Math.round((planted / quota) * 100);
-              map.set(dbCrop.id, {
-                ...dbCrop,
-                planted_ha: planted,
-                quota_ha: quota,
-                pct: pct,
-                yield_mt: `${Math.round(planted * 14)} MT`,
-                plots: Math.round(planted / 2.2),
-                status: pct > 85 ? 'CRITICAL' : pct > 70 ? 'WARNING' : 'SAFE',
-                barColor: pct > 85 ? 'bg-red-500' : pct > 70 ? 'bg-amber-500' : 'bg-emerald-600',
-                badgeColor: pct > 85 ? 'bg-red-100 text-red-800 border-red-200' : pct > 70 ? 'bg-amber-100 text-amber-900 border-amber-200' : 'bg-emerald-100 text-emerald-800 border-emerald-200'
-              });
-            }
+          return prev.map(veg => {
+            const match = res.data.data.find(c =>
+              c.crop_code === veg.crop_code ||
+              (c.name_en && c.name_en.toLowerCase().includes(veg.name_en.toLowerCase().split(' ')[0]))
+            );
+            if (!match) return veg;
+            const quota = match.standard_demand_kg ? Math.round(match.standard_demand_kg / 1000) : veg.quota_ha;
+            const planted = veg.planted_ha;
+            const pct = Math.round((planted / quota) * 100);
+            return {
+              ...veg,
+              ...match,
+              name_en: veg.name_en,
+              name_si: veg.name_si,
+              name_ta: match.name_ta || veg.name_ta,
+              image_url: veg.image_url || match.image_url,
+              planted_ha: planted,
+              quota_ha: quota,
+              pct: pct,
+              status: pct > 85 ? 'CRITICAL' : pct > 70 ? 'WARNING' : 'SAFE',
+              barColor: pct > 85 ? 'bg-red-500' : pct > 70 ? 'bg-amber-500' : 'bg-emerald-600',
+              badgeColor: pct > 85 ? 'bg-red-100 text-red-800 border-red-200' : pct > 70 ? 'bg-amber-100 text-amber-900 border-amber-200' : 'bg-emerald-100 text-emerald-800 border-emerald-200'
+            };
           });
-          return Array.from(map.values());
         });
       }
     } catch (err) {
