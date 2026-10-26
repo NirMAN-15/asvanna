@@ -8,6 +8,8 @@ class PlantingController {
       const {
         crop_id,
         land_size_acres,
+        land_size_perches,
+        land_unit = 'ACRES',
         planting_date,
         latitude,
         longitude,
@@ -37,8 +39,22 @@ class PlantingController {
       if (cropRes.rows.length === 0) return ApiResponse.error(res, 'Invalid crop ID', 400);
       const crop = cropRes.rows[0];
 
-      const acres = parseFloat(land_size_acres);
-      const expectedYieldKg = acres * parseFloat(crop.avg_yield_per_acre_kg);
+      // Calculate Acres and Perches (1 Acre = 160 Perches)
+      let acres = 0;
+      let perches = 0;
+      if (land_unit === 'PERCHES' || (land_size_perches !== undefined && land_size_perches !== null && land_size_perches !== '')) {
+        perches = parseFloat(land_size_perches || land_size_acres);
+        acres = Math.round((perches / 160) * 10000) / 10000;
+      } else {
+        acres = parseFloat(land_size_acres);
+        perches = Math.round(acres * 160 * 100) / 100;
+      }
+
+      if (isNaN(acres) || acres <= 0) {
+        return ApiResponse.error(res, 'Invalid land extent provided. Must be greater than 0.', 400);
+      }
+
+      const expectedYieldKg = Math.round(acres * parseFloat(crop.avg_yield_per_acre_kg) * 100) / 100;
 
       const pDate = new Date(planting_date);
       const expectedHarvestDate = new Date(pDate.getTime() + crop.growth_duration_days * 24 * 60 * 60 * 1000);
@@ -46,10 +62,10 @@ class PlantingController {
       // 2. Insert Record
       const insertRes = await db.query(
         `INSERT INTO planting_records 
-         (farmer_id, crop_id, land_size_acres, expected_yield_kg, planting_date, expected_harvest_date, latitude, longitude, district, division, status, entered_by_type, officer_id, sync_status)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'PLANTED', $11, $12, 'SYNCED')
+         (farmer_id, crop_id, land_size_acres, expected_yield_kg, planting_date, expected_harvest_date, latitude, longitude, district, division, status, entered_by_type, officer_id, sync_status, land_size_perches, land_unit)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'PLANTED', $11, $12, 'SYNCED', $13, $14)
          RETURNING *`,
-        [targetFarmerId, crop_id, acres, expectedYieldKg, planting_date, expectedHarvestDate.toISOString().split('T')[0], latitude, longitude, district, division, enteredByType, officerId]
+        [targetFarmerId, crop_id, acres, expectedYieldKg, planting_date, expectedHarvestDate.toISOString().split('T')[0], latitude, longitude, district, division, enteredByType, officerId, perches, land_unit]
       );
 
       // 3. Immediately evaluate updated crop risk
@@ -90,7 +106,7 @@ class PlantingController {
     try {
       const { district = 'Badulla', division, crop_id } = req.query;
       let query = `
-        SELECT pr.*, c.name_en, c.name_si, c.name_ta, c.crop_code, u.full_name as farmer_name, u.phone as farmer_phone
+        SELECT pr.*, c.name_en, c.name_si, c.name_ta, c.crop_code, u.full_name as farmer_name, u.phone as farmer_phone, u.gnd_division, u.division as farmer_division
         FROM planting_records pr
         JOIN crops c ON pr.crop_id = c.id
         JOIN users u ON pr.farmer_id = u.id
@@ -115,6 +131,96 @@ class PlantingController {
     }
   }
 
+  static async completeHarvest(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { actual_yield_kg, notes } = req.body;
+
+      const checkRes = await db.query('SELECT * FROM planting_records WHERE id = $1', [id]);
+      if (checkRes.rows.length === 0) return ApiResponse.error(res, 'Planting record not found', 404);
+      const record = checkRes.rows[0];
+
+      if (req.user.role === 'FARMER' && Number(record.farmer_id) !== Number(req.user.id)) {
+        return ApiResponse.error(res, 'Unauthorized to complete harvesting for this record', 403);
+      }
+
+      const actualYield = actual_yield_kg !== undefined && actual_yield_kg !== null && actual_yield_kg !== ''
+        ? parseFloat(actual_yield_kg)
+        : parseFloat(record.expected_yield_kg);
+
+      const updateRes = await db.query(
+        `UPDATE planting_records
+         SET status = 'HARVESTED',
+             actual_yield_kg = $1,
+             harvested_date = CURRENT_TIMESTAMP,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE id = $2
+         RETURNING *`,
+        [actualYield, id]
+      );
+
+      // Re-evaluate updated crop risk since land is cleared and crop has transitioned from growing to harvested
+      let riskAssessment = null;
+      try {
+        riskAssessment = await RiskEngineService.evaluateCropRisk(record.crop_id, record.district || 'Badulla');
+      } catch (e) {
+        console.warn('Risk engine re-evaluation note:', e.message);
+      }
+
+      return ApiResponse.success(
+        res,
+        {
+          record: updateRes.rows[0] || { ...record, status: 'HARVESTED', actual_yield_kg: actualYield },
+          cleared_land_size_acres: parseFloat(record.land_size_acres) || 0,
+          riskAssessment
+        },
+        `Harvesting completed successfully! ${record.land_size_acres} acres has been cleared and is now available for new cultivation.`
+      );
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async getAllFarmHistory(req, res, next) {
+    try {
+      const { status, crop_id, division, search } = req.query;
+      let query = `
+        SELECT pr.*, 
+               c.name_en, c.name_si, c.name_ta, c.crop_code, c.avg_yield_per_acre_kg,
+               u.full_name as farmer_name, u.phone as farmer_phone, u.gnd_division, u.division as farmer_division,
+               u.nic as farmer_nic
+        FROM planting_records pr
+        JOIN crops c ON pr.crop_id = c.id
+        JOIN users u ON pr.farmer_id = u.id
+        WHERE 1=1
+      `;
+      const params = [];
+
+      if (status && status !== 'All') {
+        params.push(status);
+        query += ` AND pr.status = $${params.length}`;
+      }
+      if (crop_id && crop_id !== 'All') {
+        params.push(crop_id);
+        query += ` AND pr.crop_id = $${params.length}`;
+      }
+      if (division && division !== 'All') {
+        params.push(division);
+        query += ` AND (pr.division = $${params.length} OR u.gnd_division = $${params.length})`;
+      }
+      if (search) {
+        params.push(`%${search.toLowerCase()}%`);
+        query += ` AND (LOWER(u.full_name) LIKE $${params.length} OR LOWER(c.name_en) LIKE $${params.length} OR LOWER(c.name_si) LIKE $${params.length} OR u.phone LIKE $${params.length})`;
+      }
+
+      query += ' ORDER BY pr.planting_date DESC LIMIT 500';
+      const result = await db.query(query, params);
+      return ApiResponse.success(res, result.rows || [], 'All farmers farm history retrieved');
+    } catch (err) {
+      next(err);
+    }
+  }
+
   static async deletePlanting(req, res, next) {
     try {
       const { id } = req.params;
@@ -134,5 +240,6 @@ class PlantingController {
     }
   }
 }
+
 
 module.exports = PlantingController;

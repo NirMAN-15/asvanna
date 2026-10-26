@@ -16,132 +16,223 @@ if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
-// 25 Master Crops for Bandarawela & Upcountry (DoA Sri Lanka & CROPIX validated)
+// 11 Master Test Crops for Bandarawela & Upcountry (DoA Sri Lanka & Keppetipola validated)
 const initialCrops = [
-  { id: 1, crop_code: 'LEEKS', name_en: 'Leeks', name_si: 'ලීක්ස්', name_ta: 'லீக்ஸ்', category: 'Upcountry Vegetable', growth_duration_days: 90, avg_yield_per_acre_kg: 8500, standard_price_per_kg: 280.00, optimal_temp_min: 12.0, optimal_temp_max: 22.0, waterlog_sensitive: false, disease_susceptibility: 'MODERATE', standard_demand_kg: 95000 },
-  { id: 2, crop_code: 'CABBAGE', name_en: 'Cabbage', name_si: 'ගෝවා', name_ta: 'முட்டைக்கோஸ்', category: 'Upcountry Vegetable', growth_duration_days: 75, avg_yield_per_acre_kg: 12000, standard_price_per_kg: 190.00, optimal_temp_min: 14.0, optimal_temp_max: 24.0, waterlog_sensitive: false, disease_susceptibility: 'MODERATE', standard_demand_kg: 120000 },
-  { id: 3, crop_code: 'CARROT', name_en: 'Carrot', name_si: 'කැරට්', name_ta: 'கேரட்', category: 'Upcountry Vegetable', growth_duration_days: 85, avg_yield_per_acre_kg: 7500, standard_price_per_kg: 340.00, optimal_temp_min: 13.0, optimal_temp_max: 22.0, waterlog_sensitive: true, disease_susceptibility: 'LOW', standard_demand_kg: 110000 },
-  { id: 4, crop_code: 'BEETROOT', name_en: 'Beetroot', name_si: 'බීට්රූට්', name_ta: 'பீட்ரூட்', category: 'Upcountry Vegetable', growth_duration_days: 70, avg_yield_per_acre_kg: 8000, standard_price_per_kg: 260.00, optimal_temp_min: 14.0, optimal_temp_max: 25.0, waterlog_sensitive: false, disease_susceptibility: 'LOW', standard_demand_kg: 75000 },
-  { id: 5, crop_code: 'POTATO', name_en: 'Upcountry Potato', name_si: 'අර්තාපල්', name_ta: 'உருளைக்கிழங்கு', category: 'Upcountry Vegetable', growth_duration_days: 100, avg_yield_per_acre_kg: 8000, standard_price_per_kg: 390.00, optimal_temp_min: 12.0, optimal_temp_max: 20.0, waterlog_sensitive: true, disease_susceptibility: 'HIGH', standard_demand_kg: 150000 },
-  { id: 6, crop_code: 'BEANS', name_en: 'Green Beans', name_si: 'බෝංචි', name_ta: 'போஞ்சி', category: 'Upcountry Vegetable', growth_duration_days: 60, avg_yield_per_acre_kg: 5000, standard_price_per_kg: 320.00, optimal_temp_min: 15.0, optimal_temp_max: 26.0, waterlog_sensitive: false, disease_susceptibility: 'MODERATE', standard_demand_kg: 80000 },
-  { id: 7, crop_code: 'TOMATO', name_en: 'Tomato', name_si: 'තක්කාලි', name_ta: 'தக்காளி', category: 'Upcountry Vegetable', growth_duration_days: 75, avg_yield_per_acre_kg: 11000, standard_price_per_kg: 220.00, optimal_temp_min: 16.0, optimal_temp_max: 27.0, waterlog_sensitive: true, disease_susceptibility: 'HIGH', standard_demand_kg: 115000 },
-  { id: 8, crop_code: 'CAPSICUM', name_en: 'Capsicum', name_si: 'මාළු මිරිස්', name_ta: 'குடை மிளகாய்', category: 'Upcountry Vegetable', growth_duration_days: 80, avg_yield_per_acre_kg: 5500, standard_price_per_kg: 460.00, optimal_temp_min: 16.0, optimal_temp_max: 26.0, waterlog_sensitive: true, disease_susceptibility: 'MODERATE', standard_demand_kg: 65000 },
-  { id: 9, crop_code: 'RADISH', name_en: 'Radish', name_si: 'රාබු', name_ta: 'முள்ளங்கி', category: 'Upcountry Vegetable', growth_duration_days: 45, avg_yield_per_acre_kg: 9000, standard_price_per_kg: 140.00, optimal_temp_min: 13.0, optimal_temp_max: 25.0, waterlog_sensitive: false, disease_susceptibility: 'LOW', standard_demand_kg: 50000 },
-  { id: 10, crop_code: 'KNOLKHOL', name_en: 'Knol-Khol', name_si: 'නෝකෝල්', name_ta: 'நூல்கோல்', category: 'Upcountry Vegetable', growth_duration_days: 65, avg_yield_per_acre_kg: 7500, standard_price_per_kg: 180.00, optimal_temp_min: 14.0, optimal_temp_max: 24.0, waterlog_sensitive: false, disease_susceptibility: 'LOW', standard_demand_kg: 45000 },
-  { id: 11, crop_code: 'SPRING_ONION', name_en: 'Spring Onion', name_si: 'ළූණු කොළ', name_ta: 'வெங்காய இலை', category: 'Upcountry Vegetable', growth_duration_days: 50, avg_yield_per_acre_kg: 6000, standard_price_per_kg: 280.00, optimal_temp_min: 14.0, optimal_temp_max: 25.0, waterlog_sensitive: false, disease_susceptibility: 'LOW', standard_demand_kg: 35000 },
-  { id: 12, crop_code: 'LETTUCE', name_en: 'Lettuce', name_si: 'සලාද කොළ', name_ta: 'லெட்யூஸ்', category: 'Upcountry Vegetable', growth_duration_days: 50, avg_yield_per_acre_kg: 5500, standard_price_per_kg: 320.00, optimal_temp_min: 13.0, optimal_temp_max: 22.0, waterlog_sensitive: true, disease_susceptibility: 'MODERATE', standard_demand_kg: 30000 },
-  { id: 13, crop_code: 'CELERY', name_en: 'Celery', name_si: 'සැල්දිරි', name_ta: 'செலரி', category: 'Upcountry Vegetable', growth_duration_days: 85, avg_yield_per_acre_kg: 4800, standard_price_per_kg: 420.00, optimal_temp_min: 13.0, optimal_temp_max: 21.0, waterlog_sensitive: false, disease_susceptibility: 'MODERATE', standard_demand_kg: 25000 },
-  { id: 14, crop_code: 'BROCCOLI', name_en: 'Broccoli', name_si: 'බ්‍රොකොලි', name_ta: 'ப்ரோக்கோலி', category: 'Upcountry Vegetable', growth_duration_days: 75, avg_yield_per_acre_kg: 4000, standard_price_per_kg: 680.00, optimal_temp_min: 12.0, optimal_temp_max: 20.0, waterlog_sensitive: false, disease_susceptibility: 'MODERATE', standard_demand_kg: 20000 },
-  { id: 15, crop_code: 'CAULIFLOWER', name_en: 'Cauliflower', name_si: 'මල්ගෝවා', name_ta: 'காலிஃபிளவர்', category: 'Upcountry Vegetable', growth_duration_days: 80, avg_yield_per_acre_kg: 6500, standard_price_per_kg: 380.00, optimal_temp_min: 14.0, optimal_temp_max: 22.0, waterlog_sensitive: false, disease_susceptibility: 'MODERATE', standard_demand_kg: 40000 },
-  { id: 16, crop_code: 'PUMPKIN', name_en: 'Pumpkin', name_si: 'වට්ටක්කා', name_ta: 'பூசணி', category: 'Adaptable Vegetable', growth_duration_days: 100, avg_yield_per_acre_kg: 10000, standard_price_per_kg: 160.00, optimal_temp_min: 17.0, optimal_temp_max: 28.0, waterlog_sensitive: false, disease_susceptibility: 'LOW', standard_demand_kg: 90000 },
-  { id: 17, crop_code: 'BITTER_GOURD', name_en: 'Bitter Gourd', name_si: 'කරවිල', name_ta: 'பாகற்காய்', category: 'Adaptable Vegetable', growth_duration_days: 60, avg_yield_per_acre_kg: 6000, standard_price_per_kg: 340.00, optimal_temp_min: 18.0, optimal_temp_max: 28.0, waterlog_sensitive: false, disease_susceptibility: 'LOW', standard_demand_kg: 45000 },
-  { id: 18, crop_code: 'SNAKE_GOURD', name_en: 'Snake Gourd', name_si: 'පතෝල', name_ta: 'புடலங்காய்', category: 'Adaptable Vegetable', growth_duration_days: 55, avg_yield_per_acre_kg: 7500, standard_price_per_kg: 210.00, optimal_temp_min: 18.0, optimal_temp_max: 28.0, waterlog_sensitive: false, disease_susceptibility: 'LOW', standard_demand_kg: 40000 },
-  { id: 19, crop_code: 'CUCUMBER', name_en: 'Cucumber', name_si: 'පිපිඤ්ඤා', name_ta: 'வெள்ளரிக்காய்', category: 'Adaptable Vegetable', growth_duration_days: 50, avg_yield_per_acre_kg: 9500, standard_price_per_kg: 160.00, optimal_temp_min: 17.0, optimal_temp_max: 28.0, waterlog_sensitive: false, disease_susceptibility: 'MODERATE', standard_demand_kg: 55000 },
-  { id: 20, crop_code: 'GREEN_CHILI', name_en: 'Green Chili', name_si: 'අමු මිරිස්', name_ta: 'பச்சை மிளகாய்', category: 'Upcountry Vegetable', growth_duration_days: 70, avg_yield_per_acre_kg: 4200, standard_price_per_kg: 540.00, optimal_temp_min: 17.0, optimal_temp_max: 28.0, waterlog_sensitive: true, disease_susceptibility: 'HIGH', standard_demand_kg: 50000 },
-  { id: 21, crop_code: 'RED_ONION', name_en: 'Red Onion', name_si: 'රතු ළූණු', name_ta: 'சிவப்பு வெங்காயம்', category: 'Upcountry Vegetable', growth_duration_days: 90, avg_yield_per_acre_kg: 5200, standard_price_per_kg: 390.00, optimal_temp_min: 16.0, optimal_temp_max: 27.0, waterlog_sensitive: true, disease_susceptibility: 'MODERATE', standard_demand_kg: 85000 },
-  { id: 22, crop_code: 'GOTUKOLA', name_en: 'Centella (Gotukola)', name_si: 'ගොටුකොළ', name_ta: 'வல்லாரை', category: 'Leafy Green', growth_duration_days: 30, avg_yield_per_acre_kg: 3500, standard_price_per_kg: 260.00, optimal_temp_min: 16.0, optimal_temp_max: 28.0, waterlog_sensitive: false, disease_susceptibility: 'LOW', standard_demand_kg: 28000 },
-  { id: 23, crop_code: 'KANGKUNG', name_en: 'Water Spinach', name_si: 'කංකුං', name_ta: 'வள்ளல் கீரை', category: 'Leafy Green', growth_duration_days: 25, avg_yield_per_acre_kg: 6000, standard_price_per_kg: 140.00, optimal_temp_min: 18.0, optimal_temp_max: 29.0, waterlog_sensitive: false, disease_susceptibility: 'LOW', standard_demand_kg: 35000 },
-  { id: 24, crop_code: 'MUKUNUWENNA', name_en: 'Mukunuwenna', name_si: 'මුකුණුවැන්න', name_ta: 'முக்குனுவென்ன', category: 'Leafy Green', growth_duration_days: 30, avg_yield_per_acre_kg: 4200, standard_price_per_kg: 210.00, optimal_temp_min: 16.0, optimal_temp_max: 28.0, waterlog_sensitive: false, disease_susceptibility: 'LOW', standard_demand_kg: 30000 },
-  { id: 25, crop_code: 'SPINACH', name_en: 'Spinach', name_si: 'නිවිති', name_ta: 'பசலைக் கீரை', category: 'Leafy Green', growth_duration_days: 35, avg_yield_per_acre_kg: 5000, standard_price_per_kg: 220.00, optimal_temp_min: 16.0, optimal_temp_max: 27.0, waterlog_sensitive: false, disease_susceptibility: 'LOW', standard_demand_kg: 25000 }
+  {
+    id: 1,
+    crop_code: 'LEEKS',
+    name_en: 'Leeks',
+    name_si: 'ලීක්ස්',
+    name_ta: 'லீக்ஸ்',
+    category: 'Upcountry Vegetable',
+    growth_duration_days: 90,
+    avg_yield_per_acre_kg: 8500,
+    standard_price_per_kg: 280.00,
+    price_range_min: 200.00,
+    price_range_max: 500.00,
+    optimal_temp_min: 12.0,
+    optimal_temp_max: 22.0,
+    waterlog_sensitive: false,
+    disease_susceptibility: 'MODERATE',
+    standard_demand_kg: 95000,
+    image_url: 'https://images.unsplash.com/photo-1587049633312-d628ae50a8ae?w=600&auto=format&fit=crop&q=80'
+  },
+  {
+    id: 2,
+    crop_code: 'CABBAGE',
+    name_en: 'Cabbage',
+    name_si: 'ගෝවා',
+    name_ta: 'முட்டைக்கோஸ்',
+    category: 'Upcountry Vegetable',
+    growth_duration_days: 75,
+    avg_yield_per_acre_kg: 12000,
+    standard_price_per_kg: 190.00,
+    price_range_min: 150.00,
+    price_range_max: 400.00,
+    optimal_temp_min: 14.0,
+    optimal_temp_max: 24.0,
+    waterlog_sensitive: false,
+    disease_susceptibility: 'MODERATE',
+    standard_demand_kg: 120000,
+    image_url: 'https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?w=600&auto=format&fit=crop&q=80'
+  },
+  {
+    id: 3,
+    crop_code: 'CARROT',
+    name_en: 'Carrot',
+    name_si: 'කැරට්',
+    name_ta: 'கேரட்',
+    category: 'Upcountry Vegetable',
+    growth_duration_days: 85,
+    avg_yield_per_acre_kg: 7500,
+    standard_price_per_kg: 340.00,
+    price_range_min: 250.00,
+    price_range_max: 600.00,
+    optimal_temp_min: 13.0,
+    optimal_temp_max: 22.0,
+    waterlog_sensitive: true,
+    disease_susceptibility: 'LOW',
+    standard_demand_kg: 110000,
+    image_url: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=600&auto=format&fit=crop&q=80'
+  },
+  {
+    id: 4,
+    crop_code: 'BEETROOT',
+    name_en: 'Beetroot',
+    name_si: 'බීට්රූට්',
+    name_ta: 'பீட்ரூட்',
+    category: 'Upcountry Vegetable',
+    growth_duration_days: 70,
+    avg_yield_per_acre_kg: 8000,
+    standard_price_per_kg: 260.00,
+    price_range_min: 200.00,
+    price_range_max: 500.00,
+    optimal_temp_min: 14.0,
+    optimal_temp_max: 25.0,
+    waterlog_sensitive: false,
+    disease_susceptibility: 'LOW',
+    standard_demand_kg: 75000,
+    image_url: 'https://images.unsplash.com/photo-1528825871115-3581a5387919?w=600&auto=format&fit=crop&q=80'
+  },
+  {
+    id: 5,
+    crop_code: 'POTATO',
+    name_en: 'Upcountry Potato (Welimada)',
+    name_si: 'අර්තාපල්',
+    name_ta: 'உருளைக்கிழங்கு',
+    category: 'Upcountry Vegetable',
+    growth_duration_days: 100,
+    avg_yield_per_acre_kg: 8000,
+    standard_price_per_kg: 390.00,
+    price_range_min: 250.00,
+    price_range_max: 450.00,
+    optimal_temp_min: 12.0,
+    optimal_temp_max: 20.0,
+    waterlog_sensitive: true,
+    disease_susceptibility: 'HIGH',
+    standard_demand_kg: 150000,
+    image_url: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=600&auto=format&fit=crop&q=80'
+  },
+  {
+    id: 6,
+    crop_code: 'BEANS',
+    name_en: 'Green Beans (Butter/Bush)',
+    name_si: 'බෝංචි',
+    name_ta: 'போஞ்சி',
+    category: 'Upcountry Vegetable',
+    growth_duration_days: 60,
+    avg_yield_per_acre_kg: 5000,
+    standard_price_per_kg: 320.00,
+    price_range_min: 250.00,
+    price_range_max: 600.00,
+    optimal_temp_min: 15.0,
+    optimal_temp_max: 26.0,
+    waterlog_sensitive: false,
+    disease_susceptibility: 'MODERATE',
+    standard_demand_kg: 80000,
+    image_url: 'https://images.unsplash.com/photo-1567375698348-5d9d5ae99de0?w=600&auto=format&fit=crop&q=80'
+  },
+  {
+    id: 7,
+    crop_code: 'TOMATO',
+    name_en: 'Tomato',
+    name_si: 'තක්කාලි',
+    name_ta: 'தக்காளி',
+    category: 'Upcountry Vegetable',
+    growth_duration_days: 75,
+    avg_yield_per_acre_kg: 11000,
+    standard_price_per_kg: 220.00,
+    price_range_min: 150.00,
+    price_range_max: 800.00,
+    optimal_temp_min: 16.0,
+    optimal_temp_max: 27.0,
+    waterlog_sensitive: true,
+    disease_susceptibility: 'HIGH',
+    standard_demand_kg: 115000,
+    image_url: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&auto=format&fit=crop&q=80'
+  },
+  {
+    id: 8,
+    crop_code: 'CAPSICUM',
+    name_en: 'Capsicum (Bell Pepper)',
+    name_si: 'මාළු මිරිස්',
+    name_ta: 'குடை மிளகாய்',
+    category: 'Upcountry Vegetable',
+    growth_duration_days: 80,
+    avg_yield_per_acre_kg: 5500,
+    standard_price_per_kg: 460.00,
+    price_range_min: 300.00,
+    price_range_max: 800.00,
+    optimal_temp_min: 16.0,
+    optimal_temp_max: 26.0,
+    waterlog_sensitive: true,
+    disease_susceptibility: 'MODERATE',
+    standard_demand_kg: 65000,
+    image_url: 'https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=600&auto=format&fit=crop&q=80'
+  },
+  {
+    id: 9,
+    crop_code: 'RADISH',
+    name_en: 'Radish',
+    name_si: 'රාබු',
+    name_ta: 'முள்ளங்கி',
+    category: 'Upcountry Vegetable',
+    growth_duration_days: 45,
+    avg_yield_per_acre_kg: 9000,
+    standard_price_per_kg: 140.00,
+    price_range_min: 100.00,
+    price_range_max: 250.00,
+    optimal_temp_min: 13.0,
+    optimal_temp_max: 25.0,
+    waterlog_sensitive: false,
+    disease_susceptibility: 'LOW',
+    standard_demand_kg: 50000,
+    image_url: 'https://images.unsplash.com/photo-1593105544559-ecb03bf76f82?w=600&auto=format&fit=crop&q=80'
+  },
+  {
+    id: 10,
+    crop_code: 'KNOLKHOL',
+    name_en: 'Knol-Khol (Kohlrabi)',
+    name_si: 'නෝල්කෝල්',
+    name_ta: 'நூல்கோல்',
+    category: 'Upcountry Vegetable',
+    growth_duration_days: 65,
+    avg_yield_per_acre_kg: 7500,
+    standard_price_per_kg: 180.00,
+    price_range_min: 150.00,
+    price_range_max: 350.00,
+    optimal_temp_min: 14.0,
+    optimal_temp_max: 24.0,
+    waterlog_sensitive: false,
+    disease_susceptibility: 'LOW',
+    standard_demand_kg: 45000,
+    image_url: 'https://images.unsplash.com/photo-1590779033100-9f60a05a013d?w=600&auto=format&fit=crop&q=80'
+  },
+  {
+    id: 15,
+    crop_code: 'CAULIFLOWER',
+    name_en: 'Cauliflower',
+    name_si: 'මල්ගෝවා',
+    name_ta: 'காலிஃபிளவர்',
+    category: 'Upcountry Vegetable',
+    growth_duration_days: 80,
+    avg_yield_per_acre_kg: 6500,
+    standard_price_per_kg: 380.00,
+    price_range_min: 300.00,
+    price_range_max: 700.00,
+    optimal_temp_min: 14.0,
+    optimal_temp_max: 22.0,
+    waterlog_sensitive: false,
+    disease_susceptibility: 'MODERATE',
+    standard_demand_kg: 40000,
+    image_url: 'https://images.unsplash.com/photo-1568584711075-3d021a7c3ca3?w=600&auto=format&fit=crop&q=80'
+  }
 ];
 
 const initialDbState = {
-  users: [
-    {
-      id: 1,
-      first_name: 'W.',
-      middle_name: 'M.',
-      last_name: 'Bandara',
-      full_name: 'W. M. Bandara (DO Officer)',
-      phone: '0771234567',
-      nic: '851234567V',
-      password_hash: '$2a$10$wN1aP0/zB00vA5zLz.vV/uE221122334455',
-      role: 'OFFICER',
-      district: 'Badulla',
-      division: 'Bandarawela',
-      gnd_division: 'Bandarawela Central',
-      address_line1: 'DoA Agrarian Services Complex',
-      address_line2: 'Badulla Road',
-      city: 'Bandarawela',
-      postal_code: '90100',
-      address: 'DoA Agrarian Services Complex, Badulla Road, Bandarawela, 90100',
-      language_preference: 'si',
-      verification_status: 'APPROVED',
-      is_verified: true
-    },
-    {
-      id: 2,
-      first_name: 'Kapila',
-      middle_name: null,
-      last_name: 'Bandara',
-      full_name: 'Kapila Bandara (Farmer)',
-      phone: '0712345678',
-      nic: '782345678V',
-      password_hash: '$2a$10$wN1aP0/zB00vA5zLz.vV/uE221122334455',
-      role: 'FARMER',
-      district: 'Badulla',
-      division: 'Bandarawela',
-      gnd_division: 'Bindunuwewa',
-      address_line1: 'No. 42',
-      address_line2: 'Bindunuwewa Valley, Dowa Temple Road',
-      city: 'Bandarawela',
-      postal_code: '90100',
-      address: 'No. 42, Bindunuwewa Valley, Dowa Temple Road, Bandarawela, 90100',
-      total_land_size: 2.5,
-      language_preference: 'si',
-      verification_status: 'APPROVED',
-      is_verified: true
-    },
-    {
-      id: 3,
-      first_name: 'Bandarawela',
-      middle_name: null,
-      last_name: 'Traders',
-      full_name: 'Bandarawela Traders',
-      phone: '0572222222',
-      nic: '903456789V',
-      password_hash: '$2a$10$wN1aP0/zB00vA5zLz.vV/uE221122334455',
-      role: 'BUYER',
-      district: 'Badulla',
-      division: 'Bandarawela',
-      gnd_division: 'Bandarawela Town',
-      address_line1: 'No. 8',
-      address_line2: 'Welimada Road, Town Centre',
-      city: 'Bandarawela',
-      postal_code: '90100',
-      address: 'No. 8, Welimada Road, Town Centre, Bandarawela, 90100',
-      language_preference: 'en',
-      verification_status: 'APPROVED',
-      is_verified: true
-    },
-    {
-      id: 4,
-      first_name: 'Nirman',
-      middle_name: 'Achintha',
-      last_name: 'Wedikkara',
-      full_name: 'Nirman Achintha Wedikkara (Super Admin)',
-      phone: '0770000000',
-      nic: '990000000V',
-      password_hash: '$2a$10$wN1aP0/zB00vA5zLz.vV/uE221122334455',
-      role: 'ADMIN',
-      district: 'Badulla',
-      division: 'Bandarawela',
-      gnd_division: 'Bandarawela Central',
-      address_line1: 'No. 15',
-      address_line2: 'Station Road, Central Hill',
-      city: 'Bandarawela',
-      postal_code: '90100',
-      address: 'No. 15, Station Road, Central Hill, Bandarawela, 90100',
-      language_preference: 'en',
-      verification_status: 'APPROVED',
-      is_verified: true
-    }
-  ],
+  users: [],
   crops: initialCrops,
-  planting_records: [
-    { id: 1, farmer_id: 2, farmer_name: 'Kapila Bandara', crop_id: 1, name_en: 'Leeks', name_si: 'ලීක්ස්', land_size_acres: 2.0, expected_yield_kg: 17000, planting_date: '2026-08-01', expected_harvest_date: '2026-11-01', latitude: 6.8322, longitude: 80.9980, district: 'Badulla', division: 'Bandarawela', status: 'PLANTED', entered_by_type: 'FARMER' },
-    { id: 2, farmer_id: 2, farmer_name: 'Kapila Bandara', crop_id: 2, name_en: 'Cabbage', name_si: 'ගෝවා', land_size_acres: 3.5, expected_yield_kg: 42000, planting_date: '2026-08-10', expected_harvest_date: '2026-10-25', latitude: 6.8350, longitude: 80.9995, district: 'Badulla', division: 'Bandarawela', status: 'PLANTED', entered_by_type: 'FARMER' }
-  ],
+  planting_records: [],
   crop_seasons: [
     { id: 1, crop_id: 1, season_name: 'MAHA', optimal_start_month: 10, optimal_end_month: 3, suitability: 'BEST', suitability_score: 95.0 },
     { id: 2, crop_id: 1, season_name: 'YALA', optimal_start_month: 5, optimal_end_month: 8, suitability: 'MODERATE', suitability_score: 65.0 },
@@ -178,11 +269,12 @@ function loadDb() {
   try {
     const raw = fs.readFileSync(dbFilePath, 'utf-8');
     const parsed = JSON.parse(raw);
-    // Ensure crops are populated with all 25 if older file was present
-    if (!parsed.crops || parsed.crops.length < 25) {
+    // Ensure crops are populated strictly with the 11 Keppetipola test crops with cloud direct image URLs
+    const validCodes = new Set(initialCrops.map(c => c.crop_code));
+    if (!parsed.crops || parsed.crops.length !== 11 || parsed.crops.some(c => !validCodes.has(c.crop_code) || !c.image_url || c.image_url.startsWith('/'))) {
       parsed.crops = initialCrops;
-      if (!parsed.crop_seasons) parsed.crop_seasons = initialDbState.crop_seasons;
-      if (!parsed.price_history) parsed.price_history = initialDbState.price_history;
+      if (!parsed.crop_seasons || parsed.crop_seasons.length === 0) parsed.crop_seasons = initialDbState.crop_seasons;
+      if (!parsed.price_history || parsed.price_history.length === 0) parsed.price_history = initialDbState.price_history;
       saveDb(parsed);
     }
     return parsed;
@@ -224,26 +316,79 @@ module.exports = {
 
     const lower = text.toLowerCase();
 
-    // SELECT Queries
-    if (lower.includes('from users where phone')) {
-      const phoneVal = params[0];
-      return { rows: fileDb.users.filter(u => u.phone === phoneVal) };
+    // TRUNCATE fallback
+    if (lower.includes('truncate table')) {
+      fileDb.users = [];
+      fileDb.planting_records = [];
+      fileDb.marketplace_listings = [];
+      fileDb.marketplace_orders = [];
+      fileDb.broadcast_warnings = [];
+      fileDb.farmer_verifications = [];
+      fileDb.notification_logs = [];
+      fileDb.audit_logs = [];
+      fileDb.risk_assessments = [];
+      fileDb.crop_recommendations = [];
+      fileDb.chat_messages = [];
+      saveDb(fileDb);
+      return { rows: [] };
     }
-    if (lower.includes('from users where id =')) {
-      const idVal = Number(params[0]);
-      return { rows: fileDb.users.filter(u => Number(u.id) === idVal) };
-    }
-    if (lower.includes('select count(*) as count from users')) {
-      let count = fileDb.users.filter(u => u.role === 'FARMER');
-      if (lower.includes("verification_status = 'approved'")) {
-        count = count.filter(u => u.verification_status === 'APPROVED');
-      } else if (lower.includes("verification_status = 'pending'")) {
-        count = count.filter(u => u.verification_status === 'PENDING');
+
+    // Generic COUNT Queries
+    if (lower.includes('count(*)')) {
+      if (lower.includes('from users')) {
+        let count = fileDb.users || [];
+        if (lower.includes("role = 'farmer'")) {
+          count = count.filter(u => u.role === 'FARMER');
+        } else if (lower.includes("role = 'admin'")) {
+          count = count.filter(u => u.role === 'ADMIN');
+        }
+        if (lower.includes("verification_status = 'approved'")) {
+          count = count.filter(u => u.verification_status === 'APPROVED');
+        } else if (lower.includes("verification_status = 'pending'")) {
+          count = count.filter(u => u.verification_status === 'PENDING');
+        }
+        return { rows: [{ count: count.length }] };
       }
-      return { rows: [{ count: count.length }] };
+      if (lower.includes('from planting_records')) {
+        return { rows: [{ count: (fileDb.planting_records || []).length }] };
+      }
+      if (lower.includes('from crops')) {
+        return { rows: [{ count: (fileDb.crops || []).length }] };
+      }
+      if (lower.includes('from marketplace_listings')) {
+        return { rows: [{ count: (fileDb.marketplace_listings || []).length }] };
+      }
+      if (lower.includes('from marketplace_orders')) {
+        return { rows: [{ count: (fileDb.marketplace_orders || []).length }] };
+      }
+      if (lower.includes('from chat_messages')) {
+        return { rows: [{ count: (fileDb.chat_messages || []).length }] };
+      }
+      return { rows: [{ count: 0 }] };
     }
-    if (lower.includes('select * from users') || (lower.includes('from users') && lower.includes("role = 'farmer'"))) {
-      let rows = fileDb.users;
+
+    // SELECT Queries
+    if (lower.includes('from users')) {
+      if (lower.includes("role = 'admin'")) {
+        const admins = (fileDb.users || []).filter(u => u.role === 'ADMIN' || u.phone === '0770000000');
+        return { rows: admins };
+      }
+      if (lower.includes('where id =')) {
+        const idVal = Number(params[0]);
+        return { rows: (fileDb.users || []).filter(u => Number(u.id) === idVal) };
+      }
+      if (lower.includes('where') && (lower.includes('phone') || lower.includes('nic'))) {
+        const val = (params[0] || '').trim().toLowerCase();
+        if (val) {
+          return {
+            rows: (fileDb.users || []).filter(u =>
+              (u.nic && u.nic.toLowerCase() === val) ||
+              (u.phone && u.phone === val)
+            )
+          };
+        }
+      }
+      let rows = fileDb.users || [];
       if (lower.includes("role = 'farmer'")) {
         rows = rows.filter(u => u.role === 'FARMER');
       }
@@ -293,7 +438,7 @@ module.exports = {
       });
       return { rows: rows.sort((a, b) => b.total_acres - a.total_acres) };
     }
-    if (lower.includes('select * from crops')) {
+    if (lower.includes('from crops') && !lower.includes('join')) {
       return { rows: fileDb.crops };
     }
     if (lower.includes('from crop_seasons')) {
@@ -345,6 +490,23 @@ module.exports = {
       }
       return { rows: fileDb.price_history || [] };
     }
+    if (lower.includes('from crop_monthly_price_benchmarks')) {
+      let rows = fileDb.crop_monthly_price_benchmarks || [];
+      if (lower.includes('where crop_id =') && lower.includes('month =')) {
+        const cId = Number(params[0]);
+        const m = Number(params[1]);
+        return { rows: rows.filter(b => Number(b.crop_id) === cId && Number(b.month) === m) };
+      }
+      if (lower.includes('where crop_id =')) {
+        const cId = Number(params[0]);
+        return { rows: rows.filter(b => Number(b.crop_id) === cId) };
+      }
+      return { rows };
+    }
+    if (lower.includes('from chat_messages')) {
+      const orderId = Number(params[0]);
+      return { rows: (fileDb.chat_messages || []).filter(m => Number(m.order_id) === orderId) };
+    }
     if (lower.includes('distinct on (c.id)') || lower.includes('from crops c left join price_history')) {
       const rows = fileDb.crops.map(c => {
         const ph = (fileDb.price_history || []).find(p => Number(p.crop_id) === Number(c.id));
@@ -375,12 +537,7 @@ module.exports = {
         const crop = fileDb.crops.find(c => c.id === l.crop_id) || {};
         const farmer = fileDb.users.find(u => u.id === l.farmer_id) || {};
         const cropCodeLower = (crop.crop_code || '').toLowerCase();
-        let defaultImg = '/crops/leek.jpg';
-        if (cropCodeLower.includes('carrot')) defaultImg = '/crops/carrot.jpg';
-        else if (cropCodeLower.includes('spring')) defaultImg = '/crops/spring_onion.jpg';
-        else if (cropCodeLower.includes('beet')) defaultImg = '/crops/beetroot.jpg';
-        else if (cropCodeLower.includes('bean')) defaultImg = '/crops/bush_beans.jpg';
-        else if (cropCodeLower.includes('radish')) defaultImg = '/crops/radish.jpg';
+        let defaultImg = crop.image_url || 'https://images.unsplash.com/photo-1587049633312-d628ae50a8ae?w=600&auto=format&fit=crop&q=80';
 
         return {
           ...l,
@@ -392,8 +549,8 @@ module.exports = {
           standard_price_per_kg: crop.standard_price_per_kg,
           price_range_min: crop.standard_price_per_kg * 0.75,
           price_range_max: crop.standard_price_per_kg * 1.35,
-          farmer_name: farmer.full_name || l.farmer_name || 'Sunil Shantha',
-          farmer_phone: farmer.phone || l.farmer_phone || '0712345678'
+          farmer_name: farmer.full_name || l.farmer_name || '',
+          farmer_phone: farmer.phone || l.farmer_phone || ''
         };
       });
       if (lower.includes('where id =')) {
@@ -442,6 +599,17 @@ module.exports = {
     }
     if (lower.includes('select * from broadcast_warnings')) {
       return { rows: fileDb.broadcast_warnings || [] };
+    }
+    if (lower.includes('from chat_messages')) {
+      let rows = fileDb.chat_messages || [];
+      if (lower.includes('where order_id =')) {
+        const oId = Number(params[0]);
+        rows = rows.filter(m => Number(m.order_id) === oId);
+      } else if (lower.includes('where listing_id =')) {
+        const lId = Number(params[0]);
+        rows = rows.filter(m => Number(m.listing_id) === lId);
+      }
+      return { rows: rows.sort((a, b) => new Date(a.created_at) - new Date(b.created_at)) };
     }
     if (lower.includes('insert into notification_logs')) {
       const newLog = {
@@ -505,6 +673,8 @@ module.exports = {
         newUser.first_name = split.first_name;
         newUser.middle_name = split.middle_name;
         newUser.last_name = split.last_name;
+      } else if (newUser.first_name && newUser.last_name) {
+        newUser.full_name = formatFullName(newUser.first_name, newUser.middle_name, newUser.last_name);
       } else if (newUser.first_name && !newUser.full_name) {
         newUser.full_name = formatFullName(newUser.first_name, newUser.middle_name, newUser.last_name);
       }
@@ -516,8 +686,8 @@ module.exports = {
         newUser.address_line2 = addrSplit.address_line2;
         newUser.city = addrSplit.city;
         newUser.postal_code = addrSplit.postal_code;
-      } else if (newUser.address_line1 && !newUser.address) {
-        newUser.address = formatAddress(newUser.address_line1, newUser.address_line2, newUser.city, newUser.postal_code);
+      } else if (newUser.address_line1) {
+        newUser.address = formatAddress(newUser.address_line1, newUser.address_line2, newUser.city || newUser.division || 'Bandarawela', newUser.postal_code || '90100');
       }
 
       // Fallback defaults
@@ -535,11 +705,15 @@ module.exports = {
     }
 
     if (lower.includes('insert into planting_records')) {
+      const acresVal = Number(params[2]);
+      const perchesVal = Math.round(acresVal * 160 * 100) / 100;
       const newPlanting = {
         id: Date.now(),
         farmer_id: params[0],
         crop_id: Number(params[1]),
-        land_size_acres: Number(params[2]),
+        land_size_acres: acresVal,
+        land_size_perches: perchesVal,
+        land_unit: 'ACRES',
         expected_yield_kg: Number(params[3]),
         planting_date: params[4] || new Date().toISOString().split('T')[0],
         expected_harvest_date: params[5] || '2026-11-01',
@@ -744,15 +918,142 @@ module.exports = {
 
     if (lower.includes('insert into farmer_verifications')) {
       const newVerif = {
-        farmer_id: params[0],
-        verification_status: 'APPROVED',
-        verified_by: params[1],
-        verified_at: new Date().toISOString()
+        id: Date.now(),
+        farmer_id: Number(params[0]),
+        verification_status: params[1] || 'PENDING',
+        nic_verified: params[2] !== undefined ? params[2] : false,
+        land_gps_verified: params[3] !== undefined ? params[3] : false,
+        land_size_verified: params[4] !== undefined ? params[4] : false,
+        verified_by: null,
+        rejection_reason: null,
+        created_at: new Date().toISOString()
       };
       if (!fileDb.farmer_verifications) fileDb.farmer_verifications = [];
-      fileDb.farmer_verifications.push(newVerif);
-      saveDb(fileDb);
+      // ON CONFLICT DO NOTHING equivalent — skip if already exists for this farmer
+      const alreadyExists = fileDb.farmer_verifications.some(fv => Number(fv.farmer_id) === newVerif.farmer_id);
+      if (!alreadyExists) {
+        fileDb.farmer_verifications.push(newVerif);
+        saveDb(fileDb);
+      }
       return { rows: [newVerif] };
+    }
+
+    if (lower.includes('insert into price_history')) {
+      const crop_id = Number(params[0]);
+      let price_per_kg, price_date, market_name;
+      if (params.length === 3) {
+        price_per_kg = Number(params[1]);
+        price_date = params[2];
+        market_name = 'Keppetipola Economic Centre';
+      } else {
+        market_name = params[1];
+        price_per_kg = Number(params[2]);
+        price_date = params[3];
+      }
+      const newPH = {
+        crop_id,
+        market_name,
+        price_per_kg,
+        price_date,
+        source: 'HARTI_BULLETIN'
+      };
+      if (!fileDb.price_history) fileDb.price_history = [];
+      const existingIdx = fileDb.price_history.findIndex(p => p.crop_id === crop_id && p.price_date === price_date);
+      if (existingIdx >= 0) {
+        fileDb.price_history[existingIdx] = newPH;
+      } else {
+        fileDb.price_history.push(newPH);
+      }
+      saveDb(fileDb);
+      return { rows: [newPH] };
+    }
+
+    if (lower.includes('insert into cropix_demand_benchmarks')) {
+      const newCDB = {
+        id: Date.now() + Math.random(),
+        crop_id: Number(params[0]),
+        district: 'Badulla',
+        target_month: Number(params[1]),
+        target_year: Number(params[2]),
+        national_demand_kg: Number(params[3]),
+        regional_quota_kg: Number(params[4]),
+        current_market_gap_kg: Number(params[5])
+      };
+      if (!fileDb.cropix_demand_benchmarks) fileDb.cropix_demand_benchmarks = [];
+      const existingIdx = fileDb.cropix_demand_benchmarks.findIndex(c => c.crop_id === newCDB.crop_id && c.target_month === newCDB.target_month && c.target_year === newCDB.target_year);
+      if (existingIdx >= 0) {
+        fileDb.cropix_demand_benchmarks[existingIdx] = newCDB;
+      } else {
+        fileDb.cropix_demand_benchmarks.push(newCDB);
+      }
+      saveDb(fileDb);
+      return { rows: [newCDB] };
+    }
+
+    if (lower.includes('insert into crop_monthly_price_benchmarks')) {
+      let crop_id, market_name, year, month, avg_price_per_kg, min_price_per_kg, max_price_per_kg, volatility_index, cyclical_glut_risk;
+      if (params.length === 8) {
+        crop_id = Number(params[0]);
+        market_name = 'Keppetipola Economic Centre';
+        year = Number(params[1]);
+        month = Number(params[2]);
+        avg_price_per_kg = Number(params[3]);
+        min_price_per_kg = Number(params[4]);
+        max_price_per_kg = Number(params[5]);
+        volatility_index = Number(params[6] || 15.0);
+        cyclical_glut_risk = params[7] || 'LOW';
+      } else {
+        crop_id = Number(params[0]);
+        market_name = params[1] || 'Keppetipola Economic Centre';
+        year = Number(params[2]);
+        month = Number(params[3]);
+        avg_price_per_kg = Number(params[4]);
+        min_price_per_kg = Number(params[5]);
+        max_price_per_kg = Number(params[6]);
+        volatility_index = Number(params[7] || 15.0);
+        cyclical_glut_risk = params[8] || 'LOW';
+      }
+      const newB = {
+        id: Date.now() + Math.random(),
+        crop_id,
+        market_name,
+        year,
+        month,
+        avg_price_per_kg,
+        min_price_per_kg,
+        max_price_per_kg,
+        volatility_index,
+        cyclical_glut_risk,
+        last_updated: new Date().toISOString()
+      };
+      if (!fileDb.crop_monthly_price_benchmarks) fileDb.crop_monthly_price_benchmarks = [];
+      const existingIdx = fileDb.crop_monthly_price_benchmarks.findIndex(
+        b => b.crop_id === newB.crop_id && b.market_name === newB.market_name && b.year === newB.year && b.month === newB.month
+      );
+      if (existingIdx >= 0) {
+        fileDb.crop_monthly_price_benchmarks[existingIdx] = newB;
+      } else {
+        fileDb.crop_monthly_price_benchmarks.push(newB);
+      }
+      saveDb(fileDb);
+      return { rows: [newB] };
+    }
+
+    if (lower.includes('insert into chat_messages')) {
+      const newMsg = {
+        id: Date.now(),
+        order_id: Number(params[0]),
+        listing_id: Number(params[1]),
+        sender_id: params[2],
+        sender_name: params[3],
+        sender_role: params[4],
+        message_text: params[5],
+        created_at: new Date().toISOString()
+      };
+      if (!fileDb.chat_messages) fileDb.chat_messages = [];
+      fileDb.chat_messages.push(newMsg);
+      saveDb(fileDb);
+      return { rows: [newMsg] };
     }
 
     return { rows: [] };

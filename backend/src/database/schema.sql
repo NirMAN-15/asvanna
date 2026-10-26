@@ -78,7 +78,9 @@ CREATE TABLE IF NOT EXISTS planting_records (
     id SERIAL PRIMARY KEY,
     farmer_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     crop_id INT NOT NULL REFERENCES crops(id),
-    land_size_acres DECIMAL(6, 2) NOT NULL CHECK (land_size_acres > 0),
+    land_size_acres DECIMAL(10, 4) NOT NULL CHECK (land_size_acres > 0),
+    land_size_perches DECIMAL(10, 2),
+    land_unit VARCHAR(10) DEFAULT 'ACRES',
     expected_yield_kg DECIMAL(10, 2) NOT NULL,
     planting_date DATE NOT NULL,
     expected_harvest_date DATE NOT NULL,
@@ -252,6 +254,22 @@ CREATE TABLE IF NOT EXISTS price_history (
     UNIQUE(crop_id, market_name, price_date)
 );
 
+-- 13b. 3-Year Rolling Monthly Price Benchmarks (36 Months Cyclical Analytics)
+CREATE TABLE IF NOT EXISTS crop_monthly_price_benchmarks (
+    id SERIAL PRIMARY KEY,
+    crop_id INT NOT NULL REFERENCES crops(id) ON DELETE CASCADE,
+    market_name VARCHAR(100) DEFAULT 'Keppetipola Economic Centre',
+    year INT NOT NULL,
+    month INT NOT NULL CHECK (month BETWEEN 1 AND 12),
+    avg_price_per_kg DECIMAL(8, 2) NOT NULL,
+    min_price_per_kg DECIMAL(8, 2) NOT NULL,
+    max_price_per_kg DECIMAL(8, 2) NOT NULL,
+    volatility_index DECIMAL(5, 2) DEFAULT 15.0,
+    cyclical_glut_risk VARCHAR(20) DEFAULT 'LOW' CHECK (cyclical_glut_risk IN ('LOW', 'MODERATE', 'HIGH', 'CRITICAL')),
+    last_updated TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(crop_id, market_name, year, month)
+);
+
 -- 14. Notification Logs Table
 CREATE TABLE IF NOT EXISTS notification_logs (
     id SERIAL PRIMARY KEY,
@@ -282,6 +300,18 @@ CREATE TABLE IF NOT EXISTS farmer_verifications (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 16. Chat Messages Table (Order-linked Buyer-Farmer Real-Time Negotiations)
+CREATE TABLE IF NOT EXISTS chat_messages (
+    id SERIAL PRIMARY KEY,
+    order_id INT REFERENCES marketplace_orders(id) ON DELETE CASCADE,
+    listing_id INT REFERENCES marketplace_listings(id) ON DELETE CASCADE,
+    sender_id INT REFERENCES users(id) ON DELETE SET NULL,
+    sender_name VARCHAR(200) NOT NULL,
+    sender_role VARCHAR(20) NOT NULL CHECK (sender_role IN ('BUYER', 'FARMER', 'ADMIN', 'OFFICER')),
+    message_text TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Idempotent Column Additions for Existing Tables
 ALTER TABLE users ADD COLUMN IF NOT EXISTS total_land_size DECIMAL(8, 2);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS preferred_search_radius DECIMAL(4, 1) DEFAULT 5.0;
@@ -289,6 +319,12 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS business_name VARCHAR(200);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS business_type VARCHAR(50);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_photo_url TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_status VARCHAR(20) DEFAULT 'PENDING';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_profile_update_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS pending_profile_updates JSONB;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_update_status VARCHAR(30) DEFAULT 'APPROVED';
+ALTER TABLE planting_records ADD COLUMN IF NOT EXISTS actual_yield_kg DECIMAL(10, 2);
+ALTER TABLE planting_records ADD COLUMN IF NOT EXISTS harvested_date TIMESTAMP WITH TIME ZONE;
+
 
 ALTER TABLE crops ADD COLUMN IF NOT EXISTS optimal_humidity_min DECIMAL(4, 1);
 ALTER TABLE crops ADD COLUMN IF NOT EXISTS optimal_humidity_max DECIMAL(4, 1);
@@ -301,6 +337,11 @@ ALTER TABLE crops ADD COLUMN IF NOT EXISTS image_url TEXT;
 ALTER TABLE crops ADD COLUMN IF NOT EXISTS description_en TEXT;
 ALTER TABLE crops ADD COLUMN IF NOT EXISTS description_si TEXT;
 ALTER TABLE crops ADD COLUMN IF NOT EXISTS description_ta TEXT;
+
+ALTER TABLE planting_records ADD COLUMN IF NOT EXISTS land_size_perches DECIMAL(10, 2);
+ALTER TABLE planting_records ADD COLUMN IF NOT EXISTS land_unit VARCHAR(10) DEFAULT 'ACRES';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS total_land_perches DECIMAL(10, 2);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS land_unit VARCHAR(10) DEFAULT 'ACRES';
 
 ALTER TABLE risk_assessments ADD COLUMN IF NOT EXISTS over_planting_score DECIMAL(5, 2) DEFAULT 0.0;
 ALTER TABLE risk_assessments ADD COLUMN IF NOT EXISTS weather_risk_score DECIMAL(5, 2) DEFAULT 0.0;
@@ -323,3 +364,5 @@ CREATE INDEX IF NOT EXISTS idx_risk_crop_district ON risk_assessments(crop_id, d
 CREATE INDEX IF NOT EXISTS idx_weather_location_date ON weather_cache(location_key, forecast_date);
 CREATE INDEX IF NOT EXISTS idx_price_history_crop_date ON price_history(crop_id, price_date);
 CREATE INDEX IF NOT EXISTS idx_crop_seasons_crop ON crop_seasons(crop_id);
+CREATE INDEX IF NOT EXISTS idx_monthly_price_crop_month ON crop_monthly_price_benchmarks(crop_id, month);
+CREATE INDEX IF NOT EXISTS idx_chat_order ON chat_messages(order_id);

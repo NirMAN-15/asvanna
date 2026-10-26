@@ -4,7 +4,7 @@ import { AuthContext } from '../context/AuthContext';
 import { LanguageContext } from '../context/LanguageContext';
 
 export default function Navbar() {
-  const { user, role, logout } = useContext(AuthContext);
+  const { user, role, switchRole, logout } = useContext(AuthContext);
   const { lang, setLanguage, t } = useContext(LanguageContext);
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -48,8 +48,8 @@ export default function Navbar() {
         { path: '/dashboard', label: t('nav_field_overview'), icon: 'agriculture' },
         { path: '/monitoring', label: t('nav_regional_map'), icon: 'map' },
         { path: '/risk-analytics', label: t('risk_analytics'), icon: 'bar_chart' },
-        { path: '/prices', label: 'Wholesale Rates', icon: 'trending_up' },
-        { path: '/weather', label: 'Agro Weather', icon: 'cloud' },
+        { path: '/prices', label: t('nav_wholesale_rates', 'Wholesale Rates'), icon: 'trending_up' },
+        { path: '/weather', label: t('nav_agro_weather', 'Agro Weather'), icon: 'cloud' },
         { path: '/farmers', label: t('nav_farmer_directory'), icon: 'group' },
         { path: '/marketplace', label: t('nav_surplus_marketplace'), icon: 'storefront' },
         { path: '/broadcasts', label: t('nav_advisory_broadcasts'), icon: 'campaign' },
@@ -59,8 +59,8 @@ export default function Navbar() {
       return [
         { path: '/dashboard', label: t('nav_my_farm'), icon: 'agriculture' },
         { path: '/risk-analytics', label: t('nav_crop_advisory'), icon: 'psychology' },
-        { path: '/prices', label: 'Market Prices', icon: 'trending_up' },
-        { path: '/weather', label: 'Agro Weather', icon: 'cloud' },
+        { path: '/prices', label: t('nav_market_prices', 'Market Prices'), icon: 'trending_up' },
+        { path: '/weather', label: t('nav_agro_weather', 'Agro Weather'), icon: 'cloud' },
         { path: '/marketplace', label: t('nav_sell_produce'), icon: 'storefront' },
         { path: '/history', label: t('nav_history'), icon: 'history' },
         { path: '/broadcasts', label: t('nav_officer_alerts'), icon: 'notifications_active' },
@@ -85,26 +85,32 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 right-0 left-0 h-20 bg-surface-bright/95 backdrop-blur-md shadow-sm flex justify-between items-center px-4 md:px-8 z-20 border-b border-outline-variant/30 flex-shrink-0">
+      <header className="sticky top-0 right-0 left-0 h-16 md:h-20 bg-surface-bright/95 backdrop-blur-md shadow-sm flex justify-between items-center px-3 sm:px-4 md:px-8 z-20 border-b border-outline-variant/30 flex-shrink-0">
         {/* Title & Division Info with Mobile Menu Trigger */}
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           {/* Mobile Hamburger Button */}
           <button
             onClick={() => setMobileMenuOpen(true)}
-            className="md:hidden p-2 text-on-surface-variant hover:text-primary rounded-xl hover:bg-surface-variant transition cursor-pointer"
+            className="md:hidden p-2 text-on-surface-variant hover:text-primary rounded-xl hover:bg-surface-variant transition cursor-pointer flex-shrink-0"
             aria-label="Open Navigation Menu"
           >
             <span className="material-symbols-outlined text-2xl">menu</span>
           </button>
 
-          <Link to="/dashboard" className="md:hidden flex-shrink-0">
+          {/* Mobile Brand Link (Logo + ASVANNA) */}
+          <Link to="/dashboard" className="md:hidden flex items-center gap-2 flex-shrink-0">
             <img
               src="/logo.png"
               alt="ASVANNA"
-              className="w-10 h-10 object-contain rounded-full shadow-sm filter drop-shadow-xs"
+              className="w-9 h-9 object-contain rounded-full shadow-sm filter drop-shadow-xs"
             />
+            <span className="font-headline font-black text-lg text-primary tracking-tight">
+              ASVANNA
+            </span>
           </Link>
-          <div className="flex flex-col min-w-0">
+
+          {/* Desktop User & Office Title (hidden on mobile, visible on md and up) */}
+          <div className="hidden md:flex flex-col min-w-0">
             <div className="flex items-center gap-2">
               <h2 className="font-headline text-lg md:text-xl font-bold text-primary truncate">
                 {getRoleTitle()}
@@ -119,13 +125,68 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Right Controls: Language Switcher, Notifications, Avatar */}
-        <div className="flex items-center gap-3 md:gap-5">
+        {/* Right Controls: Role Switcher, Language Switcher, Notifications, Avatar */}
+        <div className="flex items-center gap-2 sm:gap-3 md:gap-4 flex-shrink-0">
+          {/* Super User / Master Role Switcher */}
+          {(user?.is_admin || user?.original_role === 'ADMIN' || user?.nic === '200322610371') && (
+            <div className="hidden lg:flex items-center bg-surface-container-high rounded-full p-1 border border-outline-variant/60 gap-1 text-xs shadow-xs">
+              <span className="text-[10px] text-on-surface-variant pl-2 pr-1 font-bold uppercase tracking-wider">View:</span>
+              <button
+                type="button"
+                onClick={() => switchRole('FARMER')}
+                className={`px-2.5 py-1 rounded-full font-bold transition text-xs flex items-center gap-1 cursor-pointer ${
+                  role === 'FARMER'
+                    ? 'bg-primary text-white shadow-xs'
+                    : 'text-on-surface-variant hover:text-primary hover:bg-surface-variant/50'
+                }`}
+                title="Switch to Farmer View"
+              >
+                <span>🌾</span> Farmer
+              </button>
+              <button
+                type="button"
+                onClick={() => switchRole('OFFICER')}
+                className={`px-2.5 py-1 rounded-full font-bold transition text-xs flex items-center gap-1 cursor-pointer ${
+                  role === 'OFFICER'
+                    ? 'bg-secondary text-white shadow-xs'
+                    : 'text-on-surface-variant hover:text-secondary hover:bg-surface-variant/50'
+                }`}
+                title="Switch to Officer View"
+              >
+                <span>🛡️</span> Officer
+              </button>
+              <button
+                type="button"
+                onClick={() => switchRole('BUYER')}
+                className={`px-2.5 py-1 rounded-full font-bold transition text-xs flex items-center gap-1 cursor-pointer ${
+                  role === 'BUYER'
+                    ? 'bg-emerald-700 text-white shadow-xs'
+                    : 'text-on-surface-variant hover:text-emerald-700 hover:bg-surface-variant/50'
+                }`}
+                title="Switch to Buyer View"
+              >
+                <span>🛒</span> Buyer
+              </button>
+              <button
+                type="button"
+                onClick={() => switchRole('ADMIN')}
+                className={`px-2.5 py-1 rounded-full font-bold transition text-xs flex items-center gap-1 cursor-pointer ${
+                  role === 'ADMIN'
+                    ? 'bg-amber-600 text-white shadow-xs'
+                    : 'text-on-surface-variant hover:text-amber-600 hover:bg-surface-variant/50'
+                }`}
+                title="Switch to Admin View"
+              >
+                <span>👑</span> Admin
+              </button>
+            </div>
+          )}
+
           {/* Language Switcher */}
-          <div className="flex items-center bg-surface-container-low rounded-full px-2 py-1 border border-outline-variant text-xs shadow-sm">
+          <div className="flex items-center bg-surface-container-low rounded-full px-1.5 py-0.5 sm:px-2 sm:py-1 border border-outline-variant text-[11px] sm:text-xs shadow-xs flex-shrink-0">
             <button
               onClick={() => setLanguage('en')}
-              className={`px-2 py-0.5 rounded-full font-bold transition cursor-pointer ${
+              className={`px-1.5 sm:px-2 py-0.5 rounded-full font-bold transition cursor-pointer ${
                 lang === 'en' ? 'bg-secondary-container text-on-secondary-fixed' : 'text-on-surface-variant hover:text-primary'
               }`}
             >
@@ -134,7 +195,7 @@ export default function Navbar() {
             <div className="w-px h-3 bg-outline-variant mx-0.5" />
             <button
               onClick={() => setLanguage('si')}
-              className={`px-2 py-0.5 rounded-full font-bold transition cursor-pointer ${
+              className={`px-1.5 sm:px-2 py-0.5 rounded-full font-bold transition cursor-pointer ${
                 lang === 'si' ? 'bg-secondary-container text-on-secondary-fixed' : 'text-on-surface-variant hover:text-primary'
               }`}
             >
@@ -143,7 +204,7 @@ export default function Navbar() {
             <div className="w-px h-3 bg-outline-variant mx-0.5" />
             <button
               onClick={() => setLanguage('ta')}
-              className={`px-2 py-0.5 rounded-full font-bold transition cursor-pointer ${
+              className={`px-1.5 sm:px-2 py-0.5 rounded-full font-bold transition cursor-pointer ${
                 lang === 'ta' ? 'bg-secondary-container text-on-secondary-fixed' : 'text-on-surface-variant hover:text-primary'
               }`}
             >
@@ -153,24 +214,25 @@ export default function Navbar() {
 
           {/* Notifications Icon with Badge */}
           <div 
-            className="relative cursor-pointer hover:scale-105 transition-transform p-1"
+            className="relative cursor-pointer hover:scale-105 transition-transform p-1 flex-shrink-0 flex items-center justify-center text-on-surface-variant hover:text-primary"
             onClick={() => navigate('/broadcasts')}
+            title="Notifications"
           >
-            <span className="material-symbols-outlined text-on-surface-variant text-[26px]">
+            <span className="material-symbols-outlined text-[24px] sm:text-[26px]">
               notifications
             </span>
           </div>
 
           {/* Avatar with Ring */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <div 
-              className="h-10 w-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary font-bold overflow-hidden ring-2 ring-primary ring-offset-2 shadow-sm cursor-pointer hover:ring-secondary transition-all"
+              className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary font-bold overflow-hidden ring-2 ring-primary ring-offset-2 shadow-sm cursor-pointer hover:ring-secondary transition-all flex-shrink-0"
               onClick={() => navigate('/settings')}
             >
               {user?.photo ? (
                 <img src={user.photo} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
-                <span>{user?.full_name ? user.full_name.charAt(0).toUpperCase() : 'A'}</span>
+                <span className="text-sm sm:text-base">{user?.full_name ? user.full_name.charAt(0).toUpperCase() : 'A'}</span>
               )}
             </div>
             <button
@@ -230,6 +292,51 @@ export default function Navbar() {
                 </span>
               </div>
             </div>
+
+            {/* Mobile Super User Role Switcher */}
+            {(user?.is_admin || user?.original_role === 'ADMIN' || user?.nic === '200322610371') && (
+              <div className="px-5 py-3 bg-surface-container-high/60 border-b border-outline-variant/30">
+                <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-2">Switch Active View:</p>
+                <div className="grid grid-cols-2 gap-1.5 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => { switchRole('FARMER'); setMobileMenuOpen(false); }}
+                    className={`px-2 py-1.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1 cursor-pointer ${
+                      role === 'FARMER' ? 'bg-primary text-white shadow-xs' : 'bg-surface-container border border-outline-variant/50 text-on-surface-variant'
+                    }`}
+                  >
+                    <span>🌾</span> Farmer
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { switchRole('OFFICER'); setMobileMenuOpen(false); }}
+                    className={`px-2 py-1.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1 cursor-pointer ${
+                      role === 'OFFICER' ? 'bg-secondary text-white shadow-xs' : 'bg-surface-container border border-outline-variant/50 text-on-surface-variant'
+                    }`}
+                  >
+                    <span>🛡️</span> Officer
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { switchRole('BUYER'); setMobileMenuOpen(false); }}
+                    className={`px-2 py-1.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1 cursor-pointer ${
+                      role === 'BUYER' ? 'bg-emerald-700 text-white shadow-xs' : 'bg-surface-container border border-outline-variant/50 text-on-surface-variant'
+                    }`}
+                  >
+                    <span>🛒</span> Buyer
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { switchRole('ADMIN'); setMobileMenuOpen(false); }}
+                    className={`px-2 py-1.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1 cursor-pointer ${
+                      role === 'ADMIN' ? 'bg-amber-600 text-white shadow-xs' : 'bg-surface-container border border-outline-variant/50 text-on-surface-variant'
+                    }`}
+                  >
+                    <span>👑</span> Admin
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Navigation Links */}
             <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1 custom-scrollbar">

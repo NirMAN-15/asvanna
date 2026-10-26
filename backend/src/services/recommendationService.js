@@ -62,10 +62,15 @@ class RecommendationService {
         seasonScore = parseFloat(seasonMap[crop.id][currentSeason].suitability_score);
       }
 
-      // 4. Price Attractiveness Score (15%) - Compare current price to standard price
-      const currentPrice = priceMap[crop.id] || parseFloat(crop.standard_price_per_kg);
+      const currentPrice = priceMap[crop.id] || parseFloat(crop.standard_price_per_kg) || 200;
+
+      // 4. Projected Harvest Month 3-Year Price Score (15%)
+      const growthMonths = Math.max(1, Math.round((crop.growth_duration_days || 75) / 30));
+      const projectedHarvestMonth = ((currentMonth + growthMonths - 1) % 12) + 1;
+      const threeYearBench = await PriceService.getThreeYearMonthlyPriceTrend(crop.id, projectedHarvestMonth);
+      const harvestAvgPrice = threeYearBench.threeYearAveragePrice || currentPrice;
       const standardPrice = parseFloat(crop.standard_price_per_kg) || 200;
-      const priceRatio = (currentPrice / standardPrice) * 100;
+      const priceRatio = (harvestAvgPrice / standardPrice) * 100;
       const priceScore = Math.min(100, Math.max(20, Math.round(priceRatio)));
 
       // 5. Growth Duration Score (10%) - Faster maturity (45-60 days) scores higher
@@ -96,6 +101,17 @@ class RecommendationService {
       }
 
       recommendations.push({
+        id: crop.id,
+        crop_id: crop.id,
+        crop_code: crop.crop_code,
+        name_en: crop.name_en,
+        name_si: crop.name_si,
+        name_ta: crop.name_ta,
+        score: compositeScore,
+        suitabilityScore: seasonScore,
+        priceAttractiveness: priceScore,
+        projected_price: harvestAvgPrice,
+        standard_price_per_kg: standardPrice,
         crop: {
           id: crop.id,
           code: crop.crop_code,

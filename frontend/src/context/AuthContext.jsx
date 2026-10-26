@@ -4,30 +4,27 @@ import API from '../services/api';
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const storedToken = localStorage.getItem('asvanna_token');
-    const storedUser = localStorage.getItem('asvanna_user');
-
-    if (storedToken && storedUser) {
-      try {
-        setToken(storedToken);
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error('Failed to parse user data from localStorage', error);
-      }
-    }
-    setLoading(false);
-  }, []);
-
-  const login = async (phone, password, role, otp) => {
+  const [user, setUser] = useState(() => {
     try {
-      const payload = { phone, role };
+      const storedUser = localStorage.getItem('asvanna_user');
+      return storedUser ? JSON.parse(storedUser) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+  const [token, setToken] = useState(() => {
+    try {
+      return localStorage.getItem('asvanna_token') || null;
+    } catch (e) {
+      return null;
+    }
+  });
+  const [loading, setLoading] = useState(false);
+
+  const login = async (identifier, password, role) => {
+    try {
+      const payload = { nic: identifier, phone: identifier, identifier, role };
       if (password) payload.password = password;
-      if (otp) payload.otp = otp;
       const response = await API.post('/auth/login', payload);
       const { user: returnedUser, token: returnedToken } = response.data.data;
 
@@ -58,6 +55,13 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const switchRole = (newRole) => {
+    if (!user) return;
+    const updatedUser = { ...user, role: newRole.toUpperCase() };
+    setUser(updatedUser);
+    localStorage.setItem('asvanna_user', JSON.stringify(updatedUser));
+  };
+
   const logout = () => {
     setUser(null);
     setToken(null);
@@ -69,8 +73,14 @@ export const AuthProvider = ({ children }) => {
     <AuthContext.Provider
       value={{
         user,
+        setUser,
+        updateUser: (updatedUser) => {
+          setUser(updatedUser);
+          localStorage.setItem('asvanna_user', JSON.stringify(updatedUser));
+        },
         token,
         role: user?.role,
+        switchRole,
         loading,
         login,
         register,

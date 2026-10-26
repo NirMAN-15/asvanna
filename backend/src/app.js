@@ -41,7 +41,7 @@ app.get(['/health', '/api/health', '/api/v1/health', '/v1/health'], (req, res) =
 // API Routes (Mounted on both /api/v1 and /v1 for seamless Nginx reverse-proxy compatibility)
 ['/api/v1', '/v1'].forEach((prefix) => {
   app.use(`${prefix}/auth`, authRoutes);
-  app.use(`${prefix}/planting`, plantingRoutes);
+  app.use([`${prefix}/planting`, `${prefix}/plantings`], plantingRoutes);
   app.use(`${prefix}/risk`, riskRoutes);
   app.use(`${prefix}/recommendations`, recommendationRoutes);
   app.use(`${prefix}/marketplace`, marketplaceRoutes);
@@ -51,6 +51,7 @@ app.get(['/health', '/api/health', '/api/v1/health', '/v1/health'], (req, res) =
   app.use(`${prefix}/prices`, priceRoutes);
   app.use(`${prefix}/crops`, cropRoutes);
   app.use(`${prefix}/notifications`, notificationRoutes);
+  app.use(`${prefix}/notices`, notificationRoutes);
 });
 
 // 404 Handler

@@ -98,7 +98,7 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
                 const SizedBox(height: 14),
 
                 // 2. Localized Agro-Weather Intelligence Card
-                _buildAgroWeatherCard(context, tr),
+                _buildAgroWeatherCard(context, appState, tr),
                 const SizedBox(height: 16),
 
                 // 3. 2x2 High-Contrast Big Action Grid (Age 30-50 Farmer Friendly)
@@ -215,64 +215,95 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
         const SizedBox(width: 10),
 
         // Right side: Notification bell button with red alert indicator
-        GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const NoticeBoardScreen()),
+        Consumer<AppStateProvider>(
+          builder: (context, state, _) {
+            final unreadCount = state.unreadNoticesCount;
+            final isAlertActive = hasRedAlert || unreadCount > 0;
+
+            return GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const NoticeBoardScreen()),
+                );
+              },
+              child: Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: isAlertActive ? const Color(0xFFFEE2E2) : context.cardBg,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isAlertActive ? const Color(0xFFFCA5A5) : context.cardBorder,
+                    width: 1.2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: (isAlertActive ? AppColors.dashAlertRed : Colors.black).withValues(alpha: 0.06),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Icon(
+                      isAlertActive ? Icons.notifications_active_rounded : Icons.notifications_outlined,
+                      color: isAlertActive ? AppColors.dashAlertRed : context.titleText,
+                      size: 22,
+                    ),
+                    if (isAlertActive)
+                      Positioned(
+                        top: 4,
+                        right: 4,
+                        child: Container(
+                          padding: const EdgeInsets.all(3),
+                          decoration: BoxDecoration(
+                            color: AppColors.dashAlertRed,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 1.5),
+                          ),
+                          constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                          child: Text(
+                            unreadCount > 0 ? '$unreadCount' : '!',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.inter(
+                              color: Colors.white,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             );
           },
-          child: Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: hasRedAlert ? const Color(0xFFFEE2E2) : context.cardBg,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: hasRedAlert ? const Color(0xFFFCA5A5) : context.cardBorder,
-                width: 1.2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: (hasRedAlert ? AppColors.dashAlertRed : Colors.black).withOpacity(0.06),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Icon(
-                  hasRedAlert ? Icons.notifications_active_rounded : Icons.notifications_outlined,
-                  color: hasRedAlert ? AppColors.dashAlertRed : context.titleText,
-                  size: 22,
-                ),
-                if (hasRedAlert)
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      width: 9,
-                      height: 9,
-                      decoration: BoxDecoration(
-                        color: AppColors.dashAlertRed,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 1.5),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
         ),
       ],
     );
   }
 
   // 2. Agro-Weather Intelligence Card
-  Widget _buildAgroWeatherCard(BuildContext context, String Function(String) tr) {
+  Widget _buildAgroWeatherCard(
+    BuildContext context,
+    AppStateProvider appState,
+    String Function(String) tr,
+  ) {
     final isDark = context.isDarkMode;
+    final weather = appState.currentWeather;
+    final current = weather?.current;
+    final locationName = weather?.location.name ?? appState.selectedWeatherDivision;
+    final tempStr = current?.temp ?? '21°C';
+    final emojiStr = current?.emoji ?? '⛅';
+    final conditionStr = current?.condition ?? 'Scattered Showers';
+    final rainProbStr = current?.rainProb ?? '75%';
+    final advisoryText = (weather != null && weather.diseases.isNotEmpty)
+        ? weather.diseases.first.advice
+        : tr('soil_advisory_text');
+
     return InkWell(
       onTap: () {
         Navigator.push(
@@ -298,14 +329,35 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              tr('agro_weather_title'),
-              style: GoogleFonts.inter(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: context.subText,
-                letterSpacing: 0.3,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  tr('agro_weather_title'),
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: context.subText,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+                if (weather != null && weather.source == 'OPEN_METEO_LIVE')
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF16A34A).withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      '● LIVE RADAR',
+                      style: GoogleFonts.inter(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF16A34A),
+                      ),
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(height: 6),
             Row(
@@ -319,7 +371,7 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
                       textBaseline: TextBaseline.alphabetic,
                       children: [
                         Text(
-                          '21°C',
+                          tempStr,
                           style: GoogleFonts.poppins(
                             fontSize: 26,
                             fontWeight: FontWeight.w800,
@@ -328,7 +380,7 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'Bandarawela',
+                          locationName,
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -340,15 +392,17 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
                     const SizedBox(height: 3),
                     Row(
                       children: [
-                        const Text('🌧️', style: TextStyle(fontSize: 13)),
+                        Text(emojiStr, style: const TextStyle(fontSize: 13)),
                         const SizedBox(width: 5),
                         Text(
-                          tr('rain_prob_label'),
+                          '$rainProbStr rain • $conditionStr',
                           style: GoogleFonts.inter(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
@@ -365,8 +419,8 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
                       width: 1.5,
                     ),
                   ),
-                  child: const Center(
-                    child: Text('⛅', style: TextStyle(fontSize: 26)),
+                  child: Center(
+                    child: Text(emojiStr, style: const TextStyle(fontSize: 26)),
                   ),
                 ),
               ],
@@ -385,7 +439,7 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      tr('soil_advisory_text'),
+                      advisoryText,
                       style: GoogleFonts.inter(
                         fontSize: 11,
                         fontWeight: FontWeight.w500,

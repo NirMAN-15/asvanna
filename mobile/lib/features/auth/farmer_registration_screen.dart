@@ -16,15 +16,15 @@ class FarmerRegistrationScreen extends StatefulWidget {
 
 class _FarmerRegistrationScreenState extends State<FarmerRegistrationScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _fullNameController = TextEditingController(text: 'Imal Lakshitha');
-  final _nicController = TextEditingController(text: '200123456789');
-  final _phoneController = TextEditingController(text: '77 123 4567');
-  final _acresController = TextEditingController(text: '3.5');
-  final _locationController = TextEditingController(text: 'Heeloya Road, Bandarawela');
+  final _fullNameController = TextEditingController();
+  final _nicController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _acresController = TextEditingController();
+  final _locationController = TextEditingController();
 
   String _selectedDivision = 'Bandarawela';
   String _selectedGnd = 'Heeloya West (GND 142)';
-  bool _agreedToTerms = true;
+  bool _agreedToTerms = false;
   bool _isLoading = false;
 
   final List<String> _divisions = [

@@ -71,8 +71,10 @@ void main() {
       await tester.pumpWidget(createTestApp(const LoginScreen()));
       await tester.pumpAndSettle();
 
-      // Tap Login with OTP button
-      await tester.tap(find.text('Login with OTP'));
+      // Ensure button is visible & tap Login with OTP button
+      final btnFinder = find.text('Login with OTP');
+      await tester.ensureVisible(btnFinder);
+      await tester.tap(btnFinder);
       await tester.pumpAndSettle();
 
       expect(find.text('Instant OTP Login'), findsOneWidget);

@@ -1,0 +1,181 @@
+name: ASVANNA CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'member/**'
+      - 'feature/**'
+      - 'fix/**'
+  pull_request:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # -------------------------------------------------------------
+  # Job 1: Backend CI (Database Migration, Seeding & Accuracy Testing)
+  # -------------------------------------------------------------
+  backend-test:
+    name: Backend CI & Risk Engine Validation
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: db_ci_${{ github.run_id }}
+          POSTGRES_DB: asvanna_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install PostgreSQL Client
+        run: sudo apt-get install -y postgresql-client
+
+      - name: Install Backend Dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Initialize Database Schema
+        run: |
+          PGPASSWORD="db_ci_${{ github.run_id }}" psql -h localhost -U postgres -d asvanna_db -f backend/src/database/schema.sql
+
+      - name: Run Database Migrations & Seeds
+        working-directory: ./backend
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: postgres
+          DB_PASSWORD: db_ci_${{ github.run_id }}
+          DB_NAME: asvanna_db
+          NODE_ENV: test
+          JWT_SECRET: asvanna_jwt_${{ github.run_id }}
+        run: |
+          node src/database/migrate.js
+          node src/database/seed_admin.js
+          node src/database/seed.js
+
+      - name: Run Bandarawela Cultivation Seeder
+        working-directory: ./backend
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: postgres
+          DB_PASSWORD: db_ci_${{ github.run_id }}
+          DB_NAME: asvanna_db
+          NODE_ENV: test
+          JWT_SECRET: asvanna_jwt_${{ github.run_id }}
+        run: |
+          node src/database/seed_bandarawela_cultivation.js
+
+      - name: Execute Full Accuracy & System Verification Suite
+        working-directory: ./backend
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: postgres
+          DB_PASSWORD: db_ci_${{ github.run_id }}
+          DB_NAME: asvanna_db
+          NODE_ENV: test
+          JWT_SECRET: asvanna_jwt_${{ github.run_id }}
+        run: |
+          node test/test_accuracy_validation.js
+
+  # -------------------------------------------------------------
+  # Job 2: Frontend CI (Build Verification & Bundling)
+  # -------------------------------------------------------------
+  frontend-build:
+    name: Frontend CI & Production Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Build Production Bundle
+        working-directory: ./frontend
+        run: npm run build
+
+  # -------------------------------------------------------------
+  # Job 3: Docker Images Build Verification
+  # -------------------------------------------------------------
+  docker-build:
+    name: Docker Container Build Verification
+    runs-on: ubuntu-latest
+    needs: [backend-test, frontend-build]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Backend Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: false
+          tags: asvanna-backend:test
+
+      - name: Build Frontend Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: false
+          tags: asvanna-web-admin:test
+
+  # -------------------------------------------------------------
+  # Job 4: Pipeline Status Summary
+  # -------------------------------------------------------------
+  ci-status:
+    name: CI Pipeline Status
+    runs-on: ubuntu-latest
+    needs: [backend-test, frontend-build, docker-build]
+    if: always()
+    steps:
+      - name: Check Status
+        run: |
+          if [ "${{ needs.backend-test.result }}" = "success" ] && \
+             [ "${{ needs.frontend-build.result }}" = "success" ] && \
+             [ "${{ needs.docker-build.result }}" = "success" ]; then
+            echo "✅ All CI/CD checks passed successfully!"
+            exit 0
+          else
+            echo "❌ CI/CD pipeline failed."
+            exit 1
+          fi
