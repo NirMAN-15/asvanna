@@ -326,10 +326,10 @@ async function seedData() {
             `INSERT INTO crop_monthly_price_benchmarks (
               crop_id, market_name, year, month,
               avg_price_per_kg, min_price_per_kg, max_price_per_kg,
-              volatility_index, cyclical_glut_risk, sample_size
+              volatility_index, cyclical_glut_risk
             ) VALUES (
               $1, 'Keppetipola Economic Centre', $2, $3,
-              $4, $5, $6, $7, $8, 30
+              $4, $5, $6, $7, $8
             ) ON CONFLICT (crop_id, market_name, year, month) DO UPDATE SET
               avg_price_per_kg = EXCLUDED.avg_price_per_kg,
               min_price_per_kg = EXCLUDED.min_price_per_kg,

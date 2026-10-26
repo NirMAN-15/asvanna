@@ -75,6 +75,7 @@ jobs:
           JWT_SECRET: asvanna_super_secure_jwt_moratuwa_2026_key
         run: |
           node src/database/migrate.js
+          node src/database/seed_admin.js
           node src/database/seed.js
 
       - name: Run Bandarawela Cultivation Seeder
