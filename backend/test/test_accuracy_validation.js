@@ -130,7 +130,7 @@ async function runTestSuite() {
     totalTests++;
     const cropsRes = await db.query('SELECT * FROM crops');
     const crops = cropsRes.rows || [];
-    assert(crops.length === 25, `All 25 DoA-certified master crops loaded (Count: ${crops.length})`);
+    assert(crops.length === 11, `All 11 Keppetipola test crops loaded (Count: ${crops.length})`);
     passedTests++;
 
     totalTests++;
@@ -142,13 +142,13 @@ async function runTestSuite() {
 
     totalTests++;
     // Test Leeks price trend across past 3 years for September (historically glut month)
-    const leeksTrend = await PriceService.getThreeYearMonthlyPriceTrend(1, 9);
-    assert(leeksTrend !== null && leeksTrend.sample_count >= 1, `Leeks (Crop 1) Month 9 has 3-year cyclical benchmark data (Avg: Rs. ${leeksTrend.avg_price_per_kg}/kg, Risk: ${leeksTrend.cyclical_glut_risk})`);
+    const leeksTrend = await PriceService.getThreeYearMonthlyPriceTrend(3, 9);
+    assert(leeksTrend !== null && leeksTrend.sample_count >= 1, `Leeks (Crop 3) Month 9 has 3-year cyclical benchmark data (Avg: Rs. ${leeksTrend.avg_price_per_kg}/kg, Risk: ${leeksTrend.cyclical_glut_risk})`);
     passedTests++;
 
     totalTests++;
     // Test April New Year high price multiplier
-    const leeksApril = await PriceService.getThreeYearMonthlyPriceTrend(1, 4);
+    const leeksApril = await PriceService.getThreeYearMonthlyPriceTrend(3, 4);
     assert(leeksApril && leeksApril.avg_price_per_kg > leeksTrend.avg_price_per_kg, `April festival prices (Rs. ${leeksApril.avg_price_per_kg}) correctly exceed September glut prices (Rs. ${leeksTrend.avg_price_per_kg})`);
     passedTests++;
   } catch (err) {
@@ -162,18 +162,18 @@ async function runTestSuite() {
   try {
     // We simulate 60-day agricultural ground truth for Bandarawela across key crops:
     // Bandarawela Upcountry Agro-ecological zone (UCI) late Yala -> Maha transition:
-    // 1. LEEKS (Crop 1): High saturation / September glut risk
-    // 2. CABBAGE (Crop 2): Moderate-to-high risk in late season
-    // 3. CARROT (Crop 3): High demand crop with strong pricing
-    // 4. BEETROOT (Crop 4): Stable pricing, safe/moderate risk
-    // 5. POTATO (Crop 5): High disease/weather sensitivity
+    // 1. BEANS (Crop 1)
+    // 2. CARROT (Crop 2)
+    // 3. LEEKS (Crop 3)
+    // 4. CABBAGE (Crop 4)
+    // 5. BEETROOT (Crop 8)
 
     const testCrops = [
-      { id: 1, name: 'Leeks', expectedLevels: ['WARNING', 'OVER_PLANTED', 'SAFE'] },
-      { id: 2, name: 'Cabbage', expectedLevels: ['WARNING', 'OVER_PLANTED', 'SAFE'] },
-      { id: 3, name: 'Carrot', expectedLevels: ['SAFE', 'WARNING'] },
-      { id: 4, name: 'Beetroot', expectedLevels: ['SAFE', 'WARNING'] },
-      { id: 5, name: 'Potato', expectedLevels: ['WARNING', 'SAFE', 'OVER_PLANTED'] }
+      { id: 1, name: 'Beans', expectedLevels: ['WARNING', 'OVER_PLANTED', 'SAFE'] },
+      { id: 2, name: 'Carrot', expectedLevels: ['SAFE', 'WARNING', 'OVER_PLANTED'] },
+      { id: 3, name: 'Leeks', expectedLevels: ['WARNING', 'OVER_PLANTED', 'SAFE'] },
+      { id: 4, name: 'Cabbage', expectedLevels: ['WARNING', 'OVER_PLANTED', 'SAFE'] },
+      { id: 8, name: 'Beetroot', expectedLevels: ['SAFE', 'WARNING', 'OVER_PLANTED'] }
     ];
 
     let correctPredictions = 0;

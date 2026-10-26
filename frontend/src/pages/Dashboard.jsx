@@ -76,17 +76,17 @@ export default function Dashboard() {
   const [vegetableModalState, setVegetableModalState] = useState({ isOpen: false, vegetable: null });
 
   const [regionalVegetables, setRegionalVegetables] = useState([
-    { id: 1, crop_code: 'BEANS', name_en: 'Green Beans', name_si: 'බෝංචි', name_ta: 'போஞ்சி', planted_ha: 110, quota_ha: 160, pct: 68, yield_mt: '1,870 MT', plots: 49, status: 'SAFE', barColor: 'bg-teal-600', badgeColor: 'bg-teal-100 text-teal-800 border-teal-200', image_url: '/crops/bush_beans.jpg' },
-    { id: 2, crop_code: 'CARROT', name_en: 'Carrot', name_si: 'කැරට්', name_ta: 'கேரட்', planted_ha: 285, quota_ha: 310, pct: 92, yield_mt: '4,275 MT', plots: 94, status: 'CRITICAL', barColor: 'bg-red-500', badgeColor: 'bg-red-100 text-red-800 border-red-200', image_url: '/crops/carrot.jpg' },
-    { id: 3, crop_code: 'LEEKS', name_en: 'Leeks', name_si: 'ලීක්ස්', name_ta: 'லீக்ஸ்', planted_ha: 140, quota_ha: 180, pct: 78, yield_mt: '2,520 MT', plots: 58, status: 'WARNING', barColor: 'bg-amber-500', badgeColor: 'bg-amber-100 text-amber-900 border-amber-200', image_url: '/crops/leek.jpg' },
-    { id: 4, crop_code: 'CABBAGE', name_en: 'Cabbage', name_si: 'ගෝවා', name_ta: 'முட்டைக்கோஸ்', planted_ha: 210, quota_ha: 270, pct: 78, yield_mt: '5,250 MT', plots: 82, status: 'WARNING', barColor: 'bg-amber-500', badgeColor: 'bg-amber-100 text-amber-900 border-amber-200', image_url: 'https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?w=300&auto=format&fit=crop&q=60' },
-    { id: 5, crop_code: 'TOMATO', name_en: 'Tomato', name_si: 'තක්කාලි', name_ta: 'தக்காளி', planted_ha: 80, quota_ha: 140, pct: 57, yield_mt: '1,200 MT', plots: 36, status: 'SAFE', barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=300&auto=format&fit=crop&q=60' },
-    { id: 6, crop_code: 'CAULIFLOWER', name_en: 'Cauliflower', name_si: 'මල් ගෝවා', name_ta: 'காலிஃபிளவர்', planted_ha: 52, quota_ha: 75, pct: 69, yield_mt: '680 MT', plots: 24, status: 'SAFE', barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1568584711075-3d021a7c3ca3?w=300&auto=format&fit=crop&q=60' },
-    { id: 7, crop_code: 'CAPSICUM', name_en: 'Capsicum', name_si: 'මාළු මිරිස්', name_ta: 'குடை மிளகாய்', planted_ha: 65, quota_ha: 120, pct: 54, yield_mt: '780 MT', plots: 28, status: 'SAFE', barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=300&auto=format&fit=crop&q=60' },
-    { id: 8, crop_code: 'BEETROOT', name_en: 'Beetroot', name_si: 'බීට්රූට්', name_ta: 'பீட்ரூட்', planted_ha: 110, quota_ha: 160, pct: 68, yield_mt: '1,870 MT', plots: 49, status: 'SAFE', barColor: 'bg-teal-600', badgeColor: 'bg-teal-100 text-teal-800 border-teal-200', image_url: '/crops/beetroot.jpg' },
-    { id: 9, crop_code: 'KNOLKHOL', name_en: 'Knolkhol', name_si: 'නෝල්කෝල්', name_ta: 'நூல்கோல்', planted_ha: 38, quota_ha: 50, pct: 76, yield_mt: '420 MT', plots: 18, status: 'WARNING', barColor: 'bg-amber-500', badgeColor: 'bg-amber-100 text-amber-900 border-amber-200', image_url: '/crops/knol_khol.jpg' },
-    { id: 10, crop_code: 'RADISH', name_en: 'Radish', name_si: 'රාබු', name_ta: 'முள்ளங்கி', planted_ha: 45, quota_ha: 90, pct: 50, yield_mt: '540 MT', plots: 22, status: 'SAFE', barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: '/crops/radish.jpg' },
-    { id: 11, crop_code: 'POTATO', name_en: 'Potato (Welimada)', name_si: 'අර්තාපල්', name_ta: 'உருளைக்கிழங்கு', planted_ha: 95, quota_ha: 150, pct: 63, yield_mt: '1,425 MT', plots: 41, status: 'SAFE', barColor: 'bg-teal-600', badgeColor: 'bg-teal-100 text-teal-800 border-teal-200', image_url: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=300&auto=format&fit=crop&q=60' }
+    { id: 1, crop_code: 'LEEKS', name_en: 'Leeks', name_si: 'ලීක්ස්', name_ta: 'லீக்ஸ்', planted_ha: 140, quota_ha: 180, pct: 78, yield_mt: '2,520 MT', plots: 58, status: 'WARNING', barColor: 'bg-amber-500', badgeColor: 'bg-amber-100 text-amber-900 border-amber-200', image_url: 'https://images.unsplash.com/photo-1587049633312-d628ae50a8ae?w=600&auto=format&fit=crop&q=80' },
+    { id: 2, crop_code: 'CABBAGE', name_en: 'Cabbage', name_si: 'ගෝවා', name_ta: 'முட்டைக்கோස්', planted_ha: 210, quota_ha: 270, pct: 78, yield_mt: '5,250 MT', plots: 82, status: 'WARNING', barColor: 'bg-amber-500', badgeColor: 'bg-amber-100 text-amber-900 border-amber-200', image_url: 'https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?w=600&auto=format&fit=crop&q=80' },
+    { id: 3, crop_code: 'CARROT', name_en: 'Carrot', name_si: 'කැරට්', name_ta: 'கேரட்', planted_ha: 285, quota_ha: 310, pct: 92, yield_mt: '4,275 MT', plots: 94, status: 'CRITICAL', barColor: 'bg-red-500', badgeColor: 'bg-red-100 text-red-800 border-red-200', image_url: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=600&auto=format&fit=crop&q=80' },
+    { id: 4, crop_code: 'BEETROOT', name_en: 'Beetroot', name_si: 'බීට්රූට්', name_ta: 'பீட்ரூட்', planted_ha: 110, quota_ha: 160, pct: 68, yield_mt: '1,870 MT', plots: 49, status: 'SAFE', barColor: 'bg-teal-600', badgeColor: 'bg-teal-100 text-teal-800 border-teal-200', image_url: 'https://images.unsplash.com/photo-1528825871115-3581a5387919?w=600&auto=format&fit=crop&q=80' },
+    { id: 5, crop_code: 'POTATO', name_en: 'Potato (Welimada)', name_si: 'අර්තාපල්', name_ta: 'உருளைக்கிழங்கு', planted_ha: 95, quota_ha: 150, pct: 63, yield_mt: '1,425 MT', plots: 41, status: 'SAFE', barColor: 'bg-teal-600', badgeColor: 'bg-teal-100 text-teal-800 border-teal-200', image_url: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=600&auto=format&fit=crop&q=80' },
+    { id: 6, crop_code: 'BEANS', name_en: 'Green Beans', name_si: 'බෝංචි', name_ta: 'போஞ்சி', planted_ha: 110, quota_ha: 160, pct: 68, yield_mt: '1,870 MT', plots: 49, status: 'SAFE', barColor: 'bg-teal-600', badgeColor: 'bg-teal-100 text-teal-800 border-teal-200', image_url: 'https://images.unsplash.com/photo-1567375698348-5d9d5ae99de0?w=600&auto=format&fit=crop&q=80' },
+    { id: 7, crop_code: 'TOMATO', name_en: 'Tomato', name_si: 'තක්කාලි', name_ta: 'தக்காளி', planted_ha: 80, quota_ha: 140, pct: 57, yield_mt: '1,200 MT', plots: 36, status: 'SAFE', barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&auto=format&fit=crop&q=80' },
+    { id: 8, crop_code: 'CAPSICUM', name_en: 'Capsicum', name_si: 'මාළු මිරිස්', name_ta: 'குடை மிளகாய்', planted_ha: 65, quota_ha: 120, pct: 54, yield_mt: '780 MT', plots: 28, status: 'SAFE', barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=600&auto=format&fit=crop&q=80' },
+    { id: 9, crop_code: 'RADISH', name_en: 'Radish', name_si: 'රාබු', name_ta: 'முள்ளங்கி', planted_ha: 45, quota_ha: 90, pct: 50, yield_mt: '540 MT', plots: 22, status: 'SAFE', barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1593105544559-ecb03bf76f82?w=600&auto=format&fit=crop&q=80' },
+    { id: 10, crop_code: 'KNOLKHOL', name_en: 'Knolkhol', name_si: 'නෝල්කෝල්', name_ta: 'நூல்கோல்', planted_ha: 38, quota_ha: 50, pct: 76, yield_mt: '420 MT', plots: 18, status: 'WARNING', barColor: 'bg-amber-500', badgeColor: 'bg-amber-100 text-amber-900 border-amber-200', image_url: 'https://images.unsplash.com/photo-1590779033100-9f60a05a013d?w=600&auto=format&fit=crop&q=80' },
+    { id: 15, crop_code: 'CAULIFLOWER', name_en: 'Cauliflower', name_si: 'මල් ගෝවා', name_ta: 'காலிஃபிளவர்', planted_ha: 52, quota_ha: 75, pct: 69, yield_mt: '680 MT', plots: 24, status: 'SAFE', barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1568584711075-3d021a7c3ca3?w=600&auto=format&fit=crop&q=80' }
   ]);
 
   const fetchRegionalVegetables = async () => {
@@ -109,7 +109,7 @@ export default function Dashboard() {
               name_en: veg.name_en,
               name_si: veg.name_si,
               name_ta: match.name_ta || veg.name_ta,
-              image_url: veg.image_url || match.image_url,
+              image_url: match.image_url || veg.image_url,
               planted_ha: planted,
               quota_ha: quota,
               pct: pct,
@@ -344,7 +344,7 @@ export default function Dashboard() {
                   {t('land_utilization', 'Land Utilization')}
                 </span>
                 <span className="text-sm font-bold text-primary">
-                  {utilizedLand.toFixed(1)} / {totalLand.toFixed(1)} {t('acres', 'Acres')} ({utilPercentage}%)
+                  {utilizedLand.toFixed(2)} / {totalLand.toFixed(2)} {t('acres', 'Acres')} ({(totalLand * 160).toFixed(0)} P) ({utilPercentage}%)
                 </span>
               </div>
               <div className="w-full h-2.5 bg-surface-variant rounded-full overflow-hidden">
@@ -357,7 +357,7 @@ export default function Dashboard() {
                 <span>
                   {utilPercentage >= 100 
                     ? t('land_fully_cultivated', 'Your land is fully cultivated.') 
-                    : t('acres_available_planting', { count: availableLand.toFixed(1) }, `🌱 ${availableLand.toFixed(1)} acres available for new planting.`)}
+                    : t('acres_available_planting', { count: availableLand.toFixed(2) }, `🌱 ${availableLand.toFixed(2)} Ac (${(availableLand * 160).toFixed(0)} Perches) available for new planting.`)}
                 </span>
                 {clearedLand > 0 && (
                   <span className="text-teal-700 font-bold flex items-center gap-0.5">
@@ -479,7 +479,7 @@ export default function Dashboard() {
                 <thead className="bg-surface-container-low text-on-surface-variant text-xs uppercase tracking-wider">
                   <tr>
                     <th className="px-4 py-3">{t('th_crop', 'Crop')}</th>
-                    <th className="px-4 py-3">{t('th_land_size_acres', 'Land Size (Acres)')}</th>
+                    <th className="px-4 py-3">{t('th_land_size_acres', 'Land Extent (Ac / Perches)')}</th>
                     <th className="px-4 py-3">{t('th_planting_date', 'Planting Date')}</th>
                     <th className="px-4 py-3">{t('th_expected_harvest', 'Expected Harvest')}</th>
                     <th className="px-4 py-3">{t('th_yield_est_actual', 'Yield (Est. / Actual)')}</th>
@@ -503,7 +503,18 @@ export default function Dashboard() {
                             {lang === 'si' ? crop.name_si : (lang === 'ta' ? (crop.name_ta || crop.name_en) : `${crop.name_en} (${crop.name_si})`)}
                           </td>
                           <td className="px-4 py-3 font-bold text-primary">
-                            {crop.land_size_acres} {t('acres', 'Acres')}
+                            {crop.land_size_perches ? (
+                              <span>
+                                {crop.land_size_perches} P <span className="text-xs font-normal text-on-surface-variant">({crop.land_size_acres} Ac)</span>
+                              </span>
+                            ) : (
+                              <span>
+                                {crop.land_size_acres} {t('acres', 'Acres')}
+                                {crop.land_size_acres < 1 && (
+                                  <span className="text-xs font-normal text-on-surface-variant"> ({(crop.land_size_acres * 160).toFixed(0)} P)</span>
+                                )}
+                              </span>
+                            )}
                           </td>
                           <td className="px-4 py-3">{new Date(crop.planting_date).toLocaleDateString()}</td>
                           <td className="px-4 py-3 text-secondary font-medium">
@@ -770,7 +781,7 @@ export default function Dashboard() {
                 <div>
                   <div className="h-32 w-full rounded-lg overflow-hidden mb-3 border border-white/10 shadow-inner bg-black/20">
                     <img
-                      src="/crops/beetroot.jpg"
+                      src="https://images.unsplash.com/photo-1528825871115-3581a5387919?w=600&auto=format&fit=crop&q=80"
                       alt={t('crop_beetroot')}
                       className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                     />
@@ -799,7 +810,7 @@ export default function Dashboard() {
                 <div>
                   <div className="h-32 w-full rounded-lg overflow-hidden mb-3 border border-white/10 shadow-inner bg-black/20">
                     <img
-                      src="/crops/carrot.jpg"
+                      src="https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=600&auto=format&fit=crop&q=80"
                       alt={t('crop_carrots')}
                       className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                     />
@@ -828,7 +839,7 @@ export default function Dashboard() {
                 <div>
                   <div className="h-32 w-full rounded-lg overflow-hidden mb-3 border border-white/10 shadow-inner bg-black/20">
                     <img
-                      src="/crops/bush_beans.jpg"
+                      src="https://images.unsplash.com/photo-1567375698348-5d9d5ae99de0?w=600&auto=format&fit=crop&q=80"
                       alt={t('crop_bush_beans')}
                       className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                     />
@@ -1055,7 +1066,7 @@ export default function Dashboard() {
                     ? (crop.crop_name_ta || crop.crop_name_en || crop.crop_name)
                     : (crop.crop_name_en || crop.crop_name || 'Produce');
                 const isBelowBench = crop.price_per_kg < (crop.standard_price_per_kg * 0.9);
-                const imgSrc = crop.image_url || '/crops/leek.jpg';
+                const imgSrc = crop.image_url || 'https://images.unsplash.com/photo-1587049633312-d628ae50a8ae?w=600&auto=format&fit=crop&q=80';
                 return (
                   <div key={crop.id} className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 shadow-card overflow-hidden flex flex-col group hover:shadow-xl transition-all duration-300">
                     {/* Crop Image — taller for better visual */}
@@ -1067,7 +1078,7 @@ export default function Dashboard() {
                         onError={e => {
                           if (!e.target.dataset.fallback) {
                             e.target.dataset.fallback = '1';
-                            e.target.src = '/crops/leek.jpg';
+                            e.target.src = 'https://images.unsplash.com/photo-1587049633312-d628ae50a8ae?w=600&auto=format&fit=crop&q=80';
                           }
                         }}
                       />
@@ -1136,10 +1147,10 @@ export default function Dashboard() {
               </div>
               <div className="flex items-center gap-3 bg-surface-container p-3 rounded-xl mb-5">
                 <img
-                  src={procureModalItem.image_url || `/crops/${(procureModalItem.crop_code || 'leeks').toLowerCase()}.jpg`}
+                  src={procureModalItem.image_url || 'https://images.unsplash.com/photo-1587049633312-d628ae50a8ae?w=600&auto=format&fit=crop&q=80'}
                   alt=""
                   className="w-14 h-14 rounded-lg object-cover"
-                  onError={e => { e.target.src = '/crops/leeks.jpg'; }}
+                  onError={e => { e.target.src = 'https://images.unsplash.com/photo-1587049633312-d628ae50a8ae?w=600&auto=format&fit=crop&q=80'; }}
                 />
                 <div>
                   <p className="font-bold text-on-surface">{procureModalItem.crop_name_en || procureModalItem.crop_name}</p>

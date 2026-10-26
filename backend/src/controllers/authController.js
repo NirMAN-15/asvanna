@@ -90,7 +90,9 @@ class AuthController {
       // Farmers & Officers require verification by policy
       const verification_status = role === 'BUYER' ? 'APPROVED' : 'PENDING';
       const is_verified = role === 'BUYER';
-      const landSize = (role === 'FARMER' && total_land_size) ? parseFloat(total_land_size) : null;
+      const rawLand = req.body.total_land_perches || total_land_size;
+      const isPerches = req.body.land_unit === 'PERCHES' || req.body.total_land_perches !== undefined;
+      const landSize = (role === 'FARMER' && rawLand) ? (isPerches ? Math.round((parseFloat(rawLand) / 160) * 10000) / 10000 : parseFloat(rawLand)) : null;
 
       const result = await db.query(
         `INSERT INTO users (

@@ -2,19 +2,7 @@ import React, { useState, useContext } from 'react';
 import API from '../services/api';
 import { X, Send, Radio, AlertCircle, Globe, ShieldAlert, CheckCircle, Sparkles, Eye, FileText } from 'lucide-react';
 import { LanguageContext } from '../context/LanguageContext';
-
-const MASTER_CROPS_LIST = [
-  { code: 'LEEKS', nameEn: 'Leeks', nameSi: 'ලීක්ස්', emoji: '🥬' },
-  { code: 'CARROT', nameEn: 'Carrot', nameSi: 'කැරට්', emoji: '🥕' },
-  { code: 'BEETROOT', nameEn: 'Beetroot', nameSi: 'බීට්රූට්', emoji: '🟣' },
-  { code: 'CABBAGE', nameEn: 'Cabbage', nameSi: 'ගෝවා', emoji: '🥗' },
-  { code: 'POTATO', nameEn: 'Upcountry Potato', nameSi: 'අර්තාපල්', emoji: '🥔' },
-  { code: 'BEANS', nameEn: 'Green Beans', nameSi: 'බෝංචි', emoji: '🫘' },
-  { code: 'TOMATO', nameEn: 'Tomato', nameSi: 'තක්කාලි', emoji: '🍅' },
-  { code: 'CAPSICUM', nameEn: 'Capsicum', nameSi: 'මාළු මිරිස්', emoji: '🫑' },
-  { code: 'RADISH', nameEn: 'Radish', nameSi: 'රාබු', emoji: '🥣' },
-  { code: 'KNOLKHOL', nameEn: 'Knol-Khol', nameSi: 'නෝල්කෝල්', emoji: '🥬' }
-];
+import { MASTER_CROPS } from '../constants/crops';
 
 export default function BroadcastModal({ isOpen, onClose, onBroadcastSent }) {
   const { t } = useContext(LanguageContext);
@@ -29,7 +17,7 @@ export default function BroadcastModal({ isOpen, onClose, onBroadcastSent }) {
     message_si: '',
     message_ta: '',
     category: 'CULTIVATION_GLUT',
-    crop_code: '',
+    crop_code: 'LEEKS',
     target_district: 'Badulla',
     target_division: 'Bandarawela Division',
     target_gnd: '',
@@ -178,7 +166,7 @@ export default function BroadcastModal({ isOpen, onClose, onBroadcastSent }) {
                 onChange={(e) => setFormData({ ...formData, crop_code: e.target.value })}
                 className="w-full px-3 py-2 border border-outline-variant rounded-xl focus:border-primary bg-surface-container-lowest text-on-surface text-xs outline-none"
               >
-                {MASTER_CROPS_LIST.map(c => (
+                {MASTER_CROPS.map(c => (
                   <option key={c.code} value={c.code}>
                     {c.emoji} {c.nameEn} ({c.nameSi})
                   </option>

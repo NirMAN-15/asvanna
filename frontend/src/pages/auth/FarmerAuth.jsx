@@ -24,7 +24,8 @@ export default function FarmerAuth() {
     district: 'Badulla',
     division: 'Bandarawela',
     gnd_division: 'Wewathenna',
-    land_size_acres: '2.5',
+    land_unit: 'PERCHES',
+    land_size_acres: '40', // used as land value
     address_line1: '',
     address_line2: '',
     city: 'Bandarawela',
@@ -84,6 +85,11 @@ export default function FarmerAuth() {
     }
 
     setLoading(true);
+    const numLand = parseFloat(formData.land_size_acres) || 1.0;
+    const isPerches = formData.land_unit === 'PERCHES';
+    const acres = isPerches ? parseFloat((numLand / 160).toFixed(4)) : numLand;
+    const perches = isPerches ? numLand : parseFloat((numLand * 160).toFixed(1));
+
     const payload = {
       first_name: formData.first_name.trim(),
       middle_name: formData.middle_name.trim() || null,
@@ -93,7 +99,10 @@ export default function FarmerAuth() {
       district: formData.district,
       division: formData.division,
       gnd_division: formData.gnd_division,
-      land_size_acres: parseFloat(formData.land_size_acres) || 2.0,
+      land_unit: formData.land_unit || 'PERCHES',
+      total_land_perches: perches,
+      land_size_acres: acres,
+      total_land_size: acres,
       address_line1: formData.address_line1.trim(),
       address_line2: formData.address_line2.trim() || null,
       city: formData.city.trim() || formData.division || 'Bandarawela',
@@ -396,20 +405,59 @@ export default function FarmerAuth() {
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="font-label-md text-label-md text-on-surface-variant font-semibold" htmlFor="land_size_acres">
-                  Land Size (Acres / අක්කර)
-                </label>
-                <input
-                  id="land_size_acres"
-                  name="land_size_acres"
-                  type="number"
-                  step="0.1"
-                  required
-                  value={formData.land_size_acres}
-                  onChange={handleChange}
-                  placeholder="2.5"
-                  className="w-full h-11 px-4 font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition outline-none"
-                />
+                <div className="flex items-center justify-between">
+                  <label className="font-label-md text-label-md text-on-surface-variant font-semibold" htmlFor="land_size_acres">
+                    {formData.land_unit === 'PERCHES' ? 'Land Size (Perches / පර්චස්)' : 'Land Size (Acres / අක්කර)'}
+                  </label>
+                  <div className="inline-flex rounded border border-outline-variant/60 p-0.5 bg-surface-container text-xs">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (formData.land_unit !== 'PERCHES') {
+                          const currentAcres = parseFloat(formData.land_size_acres) || 0.25;
+                          setFormData({ ...formData, land_unit: 'PERCHES', land_size_acres: String(Math.round(currentAcres * 160)) });
+                        }
+                      }}
+                      className={`px-2 py-0.5 text-[10px] font-bold rounded ${formData.land_unit === 'PERCHES' ? 'bg-primary text-white' : 'text-on-surface-variant'}`}
+                    >
+                      Perches
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (formData.land_unit !== 'ACRES') {
+                          const currentPerches = parseFloat(formData.land_size_acres) || 40;
+                          setFormData({ ...formData, land_unit: 'ACRES', land_size_acres: String(parseFloat((currentPerches / 160).toFixed(4))) });
+                        }
+                      }}
+                      className={`px-2 py-0.5 text-[10px] font-bold rounded ${formData.land_unit === 'ACRES' ? 'bg-primary text-white' : 'text-on-surface-variant'}`}
+                    >
+                      Acres
+                    </button>
+                  </div>
+                </div>
+                <div className="relative">
+                  <input
+                    id="land_size_acres"
+                    name="land_size_acres"
+                    type="number"
+                    step={formData.land_unit === 'PERCHES' ? '1' : '0.01'}
+                    min={formData.land_unit === 'PERCHES' ? '1' : '0.01'}
+                    required
+                    value={formData.land_size_acres}
+                    onChange={handleChange}
+                    placeholder={formData.land_unit === 'PERCHES' ? '40' : '0.25'}
+                    className="w-full h-11 px-4 pr-16 font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition outline-none"
+                  />
+                  <span className="absolute right-3 top-3 text-[11px] font-bold text-outline uppercase pointer-events-none">
+                    {formData.land_unit === 'PERCHES' ? 'Perch' : 'Acres'}
+                  </span>
+                </div>
+                <span className="text-[10px] text-outline">
+                  {formData.land_unit === 'PERCHES'
+                    ? `≈ ${((parseFloat(formData.land_size_acres) || 0) / 160).toFixed(4)} Acres (160 Perches = 1 Acre)`
+                    : `≈ ${((parseFloat(formData.land_size_acres) || 0) * 160).toFixed(1)} Perches`}
+                </span>
               </div>
             </div>
 

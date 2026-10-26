@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import API from '../services/api';
 import { X, CheckCircle, AlertCircle, Edit, MapPin, Phone, ShieldCheck, Key, Sprout, PlusCircle, Calendar, Layers } from 'lucide-react';
 import { LanguageContext } from '../context/LanguageContext';
+import { MASTER_CROPS } from '../constants/crops';
 
 const BANDARAWELA_GNDS = [
   'Bandarawela Central',
@@ -18,21 +19,26 @@ const BANDARAWELA_GNDS = [
   'Kabillawela'
 ];
 
-const DEFAULT_CROPS = [
-  { id: 1, name: 'Leeks (ලීක්ස්)' },
-  { id: 2, name: 'Cabbage (ගෝවා)' },
-  { id: 3, name: 'Carrot (කැරට්)' },
-  { id: 4, name: 'Beetroot (බීට්රූට්)' },
-  { id: 5, name: 'Potato (අර්තාපල්)' },
-  { id: 6, name: 'Knol Khol (නෝකෝල්)' },
-  { id: 7, name: 'Bell Pepper (මාළු මිරිස්)' },
-  { id: 8, name: 'Tomato (තක්කාලි)' },
-  { id: 9, name: 'Paddy (වී)' }
-];
-
 export default function EditFarmerModal({ isOpen, onClose, farmer, onFarmerUpdated }) {
   const { t, lang } = useContext(LanguageContext);
   const [activeTab, setActiveTab] = useState('ACCOUNT_INFO');
+  const [cropList, setCropList] = useState(MASTER_CROPS);
+
+  useEffect(() => {
+    API.get('/crops')
+      .then(res => {
+        if (res.data?.data && res.data.data.length > 0) {
+          const mapped = res.data.data.map(c => ({
+            id: c.id,
+            nameEn: c.name_en,
+            nameSi: c.name_si,
+            nameTa: c.name_ta || c.name_en
+          }));
+          setCropList(mapped);
+        }
+      })
+      .catch(() => setCropList(MASTER_CROPS));
+  }, []);
 
   // Account details form state
   const [formData, setFormData] = useState({
@@ -487,9 +493,14 @@ export default function EditFarmerModal({ isOpen, onClose, farmer, onFarmerUpdat
                     onChange={(e) => setPlantingForm({ ...plantingForm, crop_id: e.target.value })}
                     className="w-full px-3 py-2 border border-outline-variant rounded-xl bg-surface focus:outline-primary font-bold"
                   >
-                    {DEFAULT_CROPS.map((c) => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
+                    {cropList.map((c) => {
+                      const label = lang === 'si'
+                        ? `${c.nameSi || c.nameEn}`
+                        : lang === 'ta'
+                        ? `${c.nameTa || c.nameEn}`
+                        : `${c.nameEn} (${c.nameSi})`;
+                      return <option key={c.id} value={c.id}>{label}</option>;
+                    })}
                   </select>
                 </div>
 
@@ -567,7 +578,7 @@ export default function EditFarmerModal({ isOpen, onClose, farmer, onFarmerUpdat
                       <div>
                         <span className="font-extrabold text-sm text-primary">{p.crop_name_en || p.crop_name_si || `Crop #${p.crop_id}`}</span>
                         <div className="text-[11px] text-on-surface-variant flex items-center gap-2 mt-0.5">
-                          <span>{p.land_size_acres} Acres</span>
+                          <span>{p.land_size_perches ? `${p.land_size_perches} P (${p.land_size_acres} Ac)` : `${p.land_size_acres} Acres`}</span>
                           <span>•</span>
                           <span>{new Date(p.planting_date).toLocaleDateString()}</span>
                           {p.expected_yield_kg && (

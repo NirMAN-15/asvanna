@@ -1,27 +1,26 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { MapPin, Filter, Layers, Navigation, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { LanguageContext } from '../context/LanguageContext';
+import API from '../services/api';
+import { MASTER_CROPS } from '../constants/crops';
 
 export default function RegionalMonitoring() {
   const { t, lang } = useContext(LanguageContext);
   const [selectedCrop, setSelectedCrop] = useState('');
   const [plantings, setPlantings] = useState([]);
 
-  React.useEffect(() => {
-    // Attempt to fetch real planting data
-    import('../services/api').then(({ default: API }) => {
-      API.get('/planting/regional-map?district=Badulla')
-        .then(res => {
-          if (res.data?.data) {
-            setPlantings(res.data.data);
-          }
-        })
-        .catch(err => console.warn('Failed to fetch plantings', err));
-    });
+  useEffect(() => {
+    API.get('/planting/regional-map?district=Badulla')
+      .then(res => {
+        if (res.data?.data) {
+          setPlantings(res.data.data);
+        }
+      })
+      .catch(err => console.warn('Failed to fetch plantings', err));
   }, []);
 
   const filteredPlantings = selectedCrop
-    ? plantings.filter(p => p.name_en?.toLowerCase() === selectedCrop.toLowerCase())
+    ? plantings.filter(p => (p.name_en?.toLowerCase() === selectedCrop.toLowerCase() || p.crop_code?.toLowerCase() === selectedCrop.toLowerCase()))
     : plantings;
 
   return (
@@ -50,10 +49,14 @@ export default function RegionalMonitoring() {
             className="text-xs bg-transparent text-slate-900 focus:outline-none font-black cursor-pointer"
           >
             <option value="" className="text-slate-900 font-bold">{t('all_crops_filter')}</option>
-            <option value="Leeks" className="text-slate-900 font-bold">{t('crop_leeks')}</option>
-            <option value="Cabbage" className="text-slate-900 font-bold">{t('crop_cabbage')}</option>
-            <option value="Carrot" className="text-slate-900 font-bold">{t('crop_carrot')}</option>
-            <option value="Beetroot" className="text-slate-900 font-bold">{t('crop_beetroot')}</option>
+            {MASTER_CROPS.map(c => {
+              const label = lang === 'si' ? c.nameSi : lang === 'ta' ? c.nameTa : c.nameEn;
+              return (
+                <option key={c.id} value={c.nameEn} className="text-slate-900 font-bold">
+                  {c.emoji} {label}
+                </option>
+              );
+            })}
           </select>
         </div>
       </div>

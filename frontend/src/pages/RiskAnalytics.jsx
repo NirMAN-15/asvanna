@@ -2,40 +2,9 @@ import React, { useState, useEffect, useContext, useRef } from 'react';
 import { LanguageContext } from '../context/LanguageContext';
 import API from '../services/api';
 import FarmerPlantingModal from '../components/FarmerPlantingModal';
+import { MASTER_CROPS, getCropImage } from '../constants/crops';
 
-// Master catalog of crops for autocomplete search & evaluation
-const ALL_CROPS = [
-  { id: 1, code: 'LEEKS', nameEn: 'Leeks', nameSi: 'ලීක්ස්', nameTa: 'லீக்ஸ்', days: 90, image: '/crops/leek.jpg', price: 280, category: 'Upcountry Vegetable' },
-  { id: 2, code: 'CABBAGE', nameEn: 'Cabbage', nameSi: 'ගෝවා', nameTa: 'முட்டைக்கோஸ்', days: 75, image: '/crops/leek.jpg', price: 190, category: 'Upcountry Vegetable' },
-  { id: 3, code: 'CARROT', nameEn: 'Carrot', nameSi: 'කැරට්', nameTa: 'கேரட்', days: 85, image: '/crops/carrot.jpg', price: 340, category: 'Upcountry Vegetable' },
-  { id: 4, code: 'BEETROOT', nameEn: 'Beetroot', nameSi: 'බීට්රූට්', nameTa: 'பீட்ரூட்', days: 70, image: '/crops/beetroot.jpg', price: 260, category: 'Upcountry Vegetable' },
-  { id: 5, code: 'POTATO', nameEn: 'Upcountry Potato', nameSi: 'අර්තාපල්', nameTa: 'உருளைக்கிழங்கு', days: 100, image: '/crops/radish.jpg', price: 390, category: 'Upcountry Vegetable' },
-  { id: 6, code: 'BEANS', nameEn: 'Green Beans', nameSi: 'බෝංචි', nameTa: 'போஞ்சி', days: 60, image: '/crops/bush_beans.jpg', price: 320, category: 'Upcountry Vegetable' },
-  { id: 7, code: 'TOMATO', nameEn: 'Tomato', nameSi: 'තක්කාලි', nameTa: 'தக்காளி', days: 75, image: '/crops/radish.jpg', price: 220, category: 'Upcountry Vegetable' },
-  { id: 8, code: 'CAPSICUM', nameEn: 'Capsicum', nameSi: 'මාළු මිරිස්', nameTa: 'குடை மிளகாய்', days: 80, image: '/crops/leek.jpg', price: 460, category: 'Upcountry Vegetable' },
-  { id: 9, code: 'RADISH', nameEn: 'Radish', nameSi: 'රාබු', nameTa: 'முள்ளங்கி', days: 45, image: '/crops/radish.jpg', price: 140, category: 'Upcountry Vegetable' },
-  { id: 10, code: 'KNOLKHOL', nameEn: 'Knol-Khol', nameSi: 'නෝකෝල්', nameTa: 'நூல்கோல்', days: 55, image: '/crops/knol_khol.jpg', price: 180, category: 'Upcountry Vegetable' },
-  { id: 11, code: 'SPRING_ONION', nameEn: 'Spring Onion', nameSi: 'ළූණු කොළ', nameTa: 'வெங்காய இலை', days: 50, image: '/crops/spring_onion.jpg', price: 280, category: 'Upcountry Vegetable' },
-  { id: 12, code: 'LETTUCE', nameEn: 'Lettuce', nameSi: 'සලාද කොළ', nameTa: 'லெட்யூஸ்', days: 45, image: '/crops/spinach.jpg', price: 320, category: 'Upcountry Vegetable' },
-  { id: 13, code: 'CELERY', nameEn: 'Celery', nameSi: 'සැල්දිරි', nameTa: 'செலரி', days: 70, image: '/crops/spinach.jpg', price: 420, category: 'Upcountry Vegetable' },
-  { id: 14, code: 'BROCCOLI', nameEn: 'Broccoli', nameSi: 'බ්‍රොකොලි', nameTa: 'ப்ரோக்கோலி', days: 65, image: '/crops/knol_khol.jpg', price: 680, category: 'Upcountry Vegetable' },
-  { id: 15, code: 'CAULIFLOWER', nameEn: 'Cauliflower', nameSi: 'මල්ගෝවා', nameTa: 'காலிஃபிளவர்', days: 70, image: '/crops/knol_khol.jpg', price: 380, category: 'Upcountry Vegetable' },
-  { id: 16, code: 'PUMPKIN', nameEn: 'Pumpkin', nameSi: 'වට්ටක්කා', nameTa: 'பூசணி', days: 100, image: '/crops/carrot.jpg', price: 160, category: 'Adaptable Vegetable' },
-  { id: 17, code: 'BITTER_GOURD', nameEn: 'Bitter Gourd', nameSi: 'කරවිල', nameTa: 'பாகற்காய்', days: 70, image: '/crops/bush_beans.jpg', price: 340, category: 'Adaptable Vegetable' },
-  { id: 18, code: 'SNAKE_GOURD', nameEn: 'Snake Gourd', nameSi: 'පතෝල', nameTa: 'புடலங்காய்', days: 65, image: '/crops/bush_beans.jpg', price: 240, category: 'Adaptable Vegetable' },
-  { id: 19, code: 'CUCUMBER', nameEn: 'Cucumber', nameSi: 'පිපිඤ්ඤා', nameTa: 'வெள்ளரிக்காய்', days: 50, image: '/crops/radish.jpg', price: 160, category: 'Adaptable Vegetable' },
-  { id: 20, code: 'GREEN_CHILI', nameEn: 'Green Chili', nameSi: 'අමු මිරිස්', nameTa: 'பச்சை மிளகாய்', days: 90, image: '/crops/bush_beans.jpg', price: 650, category: 'Adaptable Vegetable' },
-  { id: 21, code: 'RED_ONION', nameEn: 'Red Onion', nameSi: 'රතු ළූණු', nameTa: 'சிவப்பு வெங்காயம்', days: 75, image: '/crops/beetroot.jpg', price: 380, category: 'Adaptable Vegetable' },
-  { id: 22, code: 'GOTUKOLA', nameEn: 'Centella (Gotukola)', nameSi: 'ගොටුකොළ', nameTa: 'வல்லாரை', days: 40, image: '/crops/gotukola.jpg', price: 120, category: 'Leafy Green' },
-  { id: 23, code: 'KANGKUNG', nameEn: 'Water Spinach (Kangkung)', nameSi: 'කංකුං', nameTa: 'வள்ளல் கீரை', days: 30, image: '/crops/kangkung.jpg', price: 110, category: 'Leafy Green' },
-  { id: 24, code: 'MUKUNUWENNA', nameEn: 'Mukunuwenna', nameSi: 'මුකුණුවැන්න', nameTa: 'முக்குனுவென்ன', days: 30, image: '/crops/mukunuwenna.jpg', price: 100, category: 'Leafy Green' },
-  { id: 25, code: 'SPINACH', nameEn: 'Spinach', nameSi: 'නිවිති', nameTa: 'பசலைக் கீரை', days: 40, image: '/crops/spinach.jpg', price: 150, category: 'Leafy Green' }
-];
-
-const getCropImage = (cropId) => {
-  const match = ALL_CROPS.find(c => c.id === Number(cropId));
-  return match?.image || '/crops/leek.jpg';
-};
+const ALL_CROPS = MASTER_CROPS;
 
 export default function RiskAnalytics() {
   const { t, lang } = useContext(LanguageContext);
@@ -153,7 +122,7 @@ export default function RiskAnalytics() {
         ta: 'பண்டாரவளை பிராந்தியத்தில் 95% அதிக சந்தை தேவையும் சாதகமான காலநிலையும் நிலவுகிறது. விலை ரூ 260/கிலோ.'
       },
       priceTrend: '+12.4%',
-      image: '/crops/beetroot.jpg'
+      image: 'https://images.unsplash.com/photo-1528825871115-3581a5387919?w=600&auto=format&fit=crop&q=80'
     },
     {
       crop: { id: 9, nameEn: 'Radish', nameSi: 'රාබු', nameTa: 'முள்ளங்கி' },
@@ -164,18 +133,18 @@ export default function RiskAnalytics() {
         ta: '45 நாள் குறுகிய அறுவடை காலம் வானிலை அபாயத்தைக் குறைக்கிறது. திருவிழா காலத்திற்கு ஏற்றது.'
       },
       priceTrend: '+8.1%',
-      image: '/crops/radish.jpg'
+      image: 'https://images.unsplash.com/photo-1593105544559-ecb03bf76f82?w=600&auto=format&fit=crop&q=80'
     },
     {
-      crop: { id: 11, nameEn: 'Spring Onion', nameSi: 'ළූණු කොළ', nameTa: 'வெங்காய இலை' },
+      crop: { id: 1, nameEn: 'Leeks', nameSi: 'ලීක්ස්', nameTa: 'லீக்ஸ்' },
       scores: { compositeScore: 84, marketGapScore: 82, seasonScore: 85, weatherScore: 88, priceScore: 82 },
       rationale: {
-        en: 'High turnover crop with consistent hotel and catering demand in Ella and Bandarawela tourist corridors.',
-        si: 'ඇල්ල සහ බණ්ඩාරවෙල සංචාරක හෝටල් ජාලයෙන් අඛණ්ඩ ඉහළ ඉල්ලුමක් පවතී. කෙටි කාලීන ආදායම.',
-        ta: 'எல்ல மற்றும் பண்டாரவளை சுற்றுலா உணவகங்களில் தொடர்ச்சியான அதிக தேவை உள்ளது.'
+        en: 'Consistent hotel and wholesale demand across Keppetipola and Bandarawela markets.',
+        si: 'කැප්පෙටිපොළ සහ බණ්ඩාරවෙල වෙළෙඳපොළවල් ඔස්සේ ස්ථාවර ඉල්ලුමක් පවතී.',
+        ta: 'கெப்பட்டிப்பொல மற்றும் பண்டாரவளை சந்தைகளில் நிலையான தேவை நிலவுகிறது.'
       },
       priceTrend: '+15.0%',
-      image: '/crops/spring_onion.jpg'
+      image: 'https://images.unsplash.com/photo-1587049633312-d628ae50a8ae?w=600&auto=format&fit=crop&q=80'
     },
     {
       crop: { id: 6, nameEn: 'Green Beans', nameSi: 'බෝංචි', nameTa: 'போஞ்சி' },
@@ -186,7 +155,7 @@ export default function RiskAnalytics() {
         ta: 'கெப்பட்டிப்பொல பொருளாதார மையத்தில் நிலையான விலை போக்கு நிலவுகிறது.'
       },
       priceTrend: '+9.5%',
-      image: '/crops/bush_beans.jpg'
+      image: 'https://images.unsplash.com/photo-1567375698348-5d9d5ae99de0?w=600&auto=format&fit=crop&q=80'
     },
     {
       crop: { id: 3, nameEn: 'Carrot', nameSi: 'කැරට්', nameTa: 'கேரட்' },
@@ -197,7 +166,7 @@ export default function RiskAnalytics() {
         ta: 'பிராந்திய சாகுபடி மிதமான மட்டத்தில் உள்ளது. நல்ல வடிகால் கொண்ட நிலத்திற்கு ஏற்றது.'
       },
       priceTrend: '+6.2%',
-      image: '/crops/carrot.jpg'
+      image: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=600&auto=format&fit=crop&q=80'
     }
   ]);
 
