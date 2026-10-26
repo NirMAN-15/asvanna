@@ -16,19 +16,217 @@ if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
-// 11 Master Test Crops for Bandarawela & Upcountry (DoA Sri Lanka & CROPIX validated)
+// 11 Master Test Crops for Bandarawela & Upcountry (DoA Sri Lanka & Keppetipola validated)
 const initialCrops = [
-  { id: 1, crop_code: 'BEANS', name_en: 'Green Beans', name_si: 'බෝංචි', name_ta: 'போஞ்சி', category: 'Upcountry Vegetable', growth_duration_days: 60, avg_yield_per_acre_kg: 5000, standard_price_per_kg: 320.00, optimal_temp_min: 15.0, optimal_temp_max: 26.0, waterlog_sensitive: false, disease_susceptibility: 'MODERATE', standard_demand_kg: 80000 },
-  { id: 2, crop_code: 'CARROT', name_en: 'Carrot', name_si: 'කැරට්', name_ta: 'கேரட்', category: 'Upcountry Vegetable', growth_duration_days: 85, avg_yield_per_acre_kg: 7500, standard_price_per_kg: 340.00, optimal_temp_min: 13.0, optimal_temp_max: 22.0, waterlog_sensitive: true, disease_susceptibility: 'LOW', standard_demand_kg: 110000 },
-  { id: 3, crop_code: 'LEEKS', name_en: 'Leeks', name_si: 'ලීක්ස්', name_ta: 'லீக்ஸ்', category: 'Upcountry Vegetable', growth_duration_days: 90, avg_yield_per_acre_kg: 8500, standard_price_per_kg: 280.00, optimal_temp_min: 12.0, optimal_temp_max: 22.0, waterlog_sensitive: false, disease_susceptibility: 'MODERATE', standard_demand_kg: 95000 },
-  { id: 4, crop_code: 'CABBAGE', name_en: 'Cabbage', name_si: 'ගෝවා', name_ta: 'முட்டைக்கோஸ்', category: 'Upcountry Vegetable', growth_duration_days: 75, avg_yield_per_acre_kg: 12000, standard_price_per_kg: 190.00, optimal_temp_min: 14.0, optimal_temp_max: 24.0, waterlog_sensitive: false, disease_susceptibility: 'MODERATE', standard_demand_kg: 120000 },
-  { id: 5, crop_code: 'TOMATO', name_en: 'Tomato', name_si: 'තක්කාලි', name_ta: 'தக்காளி', category: 'Upcountry Vegetable', growth_duration_days: 75, avg_yield_per_acre_kg: 11000, standard_price_per_kg: 220.00, optimal_temp_min: 16.0, optimal_temp_max: 27.0, waterlog_sensitive: true, disease_susceptibility: 'HIGH', standard_demand_kg: 115000 },
-  { id: 6, crop_code: 'CAULIFLOWER', name_en: 'Cauliflower', name_si: 'මල් ගෝවා', name_ta: 'காலிஃபிளவர்', category: 'Upcountry Vegetable', growth_duration_days: 80, avg_yield_per_acre_kg: 6500, standard_price_per_kg: 380.00, optimal_temp_min: 14.0, optimal_temp_max: 22.0, waterlog_sensitive: false, disease_susceptibility: 'MODERATE', standard_demand_kg: 40000 },
-  { id: 7, crop_code: 'CAPSICUM', name_en: 'Capsicum', name_si: 'මාළු මිරිස්', name_ta: 'குடை மிளகாய்', category: 'Upcountry Vegetable', growth_duration_days: 80, avg_yield_per_acre_kg: 5500, standard_price_per_kg: 460.00, optimal_temp_min: 16.0, optimal_temp_max: 26.0, waterlog_sensitive: true, disease_susceptibility: 'MODERATE', standard_demand_kg: 65000 },
-  { id: 8, crop_code: 'BEETROOT', name_en: 'Beetroot', name_si: 'බීට්රූට්', name_ta: 'பீட்ரூட்', category: 'Upcountry Vegetable', growth_duration_days: 70, avg_yield_per_acre_kg: 8000, standard_price_per_kg: 260.00, optimal_temp_min: 14.0, optimal_temp_max: 25.0, waterlog_sensitive: false, disease_susceptibility: 'LOW', standard_demand_kg: 75000 },
-  { id: 9, crop_code: 'KNOLKHOL', name_en: 'Knolkhol', name_si: 'නෝල්කෝල්', name_ta: 'நூல்கோல்', category: 'Upcountry Vegetable', growth_duration_days: 65, avg_yield_per_acre_kg: 7500, standard_price_per_kg: 180.00, optimal_temp_min: 14.0, optimal_temp_max: 24.0, waterlog_sensitive: false, disease_susceptibility: 'LOW', standard_demand_kg: 45000 },
-  { id: 10, crop_code: 'RADISH', name_en: 'Radish', name_si: 'රාබු', name_ta: 'முள்ளங்கி', category: 'Upcountry Vegetable', growth_duration_days: 45, avg_yield_per_acre_kg: 9000, standard_price_per_kg: 140.00, optimal_temp_min: 13.0, optimal_temp_max: 25.0, waterlog_sensitive: false, disease_susceptibility: 'LOW', standard_demand_kg: 50000 },
-  { id: 11, crop_code: 'POTATO', name_en: 'Potato (Welimada)', name_si: 'අර්තාපල්', name_ta: 'உருளைக்கிழங்கு', category: 'Upcountry Vegetable', growth_duration_days: 100, avg_yield_per_acre_kg: 8000, standard_price_per_kg: 390.00, optimal_temp_min: 12.0, optimal_temp_max: 20.0, waterlog_sensitive: true, disease_susceptibility: 'HIGH', standard_demand_kg: 150000 }
+  {
+    id: 1,
+    crop_code: 'LEEKS',
+    name_en: 'Leeks',
+    name_si: 'ලීක්ස්',
+    name_ta: 'லீக்ஸ்',
+    category: 'Upcountry Vegetable',
+    growth_duration_days: 90,
+    avg_yield_per_acre_kg: 8500,
+    standard_price_per_kg: 280.00,
+    price_range_min: 200.00,
+    price_range_max: 500.00,
+    optimal_temp_min: 12.0,
+    optimal_temp_max: 22.0,
+    waterlog_sensitive: false,
+    disease_susceptibility: 'MODERATE',
+    standard_demand_kg: 95000,
+    image_url: 'https://images.unsplash.com/photo-1587049633312-d628ae50a8ae?w=600&auto=format&fit=crop&q=80'
+  },
+  {
+    id: 2,
+    crop_code: 'CABBAGE',
+    name_en: 'Cabbage',
+    name_si: 'ගෝවා',
+    name_ta: 'முட்டைக்கோஸ்',
+    category: 'Upcountry Vegetable',
+    growth_duration_days: 75,
+    avg_yield_per_acre_kg: 12000,
+    standard_price_per_kg: 190.00,
+    price_range_min: 150.00,
+    price_range_max: 400.00,
+    optimal_temp_min: 14.0,
+    optimal_temp_max: 24.0,
+    waterlog_sensitive: false,
+    disease_susceptibility: 'MODERATE',
+    standard_demand_kg: 120000,
+    image_url: 'https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?w=600&auto=format&fit=crop&q=80'
+  },
+  {
+    id: 3,
+    crop_code: 'CARROT',
+    name_en: 'Carrot',
+    name_si: 'කැරට්',
+    name_ta: 'கேரட்',
+    category: 'Upcountry Vegetable',
+    growth_duration_days: 85,
+    avg_yield_per_acre_kg: 7500,
+    standard_price_per_kg: 340.00,
+    price_range_min: 250.00,
+    price_range_max: 600.00,
+    optimal_temp_min: 13.0,
+    optimal_temp_max: 22.0,
+    waterlog_sensitive: true,
+    disease_susceptibility: 'LOW',
+    standard_demand_kg: 110000,
+    image_url: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=600&auto=format&fit=crop&q=80'
+  },
+  {
+    id: 4,
+    crop_code: 'BEETROOT',
+    name_en: 'Beetroot',
+    name_si: 'බීට්රූට්',
+    name_ta: 'பீட்ரூட்',
+    category: 'Upcountry Vegetable',
+    growth_duration_days: 70,
+    avg_yield_per_acre_kg: 8000,
+    standard_price_per_kg: 260.00,
+    price_range_min: 200.00,
+    price_range_max: 500.00,
+    optimal_temp_min: 14.0,
+    optimal_temp_max: 25.0,
+    waterlog_sensitive: false,
+    disease_susceptibility: 'LOW',
+    standard_demand_kg: 75000,
+    image_url: 'https://images.unsplash.com/photo-1528825871115-3581a5387919?w=600&auto=format&fit=crop&q=80'
+  },
+  {
+    id: 5,
+    crop_code: 'POTATO',
+    name_en: 'Upcountry Potato (Welimada)',
+    name_si: 'අර්තාපල්',
+    name_ta: 'உருளைக்கிழங்கு',
+    category: 'Upcountry Vegetable',
+    growth_duration_days: 100,
+    avg_yield_per_acre_kg: 8000,
+    standard_price_per_kg: 390.00,
+    price_range_min: 250.00,
+    price_range_max: 450.00,
+    optimal_temp_min: 12.0,
+    optimal_temp_max: 20.0,
+    waterlog_sensitive: true,
+    disease_susceptibility: 'HIGH',
+    standard_demand_kg: 150000,
+    image_url: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=600&auto=format&fit=crop&q=80'
+  },
+  {
+    id: 6,
+    crop_code: 'BEANS',
+    name_en: 'Green Beans (Butter/Bush)',
+    name_si: 'බෝංචි',
+    name_ta: 'போஞ்சி',
+    category: 'Upcountry Vegetable',
+    growth_duration_days: 60,
+    avg_yield_per_acre_kg: 5000,
+    standard_price_per_kg: 320.00,
+    price_range_min: 250.00,
+    price_range_max: 600.00,
+    optimal_temp_min: 15.0,
+    optimal_temp_max: 26.0,
+    waterlog_sensitive: false,
+    disease_susceptibility: 'MODERATE',
+    standard_demand_kg: 80000,
+    image_url: 'https://images.unsplash.com/photo-1567375698348-5d9d5ae99de0?w=600&auto=format&fit=crop&q=80'
+  },
+  {
+    id: 7,
+    crop_code: 'TOMATO',
+    name_en: 'Tomato',
+    name_si: 'තක්කාලි',
+    name_ta: 'தக்காளி',
+    category: 'Upcountry Vegetable',
+    growth_duration_days: 75,
+    avg_yield_per_acre_kg: 11000,
+    standard_price_per_kg: 220.00,
+    price_range_min: 150.00,
+    price_range_max: 800.00,
+    optimal_temp_min: 16.0,
+    optimal_temp_max: 27.0,
+    waterlog_sensitive: true,
+    disease_susceptibility: 'HIGH',
+    standard_demand_kg: 115000,
+    image_url: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&auto=format&fit=crop&q=80'
+  },
+  {
+    id: 8,
+    crop_code: 'CAPSICUM',
+    name_en: 'Capsicum (Bell Pepper)',
+    name_si: 'මාළු මිරිස්',
+    name_ta: 'குடை மிளகாய்',
+    category: 'Upcountry Vegetable',
+    growth_duration_days: 80,
+    avg_yield_per_acre_kg: 5500,
+    standard_price_per_kg: 460.00,
+    price_range_min: 300.00,
+    price_range_max: 800.00,
+    optimal_temp_min: 16.0,
+    optimal_temp_max: 26.0,
+    waterlog_sensitive: true,
+    disease_susceptibility: 'MODERATE',
+    standard_demand_kg: 65000,
+    image_url: 'https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=600&auto=format&fit=crop&q=80'
+  },
+  {
+    id: 9,
+    crop_code: 'RADISH',
+    name_en: 'Radish',
+    name_si: 'රාබු',
+    name_ta: 'முள்ளங்கி',
+    category: 'Upcountry Vegetable',
+    growth_duration_days: 45,
+    avg_yield_per_acre_kg: 9000,
+    standard_price_per_kg: 140.00,
+    price_range_min: 100.00,
+    price_range_max: 250.00,
+    optimal_temp_min: 13.0,
+    optimal_temp_max: 25.0,
+    waterlog_sensitive: false,
+    disease_susceptibility: 'LOW',
+    standard_demand_kg: 50000,
+    image_url: 'https://images.unsplash.com/photo-1593105544559-ecb03bf76f82?w=600&auto=format&fit=crop&q=80'
+  },
+  {
+    id: 10,
+    crop_code: 'KNOLKHOL',
+    name_en: 'Knol-Khol (Kohlrabi)',
+    name_si: 'නෝල්කෝල්',
+    name_ta: 'நூல்கோல்',
+    category: 'Upcountry Vegetable',
+    growth_duration_days: 65,
+    avg_yield_per_acre_kg: 7500,
+    standard_price_per_kg: 180.00,
+    price_range_min: 150.00,
+    price_range_max: 350.00,
+    optimal_temp_min: 14.0,
+    optimal_temp_max: 24.0,
+    waterlog_sensitive: false,
+    disease_susceptibility: 'LOW',
+    standard_demand_kg: 45000,
+    image_url: 'https://images.unsplash.com/photo-1590779033100-9f60a05a013d?w=600&auto=format&fit=crop&q=80'
+  },
+  {
+    id: 15,
+    crop_code: 'CAULIFLOWER',
+    name_en: 'Cauliflower',
+    name_si: 'මල්ගෝවා',
+    name_ta: 'காலிஃபிளவர்',
+    category: 'Upcountry Vegetable',
+    growth_duration_days: 80,
+    avg_yield_per_acre_kg: 6500,
+    standard_price_per_kg: 380.00,
+    price_range_min: 300.00,
+    price_range_max: 700.00,
+    optimal_temp_min: 14.0,
+    optimal_temp_max: 22.0,
+    waterlog_sensitive: false,
+    disease_susceptibility: 'MODERATE',
+    standard_demand_kg: 40000,
+    image_url: 'https://images.unsplash.com/photo-1568584711075-3d021a7c3ca3?w=600&auto=format&fit=crop&q=80'
+  }
 ];
 
 const initialDbState = {
@@ -71,11 +269,12 @@ function loadDb() {
   try {
     const raw = fs.readFileSync(dbFilePath, 'utf-8');
     const parsed = JSON.parse(raw);
-    // Ensure crops are populated with all 25 if older file was present
-    if (!parsed.crops || parsed.crops.length < 25) {
+    // Ensure crops are populated strictly with the 11 Keppetipola test crops with cloud direct image URLs
+    const validCodes = new Set(initialCrops.map(c => c.crop_code));
+    if (!parsed.crops || parsed.crops.length !== 11 || parsed.crops.some(c => !validCodes.has(c.crop_code) || !c.image_url || c.image_url.startsWith('/'))) {
       parsed.crops = initialCrops;
-      if (!parsed.crop_seasons) parsed.crop_seasons = initialDbState.crop_seasons;
-      if (!parsed.price_history) parsed.price_history = initialDbState.price_history;
+      if (!parsed.crop_seasons || parsed.crop_seasons.length === 0) parsed.crop_seasons = initialDbState.crop_seasons;
+      if (!parsed.price_history || parsed.price_history.length === 0) parsed.price_history = initialDbState.price_history;
       saveDb(parsed);
     }
     return parsed;
@@ -338,12 +537,7 @@ module.exports = {
         const crop = fileDb.crops.find(c => c.id === l.crop_id) || {};
         const farmer = fileDb.users.find(u => u.id === l.farmer_id) || {};
         const cropCodeLower = (crop.crop_code || '').toLowerCase();
-        let defaultImg = '/crops/leek.jpg';
-        if (cropCodeLower.includes('carrot')) defaultImg = '/crops/carrot.jpg';
-        else if (cropCodeLower.includes('spring')) defaultImg = '/crops/spring_onion.jpg';
-        else if (cropCodeLower.includes('beet')) defaultImg = '/crops/beetroot.jpg';
-        else if (cropCodeLower.includes('bean')) defaultImg = '/crops/bush_beans.jpg';
-        else if (cropCodeLower.includes('radish')) defaultImg = '/crops/radish.jpg';
+        let defaultImg = crop.image_url || 'https://images.unsplash.com/photo-1587049633312-d628ae50a8ae?w=600&auto=format&fit=crop&q=80';
 
         return {
           ...l,
@@ -511,11 +705,15 @@ module.exports = {
     }
 
     if (lower.includes('insert into planting_records')) {
+      const acresVal = Number(params[2]);
+      const perchesVal = Math.round(acresVal * 160 * 100) / 100;
       const newPlanting = {
         id: Date.now(),
         farmer_id: params[0],
         crop_id: Number(params[1]),
-        land_size_acres: Number(params[2]),
+        land_size_acres: acresVal,
+        land_size_perches: perchesVal,
+        land_unit: 'ACRES',
         expected_yield_kg: Number(params[3]),
         planting_date: params[4] || new Date().toISOString().split('T')[0],
         expected_harvest_date: params[5] || '2026-11-01',

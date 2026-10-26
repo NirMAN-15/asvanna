@@ -8,6 +8,8 @@ class PlantingController {
       const {
         crop_id,
         land_size_acres,
+        land_size_perches,
+        land_unit = 'ACRES',
         planting_date,
         latitude,
         longitude,
@@ -37,8 +39,22 @@ class PlantingController {
       if (cropRes.rows.length === 0) return ApiResponse.error(res, 'Invalid crop ID', 400);
       const crop = cropRes.rows[0];
 
-      const acres = parseFloat(land_size_acres);
-      const expectedYieldKg = acres * parseFloat(crop.avg_yield_per_acre_kg);
+      // Calculate Acres and Perches (1 Acre = 160 Perches)
+      let acres = 0;
+      let perches = 0;
+      if (land_unit === 'PERCHES' || (land_size_perches !== undefined && land_size_perches !== null && land_size_perches !== '')) {
+        perches = parseFloat(land_size_perches || land_size_acres);
+        acres = Math.round((perches / 160) * 10000) / 10000;
+      } else {
+        acres = parseFloat(land_size_acres);
+        perches = Math.round(acres * 160 * 100) / 100;
+      }
+
+      if (isNaN(acres) || acres <= 0) {
+        return ApiResponse.error(res, 'Invalid land extent provided. Must be greater than 0.', 400);
+      }
+
+      const expectedYieldKg = Math.round(acres * parseFloat(crop.avg_yield_per_acre_kg) * 100) / 100;
 
       const pDate = new Date(planting_date);
       const expectedHarvestDate = new Date(pDate.getTime() + crop.growth_duration_days * 24 * 60 * 60 * 1000);
@@ -46,10 +62,10 @@ class PlantingController {
       // 2. Insert Record
       const insertRes = await db.query(
         `INSERT INTO planting_records 
-         (farmer_id, crop_id, land_size_acres, expected_yield_kg, planting_date, expected_harvest_date, latitude, longitude, district, division, status, entered_by_type, officer_id, sync_status)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'PLANTED', $11, $12, 'SYNCED')
+         (farmer_id, crop_id, land_size_acres, expected_yield_kg, planting_date, expected_harvest_date, latitude, longitude, district, division, status, entered_by_type, officer_id, sync_status, land_size_perches, land_unit)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'PLANTED', $11, $12, 'SYNCED', $13, $14)
          RETURNING *`,
-        [targetFarmerId, crop_id, acres, expectedYieldKg, planting_date, expectedHarvestDate.toISOString().split('T')[0], latitude, longitude, district, division, enteredByType, officerId]
+        [targetFarmerId, crop_id, acres, expectedYieldKg, planting_date, expectedHarvestDate.toISOString().split('T')[0], latitude, longitude, district, division, enteredByType, officerId, perches, land_unit]
       );
 
       // 3. Immediately evaluate updated crop risk

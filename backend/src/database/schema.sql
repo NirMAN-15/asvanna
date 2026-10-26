@@ -78,7 +78,9 @@ CREATE TABLE IF NOT EXISTS planting_records (
     id SERIAL PRIMARY KEY,
     farmer_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     crop_id INT NOT NULL REFERENCES crops(id),
-    land_size_acres DECIMAL(6, 2) NOT NULL CHECK (land_size_acres > 0),
+    land_size_acres DECIMAL(10, 4) NOT NULL CHECK (land_size_acres > 0),
+    land_size_perches DECIMAL(10, 2),
+    land_unit VARCHAR(10) DEFAULT 'ACRES',
     expected_yield_kg DECIMAL(10, 2) NOT NULL,
     planting_date DATE NOT NULL,
     expected_harvest_date DATE NOT NULL,
@@ -335,6 +337,11 @@ ALTER TABLE crops ADD COLUMN IF NOT EXISTS image_url TEXT;
 ALTER TABLE crops ADD COLUMN IF NOT EXISTS description_en TEXT;
 ALTER TABLE crops ADD COLUMN IF NOT EXISTS description_si TEXT;
 ALTER TABLE crops ADD COLUMN IF NOT EXISTS description_ta TEXT;
+
+ALTER TABLE planting_records ADD COLUMN IF NOT EXISTS land_size_perches DECIMAL(10, 2);
+ALTER TABLE planting_records ADD COLUMN IF NOT EXISTS land_unit VARCHAR(10) DEFAULT 'ACRES';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS total_land_perches DECIMAL(10, 2);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS land_unit VARCHAR(10) DEFAULT 'ACRES';
 
 ALTER TABLE risk_assessments ADD COLUMN IF NOT EXISTS over_planting_score DECIMAL(5, 2) DEFAULT 0.0;
 ALTER TABLE risk_assessments ADD COLUMN IF NOT EXISTS weather_risk_score DECIMAL(5, 2) DEFAULT 0.0;

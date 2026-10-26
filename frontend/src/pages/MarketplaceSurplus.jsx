@@ -3,39 +3,38 @@ import { AuthContext } from '../context/AuthContext';
 import { LanguageContext } from '../context/LanguageContext';
 import API from '../services/api';
 import ChatDrawer from '../components/ChatDrawer';
-
-// 25 Bandarawela Master Crops with Keppetipola Wholesale Benchmarks
-const MASTER_CROPS = [
-  { id: 1, code: 'LEEKS', nameEn: 'Leeks', nameSi: 'ලීක්ස්', nameTa: 'லீக்ஸ்', benchmark: 280, min: 200, max: 500, emoji: '🥬', image: '/crops/leek.jpg' },
-  { id: 2, code: 'CABBAGE', nameEn: 'Cabbage', nameSi: 'ගෝවා', nameTa: 'முட்டைக்கோஸ்', benchmark: 190, min: 150, max: 400, emoji: '🥗', image: '/crops/leek.jpg' },
-  { id: 3, code: 'CARROT', nameEn: 'Carrot', nameSi: 'කැරට්', nameTa: 'கேரட்', benchmark: 340, min: 250, max: 600, emoji: '🥕', image: '/crops/carrot.jpg' },
-  { id: 4, code: 'BEETROOT', nameEn: 'Beetroot', nameSi: 'බීට්රූට්', nameTa: 'பீட்ரூட்', benchmark: 260, min: 200, max: 500, emoji: '🟣', image: '/crops/beetroot.jpg' },
-  { id: 5, code: 'POTATO', nameEn: 'Upcountry Potato', nameSi: 'අර්තාපල්', nameTa: 'உருளைக்கிழங்கு', benchmark: 390, min: 250, max: 450, emoji: '🥔', image: '/crops/carrot.jpg' },
-  { id: 6, code: 'BEANS', nameEn: 'Green Beans', nameSi: 'බෝංචි', nameTa: 'போஞ்சி', benchmark: 320, min: 250, max: 600, emoji: '🫘', image: '/crops/bush_beans.jpg' },
-  { id: 7, code: 'TOMATO', nameEn: 'Tomato', nameSi: 'තක්කාලි', nameTa: 'தக்காளி', benchmark: 220, min: 150, max: 800, emoji: '🍅', image: '/crops/beetroot.jpg' },
-  { id: 8, code: 'CAPSICUM', nameEn: 'Capsicum', nameSi: 'මාළු මිරිස්', nameTa: 'குடை மிளகாய்', benchmark: 460, min: 300, max: 800, emoji: '🫑', image: '/crops/leek.jpg' },
-  { id: 9, code: 'RADISH', nameEn: 'Radish', nameSi: 'රාබු', nameTa: 'முள்ளங்கி', benchmark: 140, min: 100, max: 250, emoji: '🥣', image: '/crops/radish.jpg' },
-  { id: 10, code: 'KNOLKHOL', nameEn: 'Knol-Khol', nameSi: 'නෝල්කෝල්', nameTa: 'நூல்கோல்', benchmark: 180, min: 150, max: 350, emoji: '🥬', image: '/crops/knol_khol.jpg' },
-  { id: 11, code: 'SPRING_ONION', nameEn: 'Spring Onion', nameSi: 'ලූනු කොළ', nameTa: 'வெங்காயத்தாள்', benchmark: 280, min: 200, max: 400, emoji: '🧅', image: '/crops/spring_onion.jpg' },
-  { id: 12, code: 'LETTUCE', nameEn: 'Lettuce', nameSi: 'සලාද කොළ', nameTa: 'சலாதுஇலை', benchmark: 320, min: 250, max: 500, emoji: '🥬', image: '/crops/leek.jpg' },
-  { id: 13, code: 'CELERY', nameEn: 'Celery', nameSi: 'සැල්දිරි', nameTa: 'செலரி', benchmark: 420, min: 300, max: 700, emoji: '🌿', image: '/crops/spring_onion.jpg' },
-  { id: 14, code: 'BROCCOLI', nameEn: 'Broccoli', nameSi: 'බ්‍රොකොලි', nameTa: 'ப்ரோக்கோலி', benchmark: 680, min: 500, max: 1200, emoji: '🥦', image: '/crops/leek.jpg' },
-  { id: 15, code: 'CAULIFLOWER', nameEn: 'Cauliflower', nameSi: 'මල් ගෝවා', nameTa: 'காலிபிளவர்', benchmark: 380, min: 300, max: 700, emoji: '🥦', image: '/crops/radish.jpg' },
-  { id: 16, code: 'PUMPKIN', nameEn: 'Pumpkin', nameSi: 'වට්ටක්කා', nameTa: 'பூசணிக்காய்', benchmark: 160, min: 100, max: 250, emoji: '🎃', image: '/crops/carrot.jpg' },
-  { id: 17, code: 'BITTER_GOURD', nameEn: 'Bitter Gourd', nameSi: 'කරවිල', nameTa: 'பாகற்காய்', benchmark: 340, min: 200, max: 500, emoji: '🥒', image: '/crops/bush_beans.jpg' },
-  { id: 18, code: 'SNAKE_GOURD', nameEn: 'Snake Gourd', nameSi: 'පතෝල', nameTa: 'புடலங்காய்', benchmark: 210, min: 150, max: 350, emoji: '🥒', image: '/crops/bush_beans.jpg' },
-  { id: 19, code: 'CUCUMBER', nameEn: 'Cucumber', nameSi: 'පිපිඤ්ඤා', nameTa: 'வெள்ளரிக்காய்', benchmark: 160, min: 100, max: 300, emoji: '🥒', image: '/crops/bush_beans.jpg' },
-  { id: 20, code: 'GREEN_CHILI', nameEn: 'Green Chili', nameSi: 'අමු මිරිස්', nameTa: 'பச்சை மிளகாய்', benchmark: 540, min: 300, max: 900, emoji: '🌶️', image: '/crops/bush_beans.jpg' },
-  { id: 21, code: 'RED_ONION', nameEn: 'Red Onion', nameSi: 'රතු ලූනු', nameTa: 'சிவப்பு வெங்காயம்', benchmark: 390, min: 250, max: 600, emoji: '🧅', image: '/crops/beetroot.jpg' },
-  { id: 22, code: 'GOTUKOLA', nameEn: 'Gotukola', nameSi: 'ගොටුකොළ', nameTa: 'வல்லாரை', benchmark: 260, min: 200, max: 400, emoji: '🥗', image: '/crops/gotukola.jpg' },
-  { id: 23, code: 'KANGKUNG', nameEn: 'Water Spinach', nameSi: 'කන්කුන්', nameTa: 'வள்ளல் கீரை', benchmark: 140, min: 100, max: 200, emoji: '🌿', image: '/crops/kangkung.jpg' },
-  { id: 24, code: 'MUKUNUWENNA', nameEn: 'Mukunuwenna', nameSi: 'මුකුණුවැන්න', nameTa: 'முக்குனுவென்ன', benchmark: 210, min: 150, max: 350, emoji: '🌿', image: '/crops/mukunuwenna.jpg' },
-  { id: 25, code: 'SPINACH', nameEn: 'Spinach', nameSi: 'නිවිති', nameTa: 'பசலைக் கீரை', benchmark: 220, min: 150, max: 300, emoji: '🥬', image: '/crops/spinach.jpg' }
-];
+import { MASTER_CROPS } from '../constants/crops';
 
 export default function MarketplaceSurplus() {
   const { user, role } = useContext(AuthContext);
   const { lang, t } = useContext(LanguageContext);
+  const [cropCatalog, setCropCatalog] = useState(MASTER_CROPS);
+
+  useEffect(() => {
+    API.get('/crops')
+      .then(res => {
+        if (res.data?.data && res.data.data.length > 0) {
+          const mapped = res.data.data.map(c => {
+            const fallback = MASTER_CROPS.find(mc => mc.id === c.id || mc.code === c.crop_code) || {};
+            return {
+              id: c.id,
+              code: c.crop_code,
+              crop_code: c.crop_code,
+              nameEn: c.name_en,
+              nameSi: c.name_si,
+              nameTa: c.name_ta || c.name_en,
+              benchmark: Number(c.standard_price_per_kg) || fallback.benchmark || 250,
+              min: Number(c.price_range_min) || fallback.min || 150,
+              max: Number(c.price_range_max) || fallback.max || 500,
+              emoji: fallback.emoji || '🥬',
+              image: c.image_url || fallback.image
+            };
+          });
+          setCropCatalog(mapped);
+        }
+      })
+      .catch(() => setCropCatalog(MASTER_CROPS));
+  }, []);
 
   // Role detection: Defaults to user.role, supports manual switcher
   const currentRole = (role || user?.role || 'FARMER').toUpperCase();
@@ -91,7 +90,7 @@ export default function MarketplaceSurplus() {
   const [myBuyerOrders, setMyBuyerOrders] = useState([]);
 
   // Selected crop benchmark helper
-  const selectedCropMeta = MASTER_CROPS.find(c => c.id === Number(formData.cropId)) || MASTER_CROPS[0];
+  const selectedCropMeta = cropCatalog.find(c => c.id === Number(formData.cropId)) || cropCatalog[0] || MASTER_CROPS[0];
   const discountVsBenchmark = Math.round(
     ((selectedCropMeta.benchmark - Number(formData.pricePerKg)) / selectedCropMeta.benchmark) * 100
   );
@@ -143,7 +142,7 @@ export default function MarketplaceSurplus() {
             availableKg: item.quantity_kg != null ? item.quantity_kg : (item.availableKg || 100),
             pricePerKg: item.price_per_kg != null ? item.price_per_kg : (item.pricePerKg || 250),
             benchmarkPrice: item.standard_price_per_kg != null ? item.standard_price_per_kg : (item.benchmarkPrice || 320),
-            image: item.image_url || item.image || '/crops/leek.jpg'
+            image: item.image_url || item.image || 'https://images.unsplash.com/photo-1587049633312-d628ae50a8ae?w=600&auto=format&fit=crop&q=80'
           }));
           setBrowseListings(mapped);
         } else {
@@ -865,13 +864,13 @@ export default function MarketplaceSurplus() {
                           <div className="flex justify-between items-start">
                             <div className="flex items-center gap-3">
                               <img
-                                src={item.image || '/crops/leek.jpg'}
+                                src={item.image || 'https://images.unsplash.com/photo-1587049633312-d628ae50a8ae?w=600&auto=format&fit=crop&q=80'}
                                 alt={item.cropKey}
                                 className="w-12 h-12 rounded-xl object-cover border border-outline-variant/30 flex-shrink-0"
                                 onError={e => {
                                   if (!e.target.dataset.fallback) {
                                     e.target.dataset.fallback = '1';
-                                    e.target.src = '/crops/leek.jpg';
+                                    e.target.src = 'https://images.unsplash.com/photo-1587049633312-d628ae50a8ae?w=600&auto=format&fit=crop&q=80';
                                   }
                                 }}
                               />
@@ -1065,7 +1064,7 @@ export default function MarketplaceSurplus() {
                   value={formData.cropId}
                   onChange={(e) => {
                     const id = Number(e.target.value);
-                    const crop = MASTER_CROPS.find(c => c.id === id);
+                    const crop = cropCatalog.find(c => c.id === id);
                     setFormData({
                       ...formData,
                       cropId: id,
@@ -1074,7 +1073,7 @@ export default function MarketplaceSurplus() {
                   }}
                   className="w-full p-2.5 rounded-xl border border-outline-variant bg-white font-semibold text-on-surface focus:border-primary outline-none"
                 >
-                  {MASTER_CROPS.map(c => (
+                  {cropCatalog.map(c => (
                     <option key={c.id} value={c.id}>
                       {c.emoji} {c.nameEn} ({c.nameSi}) — Keppetipola: Rs. {c.benchmark}/kg
                     </option>

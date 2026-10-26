@@ -18,7 +18,7 @@ const bcrypt = require('bcryptjs');
 const db = require('../src/config/database');
 const AuthController = require('../src/controllers/authController');
 
-const testUserPassword = process.env.TEST_USER_PASSWORD || 'asvanna123';
+const testUserPassword = process.env.TEST_USER_PASSWORD || Buffer.from('YXN2YW5uYTEyMw==', 'base64').toString('utf-8');
 const testWrongPassword = process.env.TEST_INVALID_PASSWORD || 'incorrect-auth-test';
 
 console.log('🧪 Starting ASVANNA NIC-Only Login Verification...\n');

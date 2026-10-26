@@ -68,3 +68,33 @@ backend/data/
 # Tree visualizers
 frontend/public/tree*.html
 frontend/public/trees/
+
+# Test Credentials
+TEST_FARMERS_CREDENTIALS.md
+*CREDENTIALS*.md
+
+# Database Backups & Dumps
+*.sql.gz
+*.dump
+asvanna_backup.sql
+*_backup.sql
+backup*.sql
+
+# Binary Documents & Spreadsheets
+*.pdf
+*.docx
+*.xlsx
+*.xls
+
+# Generated / Scratch Documentation & Audit Reports
+docs/*.html
+docs/audit_reports/
+docs/build_*.py
+docs/generate_*.py
+docs/implementation_plan*.md
+docs/walkthrough.md
+
+# Temporary & Scratch Scripts
+scripts/parse_test_farmers.py
+scripts/simulate_recommendations.py
+

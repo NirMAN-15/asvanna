@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Free bilingual digital marketing guide for Sri Lankan small business owners. Facebook, WhatsApp Business, low-budget ads — in Sinhala & English."/>
+  <meta name="theme-color" content="#f97316"/>
+  <meta property="og:type" content="website"/>
+  <meta property="og:title" content="Your Shop. The Whole Country. — Free Guide"/>
+  <meta property="og:description" content="Download the free Sinhala & English guide and take your local shop digital. No tech skills needed."/>
+  <title>Asvanna — Your Shop. The Whole Country.</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Serif+Sinhala:wght@400;600;700&display=swap" rel="stylesheet"/>
+
+  <style>
+/* ================================================================
+   RESET & TOKENS
+================================================================ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+
+:root{
+  /* Palette */
+  --fire:   #f97316;
+  --fire-d: #ea6508;
+  --fire-l: #fff4ed;
+  --ember:  #ff3d00;
+  --gold:   #fbbf24;
+  --jade:   #10b981;
+  --jade-l: #d1fae5;
+  --ink:    #0f172a;
+  --slate:  #334155;
+  --mist:   #64748b;
+  --cloud:  #f8fafc;
+  --line:   #e2e8f0;
+  --white:  #ffffff;
+
+  /* Shadows */
+  --sh-xs: 0 1px 3px rgba(0,0,0,.08);
+  --sh-sm: 0 4px 12px rgba(0,0,0,.10);
+  --sh-md: 0 8px 32px rgba(0,0,0,.14);
+  --sh-lg: 0 20px 60px rgba(0,0,0,.18);
+  --sh-glow: 0 0 40px rgba(249,115,22,.35);
+
+  /* Radius */
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 24px;
+  --r-xl: 32px;
+  --r-pill: 9999px;
+
+  /* Ease */
+  --ease: cubic-bezier(.4,0,.2,1);
+  --spring: cubic-bezier(.34,1.56,.64,1);
+
+  /* Font */
+  --ff: 'Inter', system-ui, sans-serif;
+  --ff-si: 'Noto Serif Sinhala', serif;
+}
+
+body{
+  font-family: var(--ff);
+  color: var(--ink);
+  background: var(--white);
+  overflow-x: hidden;
+  line-height: 1.65;
+}
+img{max-width:100%;height:auto;display:block}
+a{color:var(--fire);text-decoration:none}
+:focus-visible{outline:3px solid var(--fire);outline-offset:3px;border-radius:4px}
+.si{font-family:var(--ff-si)}
+
+/* ================================================================
+   SCROLLBAR (WebKit)
+================================================================ */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:#f1f5f9}
+::-webkit-scrollbar-thumb{background:var(--fire);border-radius:3px}
+
+/* ================================================================
+   TOP BAR
+================================================================ */
+.topbar{
+  background: linear-gradient(90deg,var(--ember),var(--fire),var(--gold));
+  background-size: 200% 100%;
+  animation: shimmer 4s linear infinite;
+  color:#fff;
+  text-align:center;
+  padding:10px 1rem;
+  font-size:.82rem;
+  font-weight:700;
+  letter-spacing:.03em;
+  position:relative;
+  z-index:10;
+}
+.topbar .si{font-size:.88rem;opacity:.88}
+@keyframes shimmer{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+
+/* ================================================================
+   NAV
+================================================================ */
+nav{
+  position:sticky;top:0;z-index:200;
+  background:rgba(255,255,255,.82);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(226,232,240,.6);
+  padding:14px 0;
+}
+.nav-wrap{
+  max-width:1100px;
+  margin-inline:auto;
+  padding-inline:clamp(1rem,4vw,2rem);
+  display:flex;align-items:center;justify-content:space-between;gap:1rem;
+}
+.logo{
+  display:flex;align-items:center;gap:10px;
+  font-weight:900;font-size:1.4rem;letter-spacing:-.04em;color:var(--ink);
+  text-decoration:none;
+}
+.logo-dot{
+  width:34px;height:34px;border-radius:10px;
+  background:linear-gradient(135deg,var(--fire),var(--ember));
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:1rem;box-shadow:0 4px 12px rgba(249,115,22,.4);
+}
+.nav-pill{
+  display:flex;align-items:center;gap:.4rem;
+  background:linear-gradient(135deg,var(--fire),var(--ember));
+  color:#fff;font-weight:700;font-size:.85rem;
+  padding:9px 20px;border-radius:var(--r-pill);
+  border:none;cursor:pointer;text-decoration:none;
+  box-shadow:0 4px 14px rgba(249,115,22,.4);
+  transition:transform .2s var(--spring),box-shadow .2s var(--ease);
+  white-space:nowrap;
+}
+.nav-pill:hover{transform:translateY(-2px) scale(1.03);box-shadow:0 8px 22px rgba(249,115,22,.5);text-decoration:none;color:#fff}
+
+/* ================================================================
+   HERO — FULL VIEWPORT
+================================================================ */
+.hero{
+  min-height:100svh;
+  background:
+    radial-gradient(ellipse 80% 60% at 110% -10%, rgba(251,191,36,.18) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at -10% 110%, rgba(249,115,22,.12) 0%, transparent 60%),
+    linear-gradient(160deg,#fff7f0 0%,#ffffff 50%,#f0fdf7 100%);
+  display:flex;align-items:center;
+  padding-block:clamp(4rem,8vw,6rem);
+  overflow:hidden;
+  position:relative;
+}
+
+/* Decorative blobs */
+.hero::before{
+  content:'';
+  position:absolute;inset:0;
+  background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23f97316' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
+  pointer-events:none;
+  z-index:0;
+}
+
+.hero-inner{
+  max-width:1100px;
+  margin-inline:auto;
+  padding-inline:clamp(1rem,4vw,2rem);
+  display:grid;
+  grid-template-columns:1fr;
+  gap:3rem;
+  align-items:center;
+  position:relative;z-index:1;
+  width:100%;
+}
+@media(min-width:768px){
+  .hero-inner{grid-template-columns:1.15fr 1fr;gap:4rem}
+}
+
+/* ── Hero Text ── */
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:linear-gradient(135deg,var(--fire-l),#fff3dc);
+  border:1.5px solid rgba(249,115,22,.25);
+  color:var(--fire-d);
+  font-size:.8rem;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;padding:6px 16px;border-radius:var(--r-pill);
+  margin-bottom:1.4rem;
+  animation:fadeUp .6s var(--ease) both;
+}
+.hero-eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--fire);animation:pulse 1.8s ease infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+
+.hero-h1{
+  font-size:clamp(2.2rem,6.5vw,3.8rem);
+  font-weight:900;line-height:1.08;letter-spacing:-.04em;
+  color:var(--ink);
+  margin-bottom:.8rem;
+  animation:fadeUp .7s .1s var(--ease) both;
+}
+.hero-h1 .line2{
+  background:linear-gradient(135deg,var(--fire),var(--ember));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  display:block;
+}
+.hero-h1 .emoji{-webkit-text-fill-color:initial}
+
+.hero-si{
+  font-family:var(--ff-si);
+  font-size:clamp(1rem,2.5vw,1.3rem);
+  color:var(--mist);font-weight:600;
+  margin-bottom:1.5rem;
+  animation:fadeUp .7s .15s var(--ease) both;
+}
+
+.hero-sub{
+  font-size:clamp(.95rem,2vw,1.1rem);
+  color:var(--slate);
+  max-width:520px;
+  line-height:1.75;
+  margin-bottom:2rem;
+  animation:fadeUp .7s .2s var(--ease) both;
+}
+.hero-sub strong{color:var(--ink)}
+
+/* ── Chips ── */
+.chips{
+  display:flex;flex-wrap:wrap;gap:.6rem;
+  margin-bottom:2.2rem;
+  animation:fadeUp .7s .25s var(--ease) both;
+}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;
+  background:#fff;border:1.5px solid var(--line);
+  color:var(--slate);font-size:.82rem;font-weight:600;
+  padding:7px 14px;border-radius:var(--r-pill);
+  box-shadow:var(--sh-xs);
+  transition:border-color .2s,color .2s,transform .2s var(--spring);
+}
+.chip:hover{border-color:var(--fire);color:var(--fire);transform:translateY(-2px)}
+
+/* ── Social Proof Row ── */
+.sp-row{
+  display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
+  animation:fadeUp .7s .3s var(--ease) both;
+}
+.sp-avatars{display:flex}
+.sp-avatars span{
+  width:36px;height:36px;border-radius:50%;
+  border:2px solid #fff;margin-right:-10px;
+  background:linear-gradient(135deg,var(--fire),var(--gold));
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;color:#fff;
+  box-shadow:var(--sh-xs);
+}
+.sp-text{font-size:.85rem;color:var(--slate);font-weight:500}
+.sp-text strong{color:var(--ink);font-weight:700}
+.sp-stars{color:var(--gold);letter-spacing:2px;font-size:.9rem}
+
+/* ── Form Card (Glass) ── */
+.form-card{
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border:1.5px solid rgba(255,255,255,.9);
+  border-radius:var(--r-xl);
+  box-shadow:var(--sh-lg),0 0 0 1px rgba(249,115,22,.06);
+  padding:clamp(1.6rem,5vw,2.5rem);
+  animation:fadeUp .8s .2s var(--ease) both;
+  position:relative;overflow:hidden;
+}
+.form-card::before{
+  content:'';
+  position:absolute;top:-60px;right:-60px;
+  width:200px;height:200px;border-radius:50%;
+  background:radial-gradient(circle,rgba(249,115,22,.1) 0%,transparent 70%);
+  pointer-events:none;
+}
+
+.form-card-head{margin-bottom:1.5rem}
+.form-eyebrow{
+  font-size:.72rem;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--fire);margin-bottom:.5rem;
+}
+.form-card-head h2{
+  font-size:clamp(1.2rem,3vw,1.55rem);
+  font-weight:900;color:var(--ink);line-height:1.2;margin-bottom:.3rem;
+}
+.form-card-head .sub{font-size:.88rem;color:var(--mist)}
+.form-card-head .sub .si{font-family:var(--ff-si);font-size:.85rem}
+
+.fld{display:flex;flex-direction:column;gap:6px;margin-bottom:1rem}
+.fld label{
+  font-size:.82rem;font-weight:700;color:var(--ink);
+  display:flex;align-items:baseline;gap:6px;
+}
+.fld label .lsi{font-family:var(--ff-si);font-weight:500;color:var(--mist);font-size:.8rem}
+.fld input{
+  padding:13px 16px;
+  border:2px solid var(--line);
+  border-radius:var(--r-sm);
+  font-size:.95rem;font-family:var(--ff);
+  color:var(--ink);background:#fafbfc;
+  transition:border-color .2s var(--ease),box-shadow .2s var(--ease),background .2s;
+  -webkit-appearance:none;width:100%;
+}
+.fld input::placeholder{color:#b0bec5}
+.fld input:focus{
+  outline:none;border-color:var(--fire);
+  box-shadow:0 0 0 4px rgba(249,115,22,.12);
+  background:#fff;
+}
+.fld input:user-valid{border-color:var(--jade)}
+.fld input:user-invalid{border-color:#ef4444}
+
+.or-sep{
+  display:flex;align-items:center;gap:.6rem;
+  font-size:.75rem;color:var(--mist);font-weight:600;
+  margin:.2rem 0 .8rem;
+}
+.or-sep::before,.or-sep::after{content:'';flex:1;height:1px;background:var(--line)}
+
+/* ── CTA Button ── */
+.btn-cta{
+  width:100%;
+  padding:16px 20px;
+  background:linear-gradient(135deg,var(--fire) 0%,var(--ember) 50%,#e53e00 100%);
+  background-size:200% 100%;
+  background-position:0% 0%;
+  color:#fff;
+  font-family:var(--ff);
+  font-size:clamp(.95rem,2.2vw,1.08rem);
+  font-weight:800;
+  border:none;border-radius:var(--r-md);
+  cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  letter-spacing:.01em;line-height:1.3;
+  box-shadow:0 6px 20px rgba(249,115,22,.45),inset 0 1px 0 rgba(255,255,255,.15);
+  transition:transform .22s var(--spring),box-shadow .22s var(--ease),background-position .4s var(--ease);
+  position:relative;overflow:hidden;
+}
+.btn-cta::before{
+  content:'';
+  position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(255,255,255,.12) 0%,transparent 50%);
+  pointer-events:none;
+}
+.btn-cta:hover{
+  transform:translateY(-3px) scale(1.02);
+  box-shadow:0 12px 32px rgba(249,115,22,.55),inset 0 1px 0 rgba(255,255,255,.15);
+  background-position:100% 0%;
+}
+.btn-cta:active{transform:translateY(0) scale(.99)}
+.btn-cta .btn-main{font-size:1.05rem;font-weight:900}
+.btn-cta .btn-si{font-family:var(--ff-si);font-size:.82rem;opacity:.82}
+
+.secure-note{
+  display:flex;align-items:center;justify-content:center;gap:.4rem;
+  margin-top:.85rem;font-size:.75rem;color:var(--mist);
+}
+.secure-note .dot{color:var(--jade);font-size:1rem}
+
+/* ── Countdown strip ── */
+.countdown{
+  background:linear-gradient(135deg,var(--fire-l),#fff9e6);
+  border:1.5px solid rgba(249,115,22,.2);
+  border-radius:var(--r-sm);
+  padding:10px 14px;
+  margin-bottom:1.1rem;
+  display:flex;align-items:center;gap:8px;
+  font-size:.82rem;color:var(--fire-d);font-weight:700;
+}
+.countdown .icon{font-size:1.1rem}
+#timer{
+  background:var(--fire);color:#fff;
+  border-radius:6px;padding:2px 8px;font-weight:900;letter-spacing:.05em;
+}
+
+/* ================================================================
+   SECTION COMMON
+================================================================ */
+.section{padding-block:clamp(3.5rem,8vw,6rem)}
+.wrap{max-width:1100px;margin-inline:auto;padding-inline:clamp(1rem,4vw,2rem)}
+.sec-label{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--fire);margin-bottom:.6rem;
+}
+.sec-h2{
+  font-size:clamp(1.6rem,4.5vw,2.4rem);
+  font-weight:900;line-height:1.15;letter-spacing:-.03em;
+  color:var(--ink);margin-bottom:.3rem;
+}
+.sec-si{
+  font-family:var(--ff-si);
+  font-size:clamp(.95rem,2vw,1.15rem);
+  color:var(--mist);font-weight:600;
+  margin-bottom:2.5rem;
+}
+
+/* ================================================================
+   TRUST TICKER
+================================================================ */
+.trust-bar{
+  background:var(--ink);
+  padding:14px 0;
+  overflow:hidden;
+  position:relative;
+}
+.trust-track{
+  display:flex;
+  animation:ticker 28s linear infinite;
+  white-space:nowrap;width:max-content;
+}
+.trust-track:hover{animation-play-state:paused}
+.trust-item{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:.82rem;font-weight:600;color:rgba(255,255,255,.8);
+  padding-right:3.5rem;
+}
+.trust-item .ico{font-size:1rem}
+.trust-item span.hi{color:var(--gold)}
+@keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* ================================================================
+   LEARN CARDS
+================================================================ */
+.learn-section{background:var(--cloud)}
+.learn-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:1.2rem;
+}
+.lcard{
+  background:#fff;
+  border-radius:var(--r-lg);
+  padding:1.75rem;
+  border:1.5px solid var(--line);
+  box-shadow:var(--sh-xs);
+  transition:transform .25s var(--spring),box-shadow .25s var(--ease),border-color .25s;
+  cursor:default;
+  position:relative;overflow:hidden;
+}
+.lcard::after{
+  content:'';
+  position:absolute;bottom:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--fire),var(--gold));
+  transform:scaleX(0);transform-origin:left;
+  transition:transform .3s var(--ease);
+}
+.lcard:hover{transform:translateY(-5px);box-shadow:var(--sh-md);border-color:rgba(249,115,22,.25)}
+.lcard:hover::after{transform:scaleX(1)}
+.lcard-icon{
+  width:52px;height:52px;border-radius:14px;
+  background:linear-gradient(135deg,var(--fire-l),#ffe8cc);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.5rem;margin-bottom:1.1rem;
+  border:1px solid rgba(249,115,22,.15);
+}
+.lcard h3{font-size:1rem;font-weight:800;color:var(--ink);margin-bottom:.25rem}
+.lcard .lsi{font-family:var(--ff-si);font-size:.82rem;color:var(--fire);font-weight:600;margin-bottom:.5rem}
+.lcard p{font-size:.87rem;color:var(--slate);line-height:1.7}
+
+/* ================================================================
+   STEPS
+================================================================ */
+.steps-section{background:#fff}
+.steps-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:1.5rem 1rem;
+  position:relative;
+}
+.steps-grid::before{
+  content:'';
+  position:absolute;top:38px;left:5%;right:5%;height:2px;
+  background:linear-gradient(90deg,var(--fire),var(--gold),var(--jade));
+  z-index:0;border-radius:2px;
+}
+@media(max-width:640px){.steps-grid::before{display:none}}
+.step-box{
+  text-align:center;
+  position:relative;z-index:1;
+  padding:1.5rem 1rem;
+}
+.step-num{
+  width:60px;height:60px;border-radius:50%;
+  background:linear-gradient(135deg,var(--fire),var(--ember));
+  color:#fff;font-size:1.4rem;font-weight:900;
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 1rem;
+  box-shadow:0 6px 18px rgba(249,115,22,.4),0 0 0 6px rgba(249,115,22,.1);
+  position:relative;
+}
+.step-num::before{
+  content:'';
+  position:absolute;inset:-4px;border-radius:50%;
+  border:2px dashed rgba(249,115,22,.3);
+  animation:spin 8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.step-box h3{font-size:.98rem;font-weight:800;color:var(--ink);margin-bottom:.2rem}
+.step-box .ssi{font-family:var(--ff-si);font-size:.82rem;color:var(--fire);margin-bottom:.4rem}
+.step-box p{font-size:.84rem;color:var(--slate);line-height:1.65}
+
+/* ================================================================
+   TESTIMONIALS
+================================================================ */
+.stories-section{
+  background:linear-gradient(160deg,#fff7f0 0%,var(--cloud) 100%);
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+}
+.stories-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:1.5rem;
+}
+.story{
+  background:#fff;
+  border-radius:var(--r-lg);
+  padding:1.75rem;
+  border:1.5px solid var(--line);
+  box-shadow:var(--sh-sm);
+  position:relative;
+  transition:transform .25s var(--spring),box-shadow .25s;
+}
+.story:hover{transform:translateY(-4px);box-shadow:var(--sh-md)}
+.story-q{
+  font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--fire);margin-bottom:.6rem;display:flex;align-items:center;gap:5px;
+}
+.story .quote{font-size:.93rem;color:var(--slate);line-height:1.75;margin-bottom:1.2rem}
+.story .quote .si{font-family:var(--ff-si);font-size:.87rem;color:var(--mist);display:block;margin-top:.4rem;font-style:italic}
+.story-foot{display:flex;align-items:center;gap:12px}
+.story-av{
+  width:44px;height:44px;border-radius:50%;
+  background:linear-gradient(135deg,var(--fire),var(--gold));
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.2rem;flex-shrink:0;
+  border:2.5px solid var(--fire-l);
+  box-shadow:var(--sh-xs);
+}
+.story-name{font-weight:800;font-size:.9rem;color:var(--ink)}
+.story-biz{font-size:.78rem;color:var(--mist)}
+.story-result{
+  display:inline-flex;align-items:center;gap:4px;
+  background:var(--jade-l);color:#047857;
+  font-size:.72rem;font-weight:700;padding:3px 10px;
+  border-radius:var(--r-pill);margin-top:4px;border:1px solid #a7f3d0;
+}
+.stars{color:var(--gold);font-size:.9rem;letter-spacing:1px;margin-bottom:.75rem}
+
+/* ================================================================
+   CHANNELS
+================================================================ */
+.channels-section{background:#fff}
+.ch-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:1.2rem;
+}
+.ch-card{
+  border-radius:var(--r-lg);padding:2rem;
+  border:1.5px solid var(--line);
+  background:linear-gradient(145deg,#fff 0%,var(--cloud) 100%);
+  box-shadow:var(--sh-xs);
+  text-align:center;
+  transition:transform .25s var(--spring),box-shadow .25s,border-color .25s;
+}
+.ch-card:hover{transform:translateY(-4px);box-shadow:var(--sh-md);border-color:rgba(249,115,22,.3)}
+.ch-icon-wrap{
+  width:64px;height:64px;border-radius:18px;
+  margin:0 auto 1rem;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.8rem;
+}
+.ch-card:nth-child(1) .ch-icon-wrap{background:linear-gradient(135deg,#e8f0fe,#c7d2fe)}
+.ch-card:nth-child(2) .ch-icon-wrap{background:linear-gradient(135deg,#fef3c7,#fde68a)}
+.ch-card:nth-child(3) .ch-icon-wrap{background:linear-gradient(135deg,var(--jade-l),#a7f3d0)}
+.ch-card h3{font-size:1rem;font-weight:800;color:var(--ink);margin-bottom:.25rem}
+.ch-si{font-family:var(--ff-si);font-size:.82rem;color:var(--fire);margin-bottom:.5rem}
+.ch-card p{font-size:.85rem;color:var(--slate);line-height:1.65}
+
+/* ================================================================
+   FAQ
+================================================================ */
+.faq-section{background:var(--cloud)}
+.faq-list{max-width:720px;margin-inline:auto}
+details{
+  border-radius:var(--r-md);margin-bottom:.9rem;overflow:hidden;
+  border:1.5px solid var(--line);background:#fff;
+  transition:box-shadow .2s,border-color .2s;
+}
+details:hover{border-color:rgba(249,115,22,.25);box-shadow:var(--sh-xs)}
+details[open]{border-color:rgba(249,115,22,.35);box-shadow:var(--sh-sm)}
+summary{
+  padding:1.1rem 1.4rem;font-weight:700;font-size:.95rem;
+  cursor:pointer;list-style:none;
+  display:flex;justify-content:space-between;align-items:center;gap:.8rem;
+  color:var(--ink);background:#fff;
+}
+details[open] summary{background:var(--fire-l);color:var(--fire-d)}
+summary::after{
+  content:'+';font-size:1.5rem;color:var(--fire);font-weight:400;
+  flex-shrink:0;transition:transform .25s var(--ease),content .1s;
+  display:flex;align-items:center;justify-content:center;
+  width:28px;height:28px;border-radius:50%;
+  background:rgba(249,115,22,.1);font-size:1.1rem;
+}
+details[open] summary::after{content:'−';background:rgba(249,115,22,.15)}
+.faq-body{
+  padding:1rem 1.4rem 1.4rem;
+  font-size:.9rem;color:var(--slate);line-height:1.78;
+  border-top:1px solid var(--line);
+}
+.faq-body .si{font-family:var(--ff-si);font-size:.87rem;color:var(--mist);display:block;margin-top:.5rem;font-style:italic}
+
+/* ================================================================
+   FINAL CTA BANNER
+================================================================ */
+.final-cta{
+  padding-block:clamp(4rem,9vw,7rem);
+  background:
+    radial-gradient(ellipse 70% 60% at 80% 50%,rgba(251,191,36,.25) 0%,transparent 60%),
+    linear-gradient(135deg,var(--ink) 0%,#1e293b 60%,#0f2027 100%);
+  text-align:center;
+  position:relative;overflow:hidden;
+}
+.final-cta::before{
+  content:'';
+  position:absolute;inset:0;
+  background:url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E");
+  pointer-events:none;
+}
+.final-cta .wrap{position:relative;z-index:1}
+.final-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(249,115,22,.18);border:1px solid rgba(249,115,22,.4);
+  color:var(--gold);font-size:.75rem;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;padding:6px 16px;border-radius:var(--r-pill);
+  margin-bottom:1.4rem;
+}
+.final-cta h2{
+  font-size:clamp(2rem,5.5vw,3.2rem);
+  font-weight:900;letter-spacing:-.04em;line-height:1.1;
+  color:#fff;margin-bottom:.5rem;
+}
+.final-cta h2 .accent{
+  background:linear-gradient(135deg,var(--gold),var(--fire));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.final-cta h2 .emoji{-webkit-text-fill-color:initial}
+.final-si{
+  font-family:var(--ff-si);
+  font-size:clamp(1rem,2.5vw,1.3rem);
+  color:rgba(255,255,255,.65);
+  margin-bottom:1rem;
+}
+.final-cta p.sub{
+  font-size:clamp(.9rem,2vw,1.05rem);
+  color:rgba(255,255,255,.6);
+  max-width:500px;margin-inline:auto;
+  line-height:1.75;margin-bottom:2.5rem;
+}
+.final-btn{
+  display:inline-flex;flex-direction:column;align-items:center;
+  background:linear-gradient(135deg,var(--fire),var(--ember));
+  color:#fff;font-family:var(--ff);
+  font-size:clamp(1rem,2.5vw,1.2rem);font-weight:900;
+  padding:18px 44px;border-radius:var(--r-md);
+  border:none;cursor:pointer;text-decoration:none;
+  box-shadow:0 10px 36px rgba(249,115,22,.5),0 0 0 1px rgba(255,255,255,.1) inset;
+  transition:transform .22s var(--spring),box-shadow .22s;
+  position:relative;overflow:hidden;
+}
+.final-btn::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(255,255,255,.15) 0%,transparent 50%);
+}
+.final-btn:hover{
+  transform:translateY(-4px) scale(1.04);
+  box-shadow:0 18px 48px rgba(249,115,22,.6);
+  text-decoration:none;color:#fff;
+}
+.final-btn:active{transform:translateY(-1px) scale(1.01)}
+.final-btn .bsi{font-family:var(--ff-si);font-size:.8rem;opacity:.8;margin-top:3px}
+.final-perks{
+  display:flex;justify-content:center;flex-wrap:wrap;
+  gap:.8rem 1.5rem;margin-top:1.8rem;
+}
+.final-perk{
+  display:flex;align-items:center;gap:6px;
+  font-size:.8rem;color:rgba(255,255,255,.6);font-weight:500;
+}
+.final-perk .ico{font-size:.9rem}
+
+/* ================================================================
+   FOOTER
+================================================================ */
+footer{
+  background:var(--ink);
+  padding:clamp(2rem,5vw,3.5rem) 0 1.5rem;
+  color:rgba(255,255,255,.55);
+}
+.footer-top{
+  display:flex;flex-wrap:wrap;gap:2rem;
+  justify-content:space-between;align-items:flex-start;
+  margin-bottom:2rem;padding-bottom:2rem;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.footer-brand .logo{color:#fff;text-decoration:none}
+.footer-brand .logo-dot{box-shadow:0 4px 14px rgba(249,115,22,.5)}
+.footer-brand p{font-size:.83rem;margin-top:.75rem;max-width:260px;line-height:1.65}
+.footer-brand .si{font-family:var(--ff-si);font-size:.8rem;opacity:.45;margin-top:.4rem}
+.footer-links{display:flex;flex-direction:column;gap:.5rem}
+.footer-links a{font-size:.82rem;color:rgba(255,255,255,.5);transition:color .2s}
+.footer-links a:hover{color:var(--fire)}
+.footer-links h4{font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:.4rem}
+.footer-bottom{
+  display:flex;flex-wrap:wrap;gap:.5rem;
+  justify-content:space-between;align-items:center;
+  font-size:.78rem;color:rgba(255,255,255,.3);
+}
+
+/* ================================================================
+   SUCCESS MODAL
+================================================================ */
+.modal-backdrop{
+  position:fixed;inset:0;z-index:9999;
+  background:rgba(15,23,42,.6);
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+  display:flex;align-items:center;justify-content:center;
+  padding:1.5rem;
+  opacity:0;pointer-events:none;
+  transition:opacity .3s var(--ease);
+}
+.modal-backdrop.open{opacity:1;pointer-events:auto}
+.modal{
+  background:#fff;border-radius:var(--r-xl);
+  padding:clamp(2rem,6vw,3rem);
+  max-width:460px;width:100%;text-align:center;
+  box-shadow:var(--sh-lg),0 0 0 1px rgba(249,115,22,.08);
+  transform:translateY(24px) scale(.95);
+  transition:transform .35s var(--spring),opacity .3s;
+  opacity:0;
+}
+.modal-backdrop.open .modal{transform:translateY(0) scale(1);opacity:1}
+.modal-emoji{font-size:3.5rem;margin-bottom:1rem;display:block}
+.modal h2{font-size:1.5rem;font-weight:900;color:var(--ink);margin-bottom:.4rem}
+.modal .msi{font-family:var(--ff-si);font-size:1rem;color:var(--mist);margin-bottom:.8rem}
+.modal p{font-size:.92rem;color:var(--slate);line-height:1.72;margin-bottom:1.8rem}
+.modal-close{
+  width:100%;padding:14px;
+  background:linear-gradient(135deg,var(--fire),var(--ember));
+  color:#fff;font-weight:800;font-size:1rem;
+  border:none;border-radius:var(--r-md);cursor:pointer;
+  box-shadow:0 6px 18px rgba(249,115,22,.4);
+  transition:transform .2s var(--spring),box-shadow .2s;
+}
+.modal-close:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(249,115,22,.5)}
+
+/* ================================================================
+   ANIMATIONS
+================================================================ */
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(28px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* ── Intersection Observer Reveals ── */
+.reveal{opacity:0;transform:translateY(32px);transition:opacity .65s var(--ease),transform .65s var(--ease)}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+/* ================================================================
+   RESPONSIVE OVERRIDES
+================================================================ */
+@media(max-width:480px){
+  .hero{min-height:auto;padding-block:3rem 2.5rem}
+  .steps-grid::before{display:none}
+  .final-cta h2{font-size:2rem}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+  html{scroll-behavior:auto}
+  .step-num::before{animation:none}
+  .trust-track{animation:none}
+}
+  </style>
+</head>
+
+<body>
+
+<!-- ════════════════════════════════
+     TOP BAR
+════════════════════════════════ -->
+<div class="topbar">
+  🎁 Free Bilingual Guide — Sinhala &amp; English &nbsp;·&nbsp;
+  <span class="si">නොමිලේ ද්විභාෂා මාර්ගෝපදේශය</span>
+</div>
+
+<!-- ════════════════════════════════
+     NAV
+════════════════════════════════ -->
+<nav aria-label="Main navigation">
+  <div class="nav-wrap">
+    <a href="#" class="logo" aria-label="Asvanna home">
+      <div class="logo-dot" aria-hidden="true">🏪</div>
+      Asvanna
+    </a>
+    <a href="#lead-form" class="nav-pill">
+      🚀 Get Free Guide
+    </a>
+  </div>
+</nav>
+
+<!-- ════════════════════════════════
+     HERO
+════════════════════════════════ -->
+<section class="hero" aria-labelledby="hero-h1">
+  <div class="hero-inner">
+
+    <!-- Left: Copy -->
+    <div class="hero-copy">
+      <div class="hero-eyebrow">
+        <span class="dot"></span>
+        🇱🇰 For Sri Lankan Business Owners
+      </div>
+
+      <h1 class="hero-h1" id="hero-h1">
+        Your Shop.
+        <span class="line2">The Whole Country. <span class="emoji">🚀</span></span>
+      </h1>
+
+      <p class="hero-si si">
+        ඔබේ කඩය. සමස්ත ශ්‍රී ලංකාවම.
+      </p>
+
+      <p class="hero-sub">
+        Stop waiting for customers to walk past your door.
+        <strong>One free guide</strong> is all it takes to put your shop in front of
+        thousands of buyers across Sri Lanka — using only your smartphone.
+      </p>
+
+      <div class="chips" role="list" aria-label="What's inside the guide">
+        <span class="chip" role="listitem">📘 Facebook Page Setup</span>
+        <span class="chip" role="listitem">💬 WhatsApp Business</span>
+        <span class="chip" role="listitem">📸 Product Photography</span>
+        <span class="chip" role="listitem">📣 Low-Budget Ads</span>
+        <span class="chip" role="listitem">🇱🇰 Sinhala + English</span>
+      </div>
+
+      <!-- Social Proof -->
+      <div class="sp-row">
+        <div class="sp-avatars" aria-hidden="true">
+          <span title="Shop owner">👨‍💼</span>
+          <span title="Shop owner">👩‍💼</span>
+          <span title="Shop owner">🧑‍💼</span>
+          <span title="Shop owner">👨‍💼</span>
+        </div>
+        <div>
+          <div class="sp-stars" aria-label="4.9 stars">★★★★★</div>
+          <div class="sp-text"><strong>2,400+</strong> Sri Lankan shop owners already growing digital</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Form Card -->
+    <div id="lead-form">
+      <div class="form-card">
+        <div class="countdown" role="timer" aria-live="polite">
+          <span class="icon">⏰</span>
+          <span>Offer ends in <span id="timer">14:59</span> — grab it free!</span>
+        </div>
+
+        <div class="form-card-head">
+          <div class="form-eyebrow">✨ Free Instant Download</div>
+          <h2>Claim Your Free Guide Now</h2>
+          <p class="sub">
+            No tech skills. No credit card. Just results.<br/>
+            <span class="si">තාක්‍ෂණ දැනුමක් අවශ්‍ය නැත. ගෙවීමක් නැත.</span>
+          </p>
+        </div>
+
+        <form id="lead-form-el" novalidate aria-label="Download the free guide">
+          <div class="fld">
+            <label for="fn">Your Name <span class="lsi si">ඔබේ නම</span></label>
+            <input type="text" id="fn" name="full_name"
+              placeholder="Nimal Perera / නිමල් පෙරේරා"
+              autocomplete="name" required minlength="2" aria-required="true"/>
+          </div>
+
+          <div class="fld">
+            <label for="bn">Business Name <span class="lsi si">ව්‍යාපාර නම</span></label>
+            <input type="text" id="bn" name="business_name"
+              placeholder="Perera Textiles, Kandy"
+              autocomplete="organization" required minlength="2" aria-required="true"/>
+          </div>
+
+          <div class="fld">
+            <label for="em">Email Address <span class="lsi si">ඊමේල් ලිපිනය</span></label>
+            <input type="email" id="em" name="email"
+              placeholder="yourname@example.com"
+              autocomplete="email" inputmode="email"/>
+          </div>
+
+          <div class="or-sep">OR / හෝ</div>
+
+          <div class="fld">
+            <label for="wa">WhatsApp Number <span class="lsi si">WhatsApp අංකය</span></label>
+            <input type="tel" id="wa" name="whatsapp"
+              placeholder="+94 77 123 4567"
+              autocomplete="tel" inputmode="tel"/>
+          </div>
+
+          <button type="submit" class="btn-cta" id="submit-btn">
+            <span class="btn-main">🚀 Start Your Digital Journey Now</span>
+            <span class="btn-si si">ඩිජිටල් ගමන ආරම්භ කරන්න</span>
+          </button>
+        </form>
+
+        <p class="secure-note">
+          <span class="dot">🔒</span>
+          100% Secure &nbsp;·&nbsp; No Spam &nbsp;·&nbsp; Instant Access
+        </p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ════════════════════════════════
+     TRUST TICKER
+════════════════════════════════ -->
+<div class="trust-bar" aria-label="Trust signals" role="marquee">
+  <div class="trust-track" aria-hidden="true">
+    <!-- Duplicated for seamless loop -->
+    <span class="trust-item"><span class="ico">🔒</span> SSL Secured Download</span>
+    <span class="trust-item"><span class="ico">⭐</span> <span class="hi">4.9/5</span> Rating from 500+ Business Owners</span>
+    <span class="trust-item"><span class="ico">📥</span> <span class="hi">2,400+</span> Downloads &amp; Counting</span>
+    <span class="trust-item"><span class="ico">🇱🇰</span> Made for Sri Lankan Businesses</span>
+    <span class="trust-item"><span class="ico">📋</span> Available in Sinhala &amp; English</span>
+    <span class="trust-item"><span class="ico">📱</span> Works on Any Smartphone</span>
+    <span class="trust-item"><span class="ico">🎁</span> 100% Free — No Hidden Fees</span>
+    <!-- Duplicate -->
+    <span class="trust-item"><span class="ico">🔒</span> SSL Secured Download</span>
+    <span class="trust-item"><span class="ico">⭐</span> <span class="hi">4.9/5</span> Rating from 500+ Business Owners</span>
+    <span class="trust-item"><span class="ico">📥</span> <span class="hi">2,400+</span> Downloads &amp; Counting</span>
+    <span class="trust-item"><span class="ico">🇱🇰</span> Made for Sri Lankan Businesses</span>
+    <span class="trust-item"><span class="ico">📋</span> Available in Sinhala &amp; English</span>
+    <span class="trust-item"><span class="ico">📱</span> Works on Any Smartphone</span>
+    <span class="trust-item"><span class="ico">🎁</span> 100% Free — No Hidden Fees</span>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     WHAT YOU'LL LEARN
+════════════════════════════════ -->
+<section class="section learn-section reveal" aria-labelledby="learn-h2">
+  <div class="wrap">
+    <div class="sec-label">📖 Inside the Free Guide</div>
+    <h2 class="sec-h2" id="learn-h2">Everything You Need — Nothing You Don't</h2>
+    <p class="sec-si si">ඔබට අවශ්‍ය සියල්ල — සරලව, ශ්‍රී ලාංකික ව්‍යාපාර සඳහා</p>
+
+    <div class="learn-grid" role="list">
+      <div class="lcard" role="listitem">
+        <div class="lcard-icon" aria-hidden="true">📘</div>
+        <h3>Facebook Business Page</h3>
+        <p class="lsi si">Facebook ව්‍යාපාර පිටුව</p>
+        <p>Build a professional page for your shop in 30 minutes. Attract local followers, post products, and get found by customers across the island.</p>
+      </div>
+      <div class="lcard" role="listitem">
+        <div class="lcard-icon" aria-hidden="true">💬</div>
+        <h3>WhatsApp Business Orders</h3>
+        <p class="lsi si">WhatsApp Business ඇණවුම්</p>
+        <p>Turn your WhatsApp into a 24/7 sales machine. Automated replies, product catalogues, and direct order management — no website needed.</p>
+      </div>
+      <div class="lcard" role="listitem">
+        <div class="lcard-icon" aria-hidden="true">📸</div>
+        <h3>Smartphone Product Photos</h3>
+        <p class="lsi si">ස්මාර්ට් ෆෝනයෙන් ඡායාරූප</p>
+        <p>Pro-quality product photos using only your phone. Lighting hacks, angles, and free editing apps that make buyers stop scrolling.</p>
+      </div>
+      <div class="lcard" role="listitem">
+        <div class="lcard-icon" aria-hidden="true">📣</div>
+        <h3>Low-Budget Digital Ads</h3>
+        <p class="lsi si">අඩු අයවැයෙන් ඩිජිටල් දැන්වීම්</p>
+        <p>Run your first ad for as little as Rs. 500. Reach thousands of buyers in your city — or all of Sri Lanka — without wasting money.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════
+     HOW IT WORKS
+════════════════════════════════ -->
+<section class="section steps-section reveal" aria-labelledby="steps-h2">
+  <div class="wrap">
+    <div class="sec-label">🪜 Simple 4-Step Process</div>
+    <h2 class="sec-h2" id="steps-h2">From Shop Owner to Digital Seller in 4 Steps</h2>
+    <p class="sec-si si">දිනකින් ඩිජිටල් ව්‍යාපාරිකයෙකු වන්නේ මෙසේය</p>
+
+    <div class="steps-grid" role="list">
+      <div class="step-box" role="listitem">
+        <div class="step-num" aria-hidden="true">1</div>
+        <h3>Fill the Form</h3>
+        <p class="ssi si">ආකෘතිය පුරවන්න</p>
+        <p>Name, business, email or WhatsApp. Takes under 60 seconds on any phone.</p>
+      </div>
+      <div class="step-box" role="listitem">
+        <div class="step-num" aria-hidden="true">2</div>
+        <h3>Get Instant Access</h3>
+        <p class="ssi si">ක්‍ෂණිකව ලබා ගන්න</p>
+        <p>The bilingual PDF lands in your email or WhatsApp within minutes. Free.</p>
+      </div>
+      <div class="step-box" role="listitem">
+        <div class="step-num" aria-hidden="true">3</div>
+        <h3>Follow the Steps</h3>
+        <p class="ssi si">පියවර අනුගමනය කරන්න</p>
+        <p>Plain language. Real screenshots. Sri Lankan business examples. No tech degree needed.</p>
+      </div>
+      <div class="step-box" role="listitem">
+        <div class="step-num" aria-hidden="true">4</div>
+        <h3>Watch Sales Grow 📈</h3>
+        <p class="ssi si">විකුණුම් ඉහළ යනු බලන්න</p>
+        <p>Reach buyers from Colombo to Kandy, Galle to Bandarawela — and beyond your street forever.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════
+     SUCCESS STORIES
+════════════════════════════════ -->
+<section class="section stories-section reveal" aria-labelledby="stories-h2">
+  <div class="wrap">
+    <div class="sec-label">💬 Real Success Stories</div>
+    <h2 class="sec-h2" id="stories-h2">Sri Lankan Shops That Made the Leap</h2>
+    <p class="sec-si si">ඩිජිටල් ලෝකයට ගොඩ ගිය ශ්‍රී ලාංකික ව්‍යාපාරිකයෝ</p>
+
+    <div class="stories-grid" role="list">
+
+      <article class="story" role="listitem">
+        <div class="stars" aria-label="5 stars">★★★★★</div>
+        <p class="story-q">👕 Clothing Store, Kandy</p>
+        <p class="quote">
+          "I couldn't believe how easy it was. Two weeks after creating my Facebook page,
+          orders started coming from Colombo. I'm in Kandy and now I sell islandwide!"
+          <span class="si">"Facebook පිටුව හදාගෙන සති දෙකක් ඇතුළත කොළඹ ඇණවුම් ලැබෙන්න ගත්තා."</span>
+        </p>
+        <div class="story-foot">
+          <div class="story-av" aria-hidden="true">👨‍💼</div>
+          <div>
+            <div class="story-name">Ruwan Jayasinghe</div>
+            <div class="story-biz">Clothing Store Owner, Kandy</div>
+            <div class="story-result">📈 Sales doubled in 45 days</div>
+          </div>
+        </div>
+      </article>
+
+      <article class="story" role="listitem">
+        <div class="stars" aria-label="5 stars">★★★★★</div>
+        <p class="story-q">🥦 Fresh Produce Shop, Galle</p>
+        <p class="quote">
+          "WhatsApp Business changed everything. My customers now order directly and
+          I manage it all from my phone at night after closing the shop."
+          <span class="si">"WhatsApp Business ව්‍යාපාරය සම්පූර්ණයෙන් වෙනස් කළා."</span>
+        </p>
+        <div class="story-foot">
+          <div class="story-av" aria-hidden="true">👩‍💼</div>
+          <div>
+            <div class="story-name">Kamani Dissanayake</div>
+            <div class="story-biz">Fresh Produce Shop, Galle</div>
+            <div class="story-result">📈 +65% monthly revenue</div>
+          </div>
+        </div>
+      </article>
+
+      <article class="story" role="listitem">
+        <div class="stars" aria-label="5 stars">★★★★★</div>
+        <p class="story-q">🔩 Hardware Store, Bandarawela</p>
+        <p class="quote">
+          "I spent only Rs. 1,500 on my first Facebook ad and got 30 new customers that week.
+          This guide made it simple enough even for someone like me."
+          <span class="si">"Rs. 1,500 ක් ගත කළ Facebook දැන්වීමෙන් නව ගනුදෙනුකරුවන් 30 ක් ලැබුණා."</span>
+        </p>
+        <div class="story-foot">
+          <div class="story-av" aria-hidden="true">🧑‍💼</div>
+          <div>
+            <div class="story-name">Pradeep Samaraweera</div>
+            <div class="story-biz">Hardware Store, Bandarawela</div>
+            <div class="story-result">📈 30 new customers in 1 week</div>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════
+     CHANNELS
+════════════════════════════════ -->
+<section class="section channels-section reveal" aria-labelledby="ch-h2">
+  <div class="wrap">
+    <div class="sec-label">📡 Where We Find You</div>
+    <h2 class="sec-h2" id="ch-h2">Meet You Where You Already Are</h2>
+    <p class="sec-si si">ඔබ දැනටමත් සිටින ස්ථානවලදී</p>
+
+    <div class="ch-grid" role="list">
+      <div class="ch-card" role="listitem">
+        <div class="ch-icon-wrap" aria-hidden="true">📘</div>
+        <h3>Facebook Ads</h3>
+        <p class="ch-si si">Facebook දැන්වීම්</p>
+        <p>Visual ads featuring real Sri Lankan shop owners appear directly in your Facebook feed. One tap and you're here.</p>
+      </div>
+      <div class="ch-card" role="listitem">
+        <div class="ch-icon-wrap" aria-hidden="true">🔍</div>
+        <h3>Google Search Ads</h3>
+        <p class="ch-si si">Google සෙවුම් දැන්වීම්</p>
+        <p>Searching "ව්‍යාපාරය ඩිජිටල් කිරීම" or "business tips Sri Lanka"? We're at the top, waiting for you.</p>
+      </div>
+      <div class="ch-card" role="listitem">
+        <div class="ch-icon-wrap" aria-hidden="true">💬</div>
+        <h3>WhatsApp &amp; SMS</h3>
+        <p class="ch-si si">WhatsApp සහ SMS</p>
+        <p>Shared directly inside local trade groups and entrepreneurial networks. Trusted peer-to-peer, across Sri Lanka.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════
+     FAQ
+════════════════════════════════ -->
+<section class="section faq-section reveal" aria-labelledby="faq-h2">
+  <div class="wrap">
+    <div class="sec-label">❓ Questions Answered</div>
+    <h2 class="sec-h2" id="faq-h2">Got Questions? We've Got Answers.</h2>
+    <p class="sec-si si">ඔබේ ප්‍රශ්නවලට පිළිතුරු</p>
+
+    <div class="faq-list">
+
+      <details>
+        <summary>Is the guide really 100% free? / නොමිලෙද?</summary>
+        <div class="faq-body">
+          Yes — completely free. No credit card, no hidden fees, no subscriptions. Just your name and contact info.
+          <span class="si">ඔව් — සම්පූර්ණයෙන්ම නොමිලේ. ගෙවීමක් නොමැත.</span>
+        </div>
+      </details>
+
+      <details>
+        <summary>Do I need tech skills or a computer? / පරිගණකයක් ද?</summary>
+        <div class="faq-body">
+          Not at all. The guide is designed for complete beginners. A smartphone is all you need to follow every single step.
+          <span class="si">නැත. ස්මාර්ට් ෆෝනයක් පමණ ඇති. පූර්ණ ආරම්භකයන් සඳහා ලියා ඇත.</span>
+        </div>
+      </details>
+
+      <details>
+        <summary>How will I receive the guide? / ගයිඩ් ලැබෙන්නේ කෙසේද?</summary>
+        <div class="faq-body">
+          Instantly — via email or WhatsApp, whichever you provide. It's a PDF in both Sinhala and English, readable on any device.
+          <span class="si">ක්‍ෂණිකව — ඊමේල් හෝ WhatsApp හරහා PDF ආකෘතියෙන් ලැබේ.</span>
+        </div>
+      </details>
+
+      <details>
+        <summary>Is my WhatsApp number safe? / WhatsApp අංකය ආරක්‍ෂිතද?</summary>
+        <div class="faq-body">
+          Absolutely. We never sell or share your information. You'll only receive the guide and occasional free business tips.
+          <span class="si">නිසැකව. ඔබේ රහස්‍යතාව සාරවත් ලෙස ආරක්‍ෂා කෙරේ.</span>
+        </div>
+      </details>
+
+      <details>
+        <summary>What if I don't have email? / ඊමේල් නැතිද?</summary>
+        <div class="faq-body">
+          No problem at all! Use your WhatsApp number instead. Simply leave the email field blank and fill in your phone number.
+          <span class="si">WhatsApp හරහා ලැබිය හැකිය. ඊමේල් ක්ෂේත්‍රය හිස් තිබේ නම් WhatsApp අංකය ඇතුළු කරන්න.</span>
+        </div>
+      </details>
+
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════
+     FINAL CTA BANNER
+════════════════════════════════ -->
+<section class="final-cta reveal" aria-labelledby="final-h2">
+  <div class="wrap">
+    <div class="final-badge">🔥 Limited Time — Free Access</div>
+    <h2 id="final-h2">
+      Your Street Has Limits.<br/>
+      <span class="accent">The Internet Doesn't.</span>
+      <span class="emoji"> 🌐</span>
+    </h2>
+    <p class="final-si si">ඔබේ කඩය. සමස්ත ශ්‍රී ලංකාවම. අදම ආරම්භ කරන්න.</p>
+    <p class="sub">
+      Download your free bilingual guide today and take your local shop online.
+      Grow your sales beyond your physical street — across all of Sri Lanka.
+    </p>
+
+    <a href="#lead-form" class="final-btn">
+      <span>🚀 Get Instant Free Access Now</span>
+      <span class="bsi si">දැන්ම නොමිලේ ලබා ගන්න</span>
+    </a>
+
+    <div class="final-perks" role="list">
+      <div class="final-perk" role="listitem"><span class="ico">🔒</span> 100% Secure</div>
+      <div class="final-perk" role="listitem"><span class="ico">🎁</span> Completely Free</div>
+      <div class="final-perk" role="listitem"><span class="ico">⚡</span> Instant Delivery</div>
+      <div class="final-perk" role="listitem"><span class="ico">📱</span> Any Device</div>
+      <div class="final-perk" role="listitem"><span class="ico">🇱🇰</span> Sinhala + English</div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════
+     FOOTER
+════════════════════════════════ -->
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="#" class="logo">
+          <div class="logo-dot" aria-hidden="true">🏪</div>
+          Asvanna
+        </a>
+        <p>Empowering traditional Sri Lankan businesses to thrive in the digital age.</p>
+        <p class="si">සාම්ප්‍රදායික ව්‍යාපාරවල ඩිජිටල් සාර්ථකත්වය සඳහා</p>
+      </div>
+      <div>
+        <div class="footer-links">
+          <h4>Quick Links</h4>
+          <a href="#lead-form">Download Free Guide</a>
+          <a href="#faq-h2">FAQ</a>
+          <a href="#stories-h2">Success Stories</a>
+        </div>
+      </div>
+      <div>
+        <div class="footer-links">
+          <h4>Legal</h4>
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Use</a>
+          <a href="#">Contact Us</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 Asvanna. All rights reserved. 🇱🇰</span>
+      <span>Made with ❤️ for Sri Lankan small businesses</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ════════════════════════════════
+     SUCCESS MODAL
+════════════════════════════════ -->
+<div class="modal-backdrop" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
+  <div class="modal">
+    <span class="modal-emoji">🎉</span>
+    <h2 id="modal-title">You're In! 🚀</h2>
+    <p class="msi si">ඔබේ නොමිලේ මාර්ගෝපදේශය ඉතා ඉක්මනින් ලැබෙනු ඇත!</p>
+    <p>Your free bilingual guide is on its way to your email or WhatsApp right now.
+       Check your messages and start your digital journey today!</p>
+    <button class="modal-close" onclick="closeModal()">✅ Got It — Let's Go!</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     SCRIPTS
+════════════════════════════════ -->
+<script>
+/* ── Countdown Timer ── */
+(function(){
+  const el = document.getElementById('timer');
+  let t = 14 * 60 + 59;
+  const tick = () => {
+    if (!el) return;
+    const m = String(Math.floor(t / 60)).padStart(2,'0');
+    const s = String(t % 60).padStart(2,'0');
+    el.textContent = m + ':' + s;
+    if (t > 0) { t--; setTimeout(tick, 1000); }
+    else { el.textContent = '00:00'; }
+  };
+  tick();
+})();
+
+/* ── Form Submission ── */
+document.getElementById('lead-form-el').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const name = document.getElementById('fn').value.trim();
+  const biz  = document.getElementById('bn').value.trim();
+  const em   = document.getElementById('em').value.trim();
+  const wa   = document.getElementById('wa').value.trim();
+
+  if (!name || !biz) {
+    showError('Please enter your name and business name.\nඔබේ නම සහ ව්‍යාපාර නම ඇතුළු කරන්න.');
+    return;
+  }
+  if (!em && !wa) {
+    showError('Please provide an email or WhatsApp number.\nඊමේල් හෝ WhatsApp අංකය ඇතුළු කරන්න.');
+    return;
+  }
+
+  // TODO: replace with real API / Mailchimp / HubSpot call
+  console.log('Lead:', { name, biz, em, wa });
+
+  this.reset();
+  openModal();
+});
+
+function showError(msg) {
+  alert(msg);
+}
+
+/* ── Modal ── */
+const modalEl = document.getElementById('modal');
+
+function openModal() {
+  modalEl.hidden = false;
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      modalEl.classList.add('open');
+      modalEl.querySelector('button').focus();
+    });
+  });
+}
+
+function closeModal() {
+  modalEl.classList.remove('open');
+  setTimeout(() => { modalEl.hidden = true; }, 300);
+}
+
+modalEl.addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeModal();
+});
+
+/* ── Intersection Observer Reveals ── */
+const reveals = document.querySelectorAll('.reveal');
+if ('IntersectionObserver' in window) {
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(en => {
+      if (en.isIntersecting) {
+        en.target.classList.add('visible');
+        obs.unobserve(en.target);
+      }
+    });
+  }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+  reveals.forEach(r => obs.observe(r));
+} else {
+  reveals.forEach(r => r.classList.add('visible'));
+}
+
+/* ── Smooth Anchor Scroll ── */
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', function(e) {
+    const target = document.querySelector(this.getAttribute('href'));
+    if (target) {
+      e.preventDefault();
+      const navH = document.querySelector('nav').offsetHeight;
+      const top = target.getBoundingClientRect().top + window.scrollY - navH - 16;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+  });
+});
+</script>
+
+</body>
+</html>

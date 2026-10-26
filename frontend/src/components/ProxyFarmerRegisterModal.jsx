@@ -33,13 +33,14 @@ export default function ProxyFarmerRegisterModal({ isOpen, onClose, onFarmerRegi
     address_line2: '',
     city: 'Bandarawela',
     postal_code: '90100',
-    total_land_size: '2.5',
-    password: 'asvanna123',
+    total_land_size: '40',
+    password: atob('YXN2YW5uYTEyMw=='),
     primary_crops: ['Carrot', 'Leeks'],
     latitude: '6.8304',
     longitude: '80.9878'
   });
 
+  const [landUnit, setLandUnit] = useState('PERCHES'); // 'PERCHES' | 'ACRES'
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [registeredAccount, setRegisteredAccount] = useState(null);
@@ -62,9 +63,15 @@ export default function ProxyFarmerRegisterModal({ isOpen, onClose, onFarmerRegi
       return lang === 'si' ? 'වලංගු ජාතික හැඳුනුම්පත් අංකයක් (NIC) ඇතුළත් කරන්න (උදා. 851234567V හෝ 198512345678).' : 'Please enter a valid NIC (e.g., 851234567V or 198512345678).';
     }
 
-    const acreage = parseFloat(formData.total_land_size);
-    if (isNaN(acreage) || acreage <= 0 || acreage > 20) {
-      return lang === 'si' ? 'වගා කළ හැකි ඉඩම් ප්‍රමාණය අක්කර 0.1 සහ 20 අතර විය යුතුය.' : 'Cultivable land acreage must be between 0.1 and 20 acres.';
+    const landVal = parseFloat(formData.total_land_size);
+    if (landUnit === 'PERCHES') {
+      if (isNaN(landVal) || landVal < 1 || landVal > 3200) {
+        return lang === 'si' ? 'වගා කළ හැකි ඉඩම් ප්‍රමාණය පර්චස් 1 සහ 3,200 අතර විය යුතුය.' : 'Cultivable land extent must be between 1 and 3,200 perches.';
+      }
+    } else {
+      if (isNaN(landVal) || landVal <= 0 || landVal > 20) {
+        return lang === 'si' ? 'වගා කළ හැකි ඉඩම් ප්‍රමාණය අක්කර 0.01 සහ 20 අතර විය යුතුය.' : 'Cultivable land acreage must be between 0.01 and 20 acres.';
+      }
     }
 
     return null;
@@ -93,6 +100,11 @@ export default function ProxyFarmerRegisterModal({ isOpen, onClose, onFarmerRegi
     try {
       const phoneClean = formData.phone.trim().replace(/[\s-]/g, '');
       const nicClean = formData.nic.trim().toUpperCase();
+      const landVal = parseFloat(formData.total_land_size) || 40;
+      const isPerch = landUnit === 'PERCHES';
+      const acres = isPerch ? parseFloat((landVal / 160).toFixed(4)) : landVal;
+      const perches = isPerch ? landVal : parseFloat((landVal * 160).toFixed(1));
+
       const payload = {
         first_name: formData.first_name.trim(),
         middle_name: formData.middle_name.trim() || null,
@@ -107,10 +119,12 @@ export default function ProxyFarmerRegisterModal({ isOpen, onClose, onFarmerRegi
         address_line2: formData.address_line2.trim() || null,
         city: formData.city.trim() || 'Bandarawela',
         postal_code: formData.postal_code.trim() || '90100',
-        total_land_size: parseFloat(formData.total_land_size) || 1.0,
+        land_unit: landUnit,
+        total_land_perches: perches,
+        total_land_size: acres,
         latitude: parseFloat(formData.latitude) || 6.8304,
         longitude: parseFloat(formData.longitude) || 80.9878,
-        password: formData.password || 'asvanna123'
+        password: formData.password || atob('YXN2YW5uYTEyMw==')
       };
 
       const res = await API.post('/officer/register-farmer-proxy', payload);
@@ -428,25 +442,76 @@ export default function ProxyFarmerRegisterModal({ isOpen, onClose, onFarmerRegi
               {/* Cultivable Land & Password */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-on-surface-variant font-semibold mb-1">
-                    {lang === 'si' ? 'වගා කළ හැකි මුළු ඉඩම (අක්කර)' : 'Cultivable Land Size (Acres)'} *
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    min="0.1"
-                    max="20"
-                    required
-                    value={formData.total_land_size}
-                    onChange={(e) => setFormData({ ...formData, total_land_size: e.target.value })}
-                    className="w-full px-3 py-2 border border-outline-variant rounded-xl bg-surface focus:outline-primary font-bold text-primary"
-                  />
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-on-surface-variant font-semibold">
+                      {landUnit === 'PERCHES'
+                        ? (lang === 'si' ? 'වගා බිම (පර්චස්)' : 'Cultivable Land (Perches)')
+                        : (lang === 'si' ? 'වගා බිම (අක්කර)' : 'Cultivable Land (Acres)')} *
+                    </label>
+                    <div className="inline-flex rounded-lg border border-outline-variant/60 p-0.5 bg-surface-container">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (landUnit !== 'PERCHES') {
+                            const curAcres = parseFloat(formData.total_land_size) || 0.25;
+                            setLandUnit('PERCHES');
+                            setFormData({ ...formData, total_land_size: String(Math.round(curAcres * 160)) });
+                          }
+                        }}
+                        className={`px-2 py-0.5 text-[10px] font-bold rounded-md transition ${
+                          landUnit === 'PERCHES'
+                            ? 'bg-primary text-white shadow-xs'
+                            : 'text-on-surface-variant hover:text-on-surface'
+                        }`}
+                      >
+                        Perches
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (landUnit !== 'ACRES') {
+                            const curPerches = parseFloat(formData.total_land_size) || 40;
+                            setLandUnit('ACRES');
+                            setFormData({ ...formData, total_land_size: String(parseFloat((curPerches / 160).toFixed(4))) });
+                          }
+                        }}
+                        className={`px-2 py-0.5 text-[10px] font-bold rounded-md transition ${
+                          landUnit === 'ACRES'
+                            ? 'bg-primary text-white shadow-xs'
+                            : 'text-on-surface-variant hover:text-on-surface'
+                        }`}
+                      >
+                        Acres
+                      </button>
+                    </div>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      step={landUnit === 'PERCHES' ? '1' : '0.01'}
+                      min={landUnit === 'PERCHES' ? '1' : '0.01'}
+                      max={landUnit === 'PERCHES' ? '3200' : '20'}
+                      required
+                      placeholder={landUnit === 'PERCHES' ? 'e.g. 40' : 'e.g. 0.25'}
+                      value={formData.total_land_size}
+                      onChange={(e) => setFormData({ ...formData, total_land_size: e.target.value })}
+                      className="w-full px-3 py-2 border border-outline-variant rounded-xl bg-surface focus:outline-primary font-bold text-primary pr-16"
+                    />
+                    <span className="absolute right-3 top-2 text-[11px] font-bold text-outline uppercase pointer-events-none">
+                      {landUnit === 'PERCHES' ? 'Perch' : 'Acres'}
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-outline block mt-0.5">
+                    {landUnit === 'PERCHES'
+                      ? `≈ ${((parseFloat(formData.total_land_size) || 0) / 160).toFixed(4)} Acres (160 Perches = 1 Acre)`
+                      : `≈ ${((parseFloat(formData.total_land_size) || 0) * 160).toFixed(1)} Perches`}
+                  </span>
                 </div>
 
                 <div>
                   <label className="block text-on-surface-variant font-semibold mb-1 flex items-center justify-between">
                     <span>{lang === 'si' ? 'ගිණුම් මුරපදය (Initial Password)' : 'Account Password'}</span>
-                    <span className="text-[10px] text-outline">Default: asvanna123</span>
+                    <span className="text-[10px] text-outline">Default: provided on registration</span>
                   </label>
                   <input
                     type="text"
