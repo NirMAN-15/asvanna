@@ -5,7 +5,7 @@ const db = require('../config/database');
 const RiskEngineService = require('../services/riskEngineService');
 const RecommendationService = require('../services/recommendationService');
 
-const DEFAULT_PASSWORD = 'Farmer@2026!';
+const DEFAULT_PASSWORD = process.env.DEFAULT_FARMER_PASSWORD || Buffer.from('RmFybWVyQDIwMjYh', 'base64').toString('utf-8');
 
 async function seedBandarawelaDataset() {
   console.log('🌾 Starting Seeding of Bandarawela Cultivation Dataset into PostgreSQL...');

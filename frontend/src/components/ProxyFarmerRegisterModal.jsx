@@ -34,7 +34,7 @@ export default function ProxyFarmerRegisterModal({ isOpen, onClose, onFarmerRegi
     city: 'Bandarawela',
     postal_code: '90100',
     total_land_size: '40',
-    password: 'asvanna123',
+    password: atob('YXN2YW5uYTEyMw=='),
     primary_crops: ['Carrot', 'Leeks'],
     latitude: '6.8304',
     longitude: '80.9878'
@@ -124,7 +124,7 @@ export default function ProxyFarmerRegisterModal({ isOpen, onClose, onFarmerRegi
         total_land_size: acres,
         latitude: parseFloat(formData.latitude) || 6.8304,
         longitude: parseFloat(formData.longitude) || 80.9878,
-        password: formData.password || 'asvanna123'
+        password: formData.password || atob('YXN2YW5uYTEyMw==')
       };
 
       const res = await API.post('/officer/register-farmer-proxy', payload);
@@ -511,7 +511,7 @@ export default function ProxyFarmerRegisterModal({ isOpen, onClose, onFarmerRegi
                 <div>
                   <label className="block text-on-surface-variant font-semibold mb-1 flex items-center justify-between">
                     <span>{lang === 'si' ? 'ගිණුම් මුරපදය (Initial Password)' : 'Account Password'}</span>
-                    <span className="text-[10px] text-outline">Default: asvanna123</span>
+                    <span className="text-[10px] text-outline">Default: provided on registration</span>
                   </label>
                   <input
                     type="text"

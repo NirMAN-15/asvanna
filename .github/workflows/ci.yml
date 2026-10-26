@@ -31,7 +31,7 @@ jobs:
         image: postgres:15-alpine
         env:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres123
+          POSTGRES_PASSWORD: db_ci_${{ github.run_id }}
           POSTGRES_DB: asvanna_db
         ports:
           - 5432:5432
@@ -61,7 +61,7 @@ jobs:
 
       - name: Initialize Database Schema
         run: |
-          PGPASSWORD=postgres123 psql -h localhost -U postgres -d asvanna_db -f backend/src/database/schema.sql
+          PGPASSWORD="db_ci_${{ github.run_id }}" psql -h localhost -U postgres -d asvanna_db -f backend/src/database/schema.sql
 
       - name: Run Database Migrations & Seeds
         working-directory: ./backend
@@ -69,10 +69,10 @@ jobs:
           DB_HOST: localhost
           DB_PORT: 5432
           DB_USER: postgres
-          DB_PASSWORD: postgres123
+          DB_PASSWORD: db_ci_${{ github.run_id }}
           DB_NAME: asvanna_db
           NODE_ENV: test
-          JWT_SECRET: asvanna_super_secure_jwt_moratuwa_2026_key
+          JWT_SECRET: asvanna_jwt_${{ github.run_id }}
         run: |
           node src/database/migrate.js
           node src/database/seed_admin.js
@@ -84,10 +84,10 @@ jobs:
           DB_HOST: localhost
           DB_PORT: 5432
           DB_USER: postgres
-          DB_PASSWORD: postgres123
+          DB_PASSWORD: db_ci_${{ github.run_id }}
           DB_NAME: asvanna_db
           NODE_ENV: test
-          JWT_SECRET: asvanna_super_secure_jwt_moratuwa_2026_key
+          JWT_SECRET: asvanna_jwt_${{ github.run_id }}
         run: |
           node src/database/seed_bandarawela_cultivation.js
 
@@ -97,10 +97,10 @@ jobs:
           DB_HOST: localhost
           DB_PORT: 5432
           DB_USER: postgres
-          DB_PASSWORD: postgres123
+          DB_PASSWORD: db_ci_${{ github.run_id }}
           DB_NAME: asvanna_db
           NODE_ENV: test
-          JWT_SECRET: asvanna_super_secure_jwt_moratuwa_2026_key
+          JWT_SECRET: asvanna_jwt_${{ github.run_id }}
         run: |
           node test/test_accuracy_validation.js
 
