@@ -11,6 +11,7 @@
     "seed:master": "node src/database/seed.js",
     "seed:admin": "node src/database/seed_admin.js",
     "db:clean": "node src/database/clean.js",
+    "db:init": "node src/database/migrate.js && node src/database/seed_admin.js && node src/database/seed.js && node src/database/seed_bandarawela_cultivation.js",
     "test": "node test/test_accuracy_validation.js"
   },
   "keywords": [
