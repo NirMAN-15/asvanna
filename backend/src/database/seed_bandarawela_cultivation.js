@@ -11,9 +11,14 @@ async function seedBandarawelaDataset() {
   console.log('🌾 Starting Seeding of Bandarawela Cultivation Dataset into PostgreSQL...');
 
   // 1. Read JSON dataset file
-  const jsonPath = path.join(__dirname, '../../../Test_data/bandarawela_farmer_cultivation_dataset.json');
-  if (!fs.existsSync(jsonPath)) {
-    throw new Error(`Dataset file not found at ${jsonPath}. Run scripts/generate_bandarawela_dataset.py first.`);
+  const candidatePaths = [
+    path.join(__dirname, 'data/bandarawela_farmer_cultivation_dataset.json'),
+    path.join(__dirname, '../../../Test_data/bandarawela_farmer_cultivation_dataset.json'),
+    path.join(__dirname, '../../data/bandarawela_farmer_cultivation_dataset.json')
+  ];
+  const jsonPath = candidatePaths.find(p => fs.existsSync(p));
+  if (!jsonPath) {
+    throw new Error(`Dataset file not found in any candidate path: ${candidatePaths.join(', ')}. Run scripts/generate_bandarawela_dataset.py first.`);
   }
 
   const rawData = fs.readFileSync(jsonPath, 'utf-8');
