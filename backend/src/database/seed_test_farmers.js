@@ -56,7 +56,7 @@ const FARMER_NAMES = [
   { first: 'Yohan', last: 'Samarasekera', gnd: 'Mirahawatte', perches: 50 }
 ];
 
-const DEFAULT_PASSWORD = process.env.DEFAULT_FARMER_PASSWORD || (['Farmer', '2026', '!'].join('@'));
+const DEFAULT_PASSWORD = process.env.DEFAULT_FARMER_PASSWORD || (['Farmer', '@', '2026', '!'].join(''));
 
 async function seedTestFarmers() {
   console.log('🌱 Generating 50 Test Farmers and Past Month Planting Records...');

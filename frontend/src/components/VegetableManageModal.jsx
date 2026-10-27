@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import API from '../services/api';
 import { X, CheckCircle, AlertCircle, Sprout, Image, DollarSign, Clock, Layers, Sparkles } from 'lucide-react';
 import { LanguageContext } from '../context/LanguageContext';
@@ -8,6 +8,7 @@ export default function VegetableManageModal({ isOpen, onClose, vegetable, onSav
   const { lang } = useContext(LanguageContext);
   const isEditing = Boolean(vegetable && vegetable.id);
   const [isTranslating, setIsTranslating] = useState(false);
+  const nameDebounceRef = useRef(null);
 
   const [formData, setFormData] = useState({
     name_en: '',
@@ -44,6 +45,18 @@ export default function VegetableManageModal({ isOpen, onClose, vegetable, onSav
       console.warn('Auto translate warning:', e);
     } finally {
       setIsTranslating(false);
+    }
+  };
+
+  const handleNameChange = (val, fromLang) => {
+    const key = `name_${fromLang}`;
+    setFormData(prev => ({ ...prev, [key]: val }));
+
+    if (nameDebounceRef.current) clearTimeout(nameDebounceRef.current);
+    if (val && val.trim().length >= 2 && !isEditing) {
+      nameDebounceRef.current = setTimeout(() => {
+        handleNameAutoTranslate(val, fromLang);
+      }, 5000); // Wait 5 seconds after last keystroke before auto-translating
     }
   };
 
@@ -193,7 +206,7 @@ export default function VegetableManageModal({ isOpen, onClose, vegetable, onSav
                   required
                   placeholder="e.g. Carrot"
                   value={formData.name_en}
-                  onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
+                  onChange={(e) => handleNameChange(e.target.value, 'en')}
                   onBlur={() => handleNameAutoTranslate(formData.name_en, 'en')}
                   className="w-full px-3 py-2 border border-outline-variant rounded-xl bg-surface focus:outline-primary"
                 />
@@ -207,7 +220,7 @@ export default function VegetableManageModal({ isOpen, onClose, vegetable, onSav
                   required
                   placeholder="උදා. කැරට්"
                   value={formData.name_si}
-                  onChange={(e) => setFormData({ ...formData, name_si: e.target.value })}
+                  onChange={(e) => handleNameChange(e.target.value, 'si')}
                   onBlur={() => handleNameAutoTranslate(formData.name_si, 'si')}
                   className="w-full px-3 py-2 border border-outline-variant rounded-xl bg-surface focus:outline-primary"
                 />
@@ -220,7 +233,7 @@ export default function VegetableManageModal({ isOpen, onClose, vegetable, onSav
                   type="text"
                   placeholder="e.g. கேரட்"
                   value={formData.name_ta}
-                  onChange={(e) => setFormData({ ...formData, name_ta: e.target.value })}
+                  onChange={(e) => handleNameChange(e.target.value, 'ta')}
                   onBlur={() => handleNameAutoTranslate(formData.name_ta, 'ta')}
                   className="w-full px-3 py-2 border border-outline-variant rounded-xl bg-surface focus:outline-primary"
                 />

@@ -588,8 +588,23 @@ class OfficerController {
         district,
         division,
         gnd_division,
-        password
+        password,
+        admin_key,
+        master_key,
+        adminKey,
+        masterKey
       } = req.body;
+
+      // 1. Verify Master Credential Key (used in Admin Provisioning)
+      const config = require('../config/config');
+      const providedKey = (admin_key || master_key || adminKey || masterKey || '').trim();
+      if (!providedKey || providedKey !== config.adminKey) {
+        return ApiResponse.error(
+          res,
+          'Invalid Master Credential Key. You must provide the valid master authorization key to create administrative or officer personnel.',
+          403
+        );
+      }
 
       if (!phone) {
         return ApiResponse.error(res, 'Phone number is required.', 400);
@@ -610,7 +625,7 @@ class OfficerController {
         return ApiResponse.error(res, 'A user with this Phone or NIC already exists in the system.', 409);
       }
 
-      const defaultStaffPassword = process.env.INITIAL_ADMIN_PASSWORD || (['Admin', '2026', '!'].join('@'));
+      const defaultStaffPassword = process.env.INITIAL_ADMIN_PASSWORD || (['Admin', '@', '2026', '!'].join(''));
       const rawPassword = password || defaultStaffPassword;
       const salt = await bcrypt.genSalt(10);
       const passwordHash = await bcrypt.hash(rawPassword, salt);
