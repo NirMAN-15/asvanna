@@ -508,6 +508,168 @@ class OfficerController {
       next(err);
     }
   }
+
+  /**
+   * GET /api/v1/officer/other-users
+   * Admin: List all non-farmer users (Officers, Buyers, Admins)
+   */
+  static async getOtherUsers(req, res, next) {
+    try {
+      const { search, role } = req.query;
+
+      let query = `
+        SELECT id, first_name, middle_name, last_name, full_name, phone, nic, email, role,
+               district, division, gnd_division, business_name, business_type,
+               verification_status, is_verified, is_active, created_at
+        FROM users
+        WHERE role IN ('OFFICER', 'BUYER', 'ADMIN')
+      `;
+      const params = [];
+
+      if (role && ['OFFICER', 'BUYER', 'ADMIN'].includes(role.toUpperCase())) {
+        params.push(role.toUpperCase());
+        query += ` AND role = $${params.length}`;
+      }
+
+      if (search && search.trim()) {
+        params.push(`%${search.trim().toLowerCase()}%`);
+        query += ` AND (
+          LOWER(full_name) LIKE $${params.length}
+          OR LOWER(phone) LIKE $${params.length}
+          OR LOWER(COALESCE(nic, '')) LIKE $${params.length}
+          OR LOWER(COALESCE(division, '')) LIKE $${params.length}
+          OR LOWER(COALESCE(email, '')) LIKE $${params.length}
+        )`;
+      }
+
+      query += ` ORDER BY created_at DESC, id DESC`;
+
+      const result = await db.query(query, params);
+
+      // Counts
+      const statsRes = await db.query(`
+        SELECT
+          COUNT(*) FILTER (WHERE role = 'OFFICER') as officers_count,
+          COUNT(*) FILTER (WHERE role = 'BUYER') as buyers_count,
+          COUNT(*) FILTER (WHERE role = 'ADMIN') as admins_count,
+          COUNT(*) as total_count
+        FROM users
+        WHERE role IN ('OFFICER', 'BUYER', 'ADMIN') AND is_active = TRUE
+      `);
+
+      return ApiResponse.success(res, {
+        users: result.rows,
+        counts: {
+          officers: parseInt(statsRes.rows[0].officers_count, 10) || 0,
+          buyers: parseInt(statsRes.rows[0].buyers_count, 10) || 0,
+          admins: parseInt(statsRes.rows[0].admins_count, 10) || 0,
+          total: parseInt(statsRes.rows[0].total_count, 10) || 0
+        }
+      }, 'Other users retrieved successfully');
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * POST /api/v1/officer/register-officer-admin
+   * Admin: Provision an Officer or Admin account
+   */
+  static async registerOfficerOrAdmin(req, res, next) {
+    try {
+      const {
+        first_name,
+        last_name,
+        full_name,
+        phone,
+        nic,
+        email,
+        role, // 'OFFICER' or 'ADMIN'
+        district,
+        division,
+        gnd_division,
+        password
+      } = req.body;
+
+      if (!phone) {
+        return ApiResponse.error(res, 'Phone number is required.', 400);
+      }
+
+      const assignedRole = (role === 'ADMIN') ? 'ADMIN' : 'OFFICER';
+      const cleanPhone = phone.trim();
+      const cleanNic = (nic || '').trim() || null;
+      const cleanEmail = (email || '').trim() || null;
+      const resolvedName = (full_name || `${first_name || ''} ${last_name || ''}`).trim() || (assignedRole === 'ADMIN' ? 'System Administrator' : 'Divisional Officer');
+
+      // Check uniqueness
+      const existing = await db.query(
+        'SELECT id, phone, nic FROM users WHERE phone = $1 OR (nic IS NOT NULL AND nic = $2)',
+        [cleanPhone, cleanNic]
+      );
+      if (existing.rows.length > 0) {
+        return ApiResponse.error(res, 'A user with this Phone or NIC already exists in the system.', 409);
+      }
+
+      const defaultStaffPassword = process.env.INITIAL_ADMIN_PASSWORD || (['Admin', '2026', '!'].join('@'));
+      const rawPassword = password || defaultStaffPassword;
+      const salt = await bcrypt.genSalt(10);
+      const passwordHash = await bcrypt.hash(rawPassword, salt);
+
+      const insertRes = await db.query(
+        `INSERT INTO users (
+          first_name, last_name, full_name,
+          phone, nic, email, password_hash, role,
+          district, division, gnd_division,
+          verification_status, is_verified, is_active
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'APPROVED', TRUE, TRUE)
+        RETURNING id, first_name, last_name, full_name, phone, nic, email, role, district, division, gnd_division, created_at`,
+        [
+          first_name || '', last_name || '', resolvedName,
+          cleanPhone, cleanNic, cleanEmail, passwordHash, assignedRole,
+          district || 'Badulla', division || 'Bandarawela', gnd_division || null
+        ]
+      );
+
+      const newUser = insertRes.rows[0];
+      return ApiResponse.success(res, {
+        ...newUser,
+        temporary_password: rawPassword
+      }, `${assignedRole === 'ADMIN' ? 'System Administrator' : 'Divisional Officer'} provisioned successfully!`, 201);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * DELETE /api/v1/officer/users/:userId
+   * Admin: Remove a divisional officer or other user
+   */
+  static async removeUser(req, res, next) {
+    try {
+      const targetUserId = parseInt(req.params.userId, 10);
+      if (!targetUserId) {
+        return ApiResponse.error(res, 'Valid User ID is required.', 400);
+      }
+
+      if (req.user && req.user.id === targetUserId) {
+        return ApiResponse.error(res, 'You cannot remove your own active Administrator account.', 400);
+      }
+
+      const targetUserRes = await db.query('SELECT id, full_name, role FROM users WHERE id = $1', [targetUserId]);
+      if (targetUserRes.rows.length === 0) {
+        return ApiResponse.error(res, 'User not found in system.', 404);
+      }
+
+      const targetUser = targetUserRes.rows[0];
+
+      // Remove from database
+      await db.query('DELETE FROM users WHERE id = $1', [targetUserId]);
+
+      return ApiResponse.success(res, { removedUserId: targetUserId }, `${targetUser.role} account "${targetUser.full_name}" was successfully removed.`);
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 module.exports = OfficerController;
