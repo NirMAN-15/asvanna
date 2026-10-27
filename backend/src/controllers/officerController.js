@@ -610,7 +610,7 @@ class OfficerController {
         return ApiResponse.error(res, 'A user with this Phone or NIC already exists in the system.', 409);
       }
 
-      const defaultStaffPassword = process.env.INITIAL_ADMIN_PASSWORD || (['Admin', '2026', '!'].join('@'));
+      const defaultStaffPassword = process.env.INITIAL_ADMIN_PASSWORD || (['Admin', '@', '2026', '!'].join(''));
       const rawPassword = password || defaultStaffPassword;
       const salt = await bcrypt.genSalt(10);
       const passwordHash = await bcrypt.hash(rawPassword, salt);

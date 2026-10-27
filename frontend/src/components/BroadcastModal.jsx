@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useRef } from 'react';
 import API from '../services/api';
 import { X, Send, Radio, AlertCircle, Globe, ShieldAlert, CheckCircle, Sparkles, Eye, FileText, RefreshCw } from 'lucide-react';
 import { LanguageContext } from '../context/LanguageContext';
@@ -10,6 +10,8 @@ export default function BroadcastModal({ isOpen, onClose, onBroadcastSent }) {
   const [activeLangTab, setActiveLangTab] = useState('si'); // 'si' | 'en' | 'ta'
   const [showPreview, setShowPreview] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
+  const titleDebounceRef = useRef(null);
+  const messageDebounceRef = useRef(null);
 
   const [formData, setFormData] = useState({
     title_en: '',
@@ -57,6 +59,30 @@ export default function BroadcastModal({ isOpen, onClose, onBroadcastSent }) {
       console.warn('Auto translation warning:', err);
     } finally {
       setIsTranslating(false);
+    }
+  };
+
+  const handleTitleChange = (val, lang) => {
+    const key = `title_${lang}`;
+    setFormData(prev => ({ ...prev, [key]: val }));
+
+    if (titleDebounceRef.current) clearTimeout(titleDebounceRef.current);
+    if (val && val.trim().length >= 2) {
+      titleDebounceRef.current = setTimeout(() => {
+        handleAutoTranslate('title', val, lang);
+      }, 700);
+    }
+  };
+
+  const handleMessageChange = (val, lang) => {
+    const key = `message_${lang}`;
+    setFormData(prev => ({ ...prev, [key]: val }));
+
+    if (messageDebounceRef.current) clearTimeout(messageDebounceRef.current);
+    if (val && val.trim().length >= 3) {
+      messageDebounceRef.current = setTimeout(() => {
+        handleAutoTranslate('message', val, lang);
+      }, 700);
     }
   };
 
@@ -336,7 +362,7 @@ export default function BroadcastModal({ isOpen, onClose, onBroadcastSent }) {
                     type="text"
                     required
                     value={formData.title_si}
-                    onChange={(e) => setFormData({ ...formData, title_si: e.target.value })}
+                    onChange={(e) => handleTitleChange(e.target.value, 'si')}
                     onBlur={() => handleAutoTranslate('title', formData.title_si, 'si')}
                     placeholder="උදා: බණ්ඩාරවෙල ලීක්ස් අතිරික්තය පිළිබඳ අනතුරු ඇඟවීමයි"
                     className="w-full px-3 py-2 border border-outline-variant rounded-xl focus:border-primary bg-surface-container-lowest text-on-surface text-xs outline-none font-semibold"
@@ -348,7 +374,7 @@ export default function BroadcastModal({ isOpen, onClose, onBroadcastSent }) {
                     rows={3}
                     required
                     value={formData.message_si}
-                    onChange={(e) => setFormData({ ...formData, message_si: e.target.value })}
+                    onChange={(e) => handleMessageChange(e.target.value, 'si')}
                     onBlur={() => handleAutoTranslate('message', formData.message_si, 'si')}
                     placeholder="පණිවිඩය මෙහි ටයිප් කරන්න (අනෙක් භාෂාවලට ස්වයංක්‍රීයව පරිවර්තනය වේ)"
                     className="w-full px-3 py-2 border border-outline-variant rounded-xl focus:border-primary bg-surface-container-lowest text-on-surface text-xs outline-none"
@@ -365,7 +391,7 @@ export default function BroadcastModal({ isOpen, onClose, onBroadcastSent }) {
                     type="text"
                     required
                     value={formData.title_ta}
-                    onChange={(e) => setFormData({ ...formData, title_ta: e.target.value })}
+                    onChange={(e) => handleTitleChange(e.target.value, 'ta')}
                     onBlur={() => handleAutoTranslate('title', formData.title_ta, 'ta')}
                     placeholder="எ.கா. பண்டாரவளை லீக்ஸ் அதிகப்படியான விளைச்சல் எச்சரிக்கை"
                     className="w-full px-3 py-2 border border-outline-variant rounded-xl focus:border-primary bg-surface-container-lowest text-on-surface text-xs outline-none font-semibold"
@@ -377,7 +403,7 @@ export default function BroadcastModal({ isOpen, onClose, onBroadcastSent }) {
                     rows={3}
                     required
                     value={formData.message_ta}
-                    onChange={(e) => setFormData({ ...formData, message_ta: e.target.value })}
+                    onChange={(e) => handleMessageChange(e.target.value, 'ta')}
                     onBlur={() => handleAutoTranslate('message', formData.message_ta, 'ta')}
                     placeholder="செய்தியை இங்கே தட்டச்சு செய்யவும் (தானாகவே மொழிபெயர்க்கப்படும்)"
                     className="w-full px-3 py-2 border border-outline-variant rounded-xl focus:border-primary bg-surface-container-lowest text-on-surface text-xs outline-none"
@@ -394,7 +420,7 @@ export default function BroadcastModal({ isOpen, onClose, onBroadcastSent }) {
                     type="text"
                     required
                     value={formData.title_en}
-                    onChange={(e) => setFormData({ ...formData, title_en: e.target.value })}
+                    onChange={(e) => handleTitleChange(e.target.value, 'en')}
                     onBlur={() => handleAutoTranslate('title', formData.title_en, 'en')}
                     placeholder="e.g. Critical Leeks Market Glut & Harvest Advisory"
                     className="w-full px-3 py-2 border border-outline-variant rounded-xl focus:border-primary bg-surface-container-lowest text-on-surface text-xs outline-none font-semibold"
@@ -406,7 +432,7 @@ export default function BroadcastModal({ isOpen, onClose, onBroadcastSent }) {
                     rows={3}
                     required
                     value={formData.message_en}
-                    onChange={(e) => setFormData({ ...formData, message_en: e.target.value })}
+                    onChange={(e) => handleMessageChange(e.target.value, 'en')}
                     onBlur={() => handleAutoTranslate('message', formData.message_en, 'en')}
                     placeholder="Type broadcast message in English (auto-translates into Sinhala & Tamil)..."
                     className="w-full px-3 py-2 border border-outline-variant rounded-xl focus:border-primary bg-surface-container-lowest text-on-surface text-xs outline-none"

@@ -2,7 +2,7 @@ import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { LanguageContext } from '../context/LanguageContext';
-import { validateNIC } from '../utils/validation';
+import { validateNIC, validatePhone } from '../utils/validation';
 import farmerBg from '../assets/login-farmer-bg.jpg';
 import buyerBg from '../assets/login-buyer-bg.jpg';
 import officerBg from '../assets/login-officer-bg.jpg';

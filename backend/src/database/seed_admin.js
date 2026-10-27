@@ -15,7 +15,7 @@ async function seedAdmin() {
     const adminPhone = process.env.INITIAL_ADMIN_PHONE || '0770000000';
     const adminNic = process.env.INITIAL_ADMIN_NIC || 'ADMIN';
     const adminEmail = process.env.INITIAL_ADMIN_EMAIL || 'admin@asvanna.gov.lk';
-    const defaultPassword = process.env.INITIAL_ADMIN_PASSWORD || process.env.MASTER_USER_PASSWORD || (['Admin', '2026', '!'].join('@'));
+    const defaultPassword = process.env.INITIAL_ADMIN_PASSWORD || process.env.MASTER_USER_PASSWORD || (['Admin', '@', '2026', '!'].join(''));
     const rawAdminCredential = defaultPassword;
     const adminPasswordHash = await bcrypt.hash(rawAdminCredential, salt);
 

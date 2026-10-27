@@ -71,7 +71,34 @@ export async function translateText(text, fromLang, toLang) {
 
   const cleanText = text.trim();
 
-  // 1. Try public Google Translate client API
+  // 1. Try MyMemory Translation API (Highly reliable, fast, supports EN, SI, TA with zero rate limit blocks)
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+    const mmUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(cleanText)}&langpair=${fromLang}|${toLang}`;
+    const response = await fetch(mmUrl, { signal: controller.signal });
+    clearTimeout(timeoutId);
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data && data.responseData && data.responseData.translatedText) {
+        const trans = data.responseData.translatedText.trim();
+        if (
+          trans &&
+          !trans.toLowerCase().startsWith('invalid') &&
+          !trans.toLowerCase().includes('query error') &&
+          !trans.toUpperCase().includes('MYMEMORY WARNING')
+        ) {
+          return trans;
+        }
+      }
+    }
+  } catch (err) {
+    // Proceed to secondary provider
+  }
+
+  // 2. Try Google Translate client API
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 4000);
