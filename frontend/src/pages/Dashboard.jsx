@@ -10,15 +10,15 @@ import Pagination from '../components/Pagination';
 import { Link } from 'react-router-dom';
 
 const DEFAULT_REGIONAL_VEGETABLES = [
-  { id: 1, crop_code: 'BEANS', name_en: 'Green Beans', name_si: 'බෝංචි', name_ta: 'போஞ்சி', planted_ha: 110, quota_ha: 160, pct: 68, yield_mt: '1,870 MT', plots: 49, status: 'SAFE', barColor: 'bg-teal-600', badgeColor: 'bg-teal-100 text-teal-800 border-teal-200', image_url: 'https://images.unsplash.com/photo-1567375698348-5d9d5ae99de0?w=600&auto=format&fit=crop&q=80' },
+  { id: 1, crop_code: 'BEANS', name_en: 'Green Beans (Butter/Bush)', name_si: 'බෝංචි', name_ta: 'போஞ்சி', planted_ha: 110, quota_ha: 160, pct: 68, yield_mt: '1,870 MT', plots: 49, status: 'SAFE', barColor: 'bg-teal-600', badgeColor: 'bg-teal-100 text-teal-800 border-teal-200', image_url: 'https://images.unsplash.com/photo-1567375698348-5d9d5ae99de0?w=600&auto=format&fit=crop&q=80' },
   { id: 2, crop_code: 'CARROT', name_en: 'Carrot', name_si: 'කැරට්', name_ta: 'கேரட்', planted_ha: 285, quota_ha: 310, pct: 92, yield_mt: '4,275 MT', plots: 94, status: 'CRITICAL', barColor: 'bg-red-500', badgeColor: 'bg-red-100 text-red-800 border-red-200', image_url: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=600&auto=format&fit=crop&q=80' },
   { id: 3, crop_code: 'LEEKS', name_en: 'Leeks', name_si: 'ලීක්ස්', name_ta: 'லீக்ස්', planted_ha: 140, quota_ha: 180, pct: 78, yield_mt: '2,520 MT', plots: 58, status: 'WARNING', barColor: 'bg-amber-500', badgeColor: 'bg-amber-100 text-amber-900 border-amber-200', image_url: 'https://images.unsplash.com/photo-1587049633312-d628ae50a8ae?w=600&auto=format&fit=crop&q=80' },
   { id: 4, crop_code: 'CABBAGE', name_en: 'Cabbage', name_si: 'ගෝවා', name_ta: 'முட்டைக்கோஸ்', planted_ha: 210, quota_ha: 270, pct: 78, yield_mt: '5,250 MT', plots: 82, status: 'WARNING', barColor: 'bg-amber-500', badgeColor: 'bg-amber-100 text-amber-900 border-amber-200', image_url: 'https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?w=600&auto=format&fit=crop&q=80' },
   { id: 5, crop_code: 'TOMATO', name_en: 'Tomato', name_si: 'තක්කාලි', name_ta: 'தக்காளி', planted_ha: 80, quota_ha: 140, pct: 57, yield_mt: '1,200 MT', plots: 36, status: 'SAFE', barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&auto=format&fit=crop&q=80' },
   { id: 6, crop_code: 'CAULIFLOWER', name_en: 'Cauliflower', name_si: 'මල් ගෝවා', name_ta: 'காலிஃபிளவர்', planted_ha: 52, quota_ha: 75, pct: 69, yield_mt: '680 MT', plots: 24, status: 'SAFE', barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1568584711075-3d021a7c3ca3?w=600&auto=format&fit=crop&q=80' },
-  { id: 7, crop_code: 'CAPSICUM', name_en: 'Capsicum', name_si: 'මාළු මිරිස්', name_ta: 'குடை மிளகாய்', planted_ha: 65, quota_ha: 120, pct: 54, yield_mt: '780 MT', plots: 28, status: 'SAFE', barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=600&auto=format&fit=crop&q=80' },
+  { id: 7, crop_code: 'CAPSICUM', name_en: 'Capsicum (Bell Pepper)', name_si: 'මාළු මිරිස්', name_ta: 'குடை மிளகாய்', planted_ha: 65, quota_ha: 120, pct: 54, yield_mt: '780 MT', plots: 28, status: 'SAFE', barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=600&auto=format&fit=crop&q=80' },
   { id: 8, crop_code: 'BEETROOT', name_en: 'Beetroot', name_si: 'බීට්රූට්', name_ta: 'பீட்ரூட்', planted_ha: 110, quota_ha: 160, pct: 68, yield_mt: '1,870 MT', plots: 49, status: 'SAFE', barColor: 'bg-teal-600', badgeColor: 'bg-teal-100 text-teal-800 border-teal-200', image_url: 'https://images.unsplash.com/photo-1528825871115-3581a5387919?w=600&auto=format&fit=crop&q=80' },
-  { id: 9, crop_code: 'KNOLKHOL', name_en: 'Knolkhol', name_si: 'නෝල්කෝල්', name_ta: 'நூல்கோல்', planted_ha: 38, quota_ha: 50, pct: 76, yield_mt: '420 MT', plots: 18, status: 'WARNING', barColor: 'bg-amber-500', badgeColor: 'bg-amber-100 text-amber-900 border-amber-200', image_url: 'https://images.unsplash.com/photo-1590779033100-9f60a05a013d?w=600&auto=format&fit=crop&q=80' },
+  { id: 9, crop_code: 'KNOLKHOL', name_en: 'Knol-Khol (Kohlrabi)', name_si: 'නෝල්කෝල්', name_ta: 'நூல்கோல்', planted_ha: 38, quota_ha: 50, pct: 76, yield_mt: '420 MT', plots: 18, status: 'WARNING', barColor: 'bg-amber-500', badgeColor: 'bg-amber-100 text-amber-900 border-amber-200', image_url: 'https://images.unsplash.com/photo-1590779033100-9f60a05a013d?w=600&auto=format&fit=crop&q=80' },
   { id: 10, crop_code: 'RADISH', name_en: 'Radish', name_si: 'රාබු', name_ta: 'முள்ளங்கி', planted_ha: 45, quota_ha: 90, pct: 50, yield_mt: '540 MT', plots: 22, status: 'SAFE', barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1593105544559-ecb03bf76f82?w=600&auto=format&fit=crop&q=80' },
   { id: 15, crop_code: 'BROCCOLI', name_en: 'Broccoli', name_si: 'බ්‍රොකොලි', name_ta: 'ப்ரோக்கோலி', planted_ha: 25, quota_ha: 40, pct: 62, yield_mt: '240 MT', plots: 15, status: 'SAFE', barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?w=600&auto=format&fit=crop&q=80' }
 ];
@@ -95,13 +95,55 @@ export default function Dashboard() {
 
   const [regionalVegetables, setRegionalVegetables] = useState(() => {
     try {
+      localStorage.removeItem('asvanna_deleted_vegetables');
       const cached = localStorage.getItem('asvanna_regional_vegetables');
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      const parsed = cached ? JSON.parse(cached) : [];
+
+      const seenCodes = new Set();
+      const seenNames = new Set();
+      const list = [];
+
+      DEFAULT_REGIONAL_VEGETABLES.forEach(defVeg => {
+        const code = (defVeg.crop_code || '').toUpperCase().trim();
+        const normKey = (defVeg.name_en || '').toLowerCase().replace(/[^a-z]/g, '');
+        seenCodes.add(code);
+        seenNames.add(normKey);
+
+        const cachedMatch = Array.isArray(parsed) ? parsed.find(p =>
+          (p.crop_code && p.crop_code.toUpperCase().trim() === code) ||
+          (p.id && Number(p.id) === Number(defVeg.id)) ||
+          (p.name_en && p.name_en.toLowerCase().replace(/[^a-z]/g, '').slice(0, 5) === normKey.slice(0, 5))
+        ) : null;
+
+        list.push({
+          ...defVeg,
+          image_url: cachedMatch?.image_url || defVeg.image_url,
+          quota_ha: cachedMatch?.quota_ha || defVeg.quota_ha,
+          planted_ha: cachedMatch?.planted_ha || defVeg.planted_ha,
+          pct: cachedMatch?.pct || defVeg.pct,
+          yield_mt: cachedMatch?.yield_mt || defVeg.yield_mt,
+          plots: cachedMatch?.plots || defVeg.plots
+        });
+      });
+
+      if (Array.isArray(parsed)) {
+        parsed.forEach(c => {
+          const code = (c.crop_code || '').toUpperCase().trim();
+          const normKey = (c.name_en || '').toLowerCase().replace(/[^a-z]/g, '');
+          const alreadyExists = (code && seenCodes.has(code)) || (normKey && seenNames.has(normKey));
+          if (!alreadyExists && normKey) {
+            if (code) seenCodes.add(code);
+            seenNames.add(normKey);
+            list.push(c);
+          }
+        });
       }
-    } catch (e) {}
-    return DEFAULT_REGIONAL_VEGETABLES;
+
+      localStorage.setItem('asvanna_regional_vegetables', JSON.stringify(list));
+      return list;
+    } catch (e) {
+      return DEFAULT_REGIONAL_VEGETABLES;
+    }
   });
 
   const activeTrendCrop = selectedTrendCrop || regionalVegetables[0] || null;
@@ -167,9 +209,18 @@ export default function Dashboard() {
         console.warn('API delete crop error, continuing with local updates:', apiErr);
       }
 
+      // Track deleted crop ID in localStorage
+      try {
+        const deletedIds = JSON.parse(localStorage.getItem('asvanna_deleted_vegetables') || '[]');
+        if (!deletedIds.includes(cropToDeleteId)) {
+          deletedIds.push(cropToDeleteId);
+          localStorage.setItem('asvanna_deleted_vegetables', JSON.stringify(deletedIds));
+        }
+      } catch (e) {}
+
       let nextTrendCrop = null;
       setRegionalVegetables(prev => {
-        const updated = prev.filter(c => Number(c.id) !== Number(cropToDeleteId) && c.crop_code !== String(cropToDeleteId));
+        const updated = prev.filter(c => Number(c.id) !== Number(cropToDeleteId) && c.crop_code !== String(cropToDeleteId) && String(c.id) !== String(cropToDeleteId));
         try {
           localStorage.setItem('asvanna_regional_vegetables', JSON.stringify(updated));
         } catch (e) {}
@@ -178,12 +229,12 @@ export default function Dashboard() {
       });
 
       setVegPage(p => {
-        const remainingCount = regionalVegetables.filter(c => Number(c.id) !== Number(cropToDeleteId) && c.crop_code !== String(cropToDeleteId)).length;
+        const remainingCount = regionalVegetables.filter(c => Number(c.id) !== Number(cropToDeleteId) && c.crop_code !== String(cropToDeleteId) && String(c.id) !== String(cropToDeleteId)).length;
         const maxP = Math.max(1, Math.ceil(remainingCount / 6));
         return p > maxP ? maxP : p;
       });
 
-      if (selectedTrendCrop && (Number(selectedTrendCrop.id) === Number(cropToDeleteId) || selectedTrendCrop.crop_code === String(cropToDeleteId))) {
+      if (selectedTrendCrop && (Number(selectedTrendCrop.id) === Number(cropToDeleteId) || selectedTrendCrop.crop_code === String(cropToDeleteId) || String(selectedTrendCrop.id) === String(cropToDeleteId))) {
         setSelectedTrendCrop(nextTrendCrop);
       }
 
@@ -204,35 +255,73 @@ export default function Dashboard() {
       if (res.data?.data && res.data.data.length > 0) {
         setRegionalVegetables(prev => {
           const apiCrops = res.data.data;
-          const updated = apiCrops.map(apiCrop => {
-            const match = prev.find(v =>
-              v.id === apiCrop.id ||
-              v.crop_code === apiCrop.crop_code ||
-              (v.name_en && apiCrop.name_en && v.name_en.toLowerCase().includes(apiCrop.name_en.toLowerCase().split(' ')[0]))
+          const seenCodes = new Set();
+          const seenNames = new Set();
+          const cleanList = [];
+
+          DEFAULT_REGIONAL_VEGETABLES.forEach(defVeg => {
+            const code = (defVeg.crop_code || '').toUpperCase().trim();
+            const normKey = (defVeg.name_en || '').toLowerCase().replace(/[^a-z]/g, '');
+            seenCodes.add(code);
+            seenNames.add(normKey);
+
+            const apiMatch = apiCrops.find(a =>
+              (a.crop_code && a.crop_code.toUpperCase().trim() === code) ||
+              (a.id && Number(a.id) === Number(defVeg.id)) ||
+              (a.name_en && a.name_en.toLowerCase().replace(/[^a-z]/g, '').slice(0, 5) === normKey.slice(0, 5))
             );
-            const quota = apiCrop.standard_demand_kg ? Math.round(apiCrop.standard_demand_kg / 1000) : (match?.quota_ha || 100);
-            const planted = match?.planted_ha || 50;
+            const prevMatch = prev.find(p =>
+              (p.crop_code && p.crop_code.toUpperCase().trim() === code) ||
+              (p.id && Number(p.id) === Number(defVeg.id)) ||
+              (p.name_en && p.name_en.toLowerCase().replace(/[^a-z]/g, '').slice(0, 5) === normKey.slice(0, 5))
+            );
+
+            const quota = apiMatch?.standard_demand_kg ? Math.round(apiMatch.standard_demand_kg / 1000) : (prevMatch?.quota_ha || defVeg.quota_ha);
+            const planted = prevMatch?.planted_ha || defVeg.planted_ha;
             const pct = Math.round((planted / quota) * 100);
-            return {
-              ...(match || {}),
-              ...apiCrop,
-              name_en: apiCrop.name_en,
-              name_si: apiCrop.name_si || match?.name_si || apiCrop.name_en,
-              name_ta: apiCrop.name_ta || match?.name_ta || apiCrop.name_en,
-              image_url: apiCrop.image_url || match?.image_url || '',
+
+            cleanList.push({
+              ...defVeg,
+              ...(apiMatch || {}),
+              name_en: defVeg.name_en,
+              name_si: defVeg.name_si,
+              name_ta: defVeg.name_ta,
+              image_url: apiMatch?.image_url || prevMatch?.image_url || defVeg.image_url,
               planted_ha: planted,
               quota_ha: quota,
               pct: pct,
               status: pct > 85 ? 'CRITICAL' : pct > 70 ? 'WARNING' : 'SAFE',
               barColor: pct > 85 ? 'bg-red-500' : pct > 70 ? 'bg-amber-500' : 'bg-emerald-600',
               badgeColor: pct > 85 ? 'bg-red-100 text-red-800 border-red-200' : pct > 70 ? 'bg-amber-100 text-amber-900 border-amber-200' : 'bg-emerald-100 text-emerald-800 border-emerald-200'
-            };
+            });
+          });
+
+          [...prev, ...apiCrops].forEach(item => {
+            const code = (item.crop_code || '').toUpperCase().trim();
+            const normKey = (item.name_en || '').toLowerCase().replace(/[^a-z]/g, '');
+            const alreadyExists = (code && seenCodes.has(code)) || (normKey && seenNames.has(normKey));
+            if (!alreadyExists && normKey) {
+              if (code) seenCodes.add(code);
+              seenNames.add(normKey);
+              const quota = item.standard_demand_kg ? Math.round(item.standard_demand_kg / 1000) : (item.quota_ha || 100);
+              const planted = item.planted_ha || 50;
+              const pct = Math.round((planted / quota) * 100);
+              cleanList.push({
+                ...item,
+                quota_ha: quota,
+                planted_ha: planted,
+                pct: pct,
+                status: pct > 85 ? 'CRITICAL' : pct > 70 ? 'WARNING' : 'SAFE',
+                barColor: pct > 85 ? 'bg-red-500' : pct > 70 ? 'bg-amber-500' : 'bg-emerald-600',
+                badgeColor: pct > 85 ? 'bg-red-100 text-red-800 border-red-200' : pct > 70 ? 'bg-amber-100 text-amber-900 border-amber-200' : 'bg-emerald-100 text-emerald-800 border-emerald-200'
+              });
+            }
           });
 
           try {
-            localStorage.setItem('asvanna_regional_vegetables', JSON.stringify(updated));
+            localStorage.setItem('asvanna_regional_vegetables', JSON.stringify(cleanList));
           } catch (e) {}
-          return updated;
+          return cleanList;
         });
       }
     } catch (err) {
@@ -1721,19 +1810,40 @@ export default function Dashboard() {
         isOpen={vegetableModalState.isOpen}
         onClose={() => setVegetableModalState({ isOpen: false, vegetable: null })}
         vegetable={vegetableModalState.vegetable}
-        onSaved={(savedCrop) => {
+        onSaved={(savedCrop, isEditing) => {
           if (savedCrop) {
+            const demandKg = Number(savedCrop.standard_demand_kg) || 100000;
+            const quota = savedCrop.quota_ha || Math.round(demandKg / 1000) || 100;
+            const planted = savedCrop.planted_ha || 50;
+            const pct = Math.round((planted / quota) * 100);
+
+            const cropWithFields = {
+              planted_ha: planted,
+              quota_ha: quota,
+              yield_mt: savedCrop.yield_mt || `${Math.round(planted * 12)} MT`,
+              plots: savedCrop.plots || Math.round(planted / 2.5) || 20,
+              pct: pct,
+              status: pct > 85 ? 'CRITICAL' : pct > 70 ? 'WARNING' : 'SAFE',
+              barColor: pct > 85 ? 'bg-red-500' : pct > 70 ? 'bg-amber-500' : 'bg-emerald-600',
+              badgeColor: pct > 85 ? 'bg-red-100 text-red-800 border-red-200' : pct > 70 ? 'bg-amber-100 text-amber-900 border-amber-200' : 'bg-emerald-100 text-emerald-800 border-emerald-200',
+              ...savedCrop,
+              id: savedCrop.id || `crop_${Date.now()}`
+            };
+
             setRegionalVegetables(prev => {
-              const exists = prev.some(v => v.id === savedCrop.id || v.crop_code === savedCrop.crop_code);
-              const updated = exists
-                ? prev.map(v => (v.id === savedCrop.id || v.crop_code === savedCrop.crop_code ? { ...v, ...savedCrop } : v))
-                : [savedCrop, ...prev];
+              let updated;
+              if (isEditing) {
+                updated = prev.map(v => (v.id && String(v.id) === String(cropWithFields.id)) || (v.crop_code && v.crop_code === cropWithFields.crop_code) ? { ...v, ...cropWithFields } : v);
+              } else {
+                // ALWAYS prepend as a new vegetable - NEVER overwrite previous crops!
+                updated = [cropWithFields, ...prev];
+              }
               try {
                 localStorage.setItem('asvanna_regional_vegetables', JSON.stringify(updated));
               } catch (e) {}
               return updated;
             });
-            setSelectedTrendCrop(savedCrop);
+            setSelectedTrendCrop(cropWithFields);
           }
           fetchRegionalVegetables();
           triggerToast(lang === 'si' ? 'එළවළු දත්ත සාර්ථකව යාවත්කාලීන විය!' : 'Vegetable details saved successfully!');
