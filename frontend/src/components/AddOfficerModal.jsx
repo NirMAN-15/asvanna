@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import API from '../services/api';
-import { X, UserPlus, Shield, CheckCircle, AlertCircle, Eye, EyeOff, Sparkles } from 'lucide-react';
+import { X, UserPlus, Shield, CheckCircle, AlertCircle, Eye, EyeOff, Sparkles, Key } from 'lucide-react';
 
 export default function AddOfficerModal({ isOpen, onClose, onUserAdded }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showMasterKey, setShowMasterKey] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -18,7 +19,8 @@ export default function AddOfficerModal({ isOpen, onClose, onUserAdded }) {
     district: 'Badulla',
     division: 'Bandarawela',
     gnd_division: '',
-    password: ''
+    password: '',
+    master_key: ''
   });
 
   if (!isOpen) return null;
@@ -39,6 +41,11 @@ export default function AddOfficerModal({ isOpen, onClose, onUserAdded }) {
       return;
     }
 
+    if (!formData.master_key.trim()) {
+      setError('Master Credential Key is required to authorize staff or administrator creation.');
+      return;
+    }
+
     setLoading(true);
     try {
       const payload = {
@@ -52,7 +59,9 @@ export default function AddOfficerModal({ isOpen, onClose, onUserAdded }) {
         division: formData.division.trim() || 'Bandarawela',
         gnd_division: formData.gnd_division.trim() || undefined,
         password: formData.password || undefined,
-        role: isAdmin ? 'ADMIN' : 'OFFICER'
+        role: isAdmin ? 'ADMIN' : 'OFFICER',
+        master_key: formData.master_key.trim(),
+        admin_key: formData.master_key.trim()
       };
 
       const res = await API.post('/officer/register-officer-admin', payload);
@@ -80,9 +89,12 @@ export default function AddOfficerModal({ isOpen, onClose, onUserAdded }) {
       district: 'Badulla',
       division: 'Bandarawela',
       gnd_division: '',
-      password: ''
+      password: '',
+      master_key: ''
     });
     setIsAdmin(false);
+    setShowMasterKey(false);
+    setShowPassword(false);
     setError('');
     setSuccessMsg('');
     onClose();
@@ -159,6 +171,41 @@ export default function AddOfficerModal({ isOpen, onClose, onUserAdded }) {
                 </p>
               </div>
             </label>
+          </div>
+
+          {/* Master Credential Key (Required for Officer/Admin Provisioning) */}
+          <div className="p-4 rounded-xl border-2 border-amber-500/40 bg-amber-500/5 space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-bold text-amber-900 uppercase tracking-wider flex items-center gap-1.5">
+                <Key className="w-4 h-4 text-amber-600" />
+                <span>Master Credential Key (අධීක්ෂක රහස් යතුර) <span className="text-error">*</span></span>
+              </label>
+              <span className="text-[10px] font-black text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">
+                REQUIRED
+              </span>
+            </div>
+            <div className="relative">
+              <input
+                type={showMasterKey ? 'text' : 'password'}
+                name="master_key"
+                value={formData.master_key}
+                onChange={handleChange}
+                required
+                placeholder="Enter Master Credential Key (e.g. asvanna#2026)"
+                className="w-full px-3.5 py-2.5 pr-10 rounded-xl border border-amber-300 bg-white text-on-surface text-sm font-mono focus:outline-hidden focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition"
+              />
+              <button
+                type="button"
+                onClick={() => setShowMasterKey(!showMasterKey)}
+                className="absolute right-3 top-2.5 text-on-surface-variant hover:text-on-surface cursor-pointer"
+                title={showMasterKey ? 'Hide key' : 'Show key'}
+              >
+                {showMasterKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+            <p className="text-[11px] text-amber-800/80 leading-relaxed font-medium">
+              Required master credential key used in administrator provisioning to authenticate staff account registration.
+            </p>
           </div>
 
           {/* Name fields */}

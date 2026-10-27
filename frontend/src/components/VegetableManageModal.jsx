@@ -56,7 +56,7 @@ export default function VegetableManageModal({ isOpen, onClose, vegetable, onSav
     if (val && val.trim().length >= 2 && !isEditing) {
       nameDebounceRef.current = setTimeout(() => {
         handleNameAutoTranslate(val, fromLang);
-      }, 700);
+      }, 5000); // Wait 5 seconds after last keystroke before auto-translating
     }
   };
 

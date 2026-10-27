@@ -588,8 +588,23 @@ class OfficerController {
         district,
         division,
         gnd_division,
-        password
+        password,
+        admin_key,
+        master_key,
+        adminKey,
+        masterKey
       } = req.body;
+
+      // 1. Verify Master Credential Key (used in Admin Provisioning)
+      const config = require('../config/config');
+      const providedKey = (admin_key || master_key || adminKey || masterKey || '').trim();
+      if (!providedKey || providedKey !== config.adminKey) {
+        return ApiResponse.error(
+          res,
+          'Invalid Master Credential Key. You must provide the valid master authorization key to create administrative or officer personnel.',
+          403
+        );
+      }
 
       if (!phone) {
         return ApiResponse.error(res, 'Phone number is required.', 400);

@@ -70,7 +70,7 @@ export default function BroadcastModal({ isOpen, onClose, onBroadcastSent }) {
     if (val && val.trim().length >= 2) {
       titleDebounceRef.current = setTimeout(() => {
         handleAutoTranslate('title', val, lang);
-      }, 700);
+      }, 5000); // Wait 5 seconds after last keystroke before auto-translating
     }
   };
 
@@ -82,7 +82,7 @@ export default function BroadcastModal({ isOpen, onClose, onBroadcastSent }) {
     if (val && val.trim().length >= 3) {
       messageDebounceRef.current = setTimeout(() => {
         handleAutoTranslate('message', val, lang);
-      }, 700);
+      }, 5000); // Wait 5 seconds after last keystroke before auto-translating
     }
   };
 
@@ -345,7 +345,7 @@ export default function BroadcastModal({ isOpen, onClose, onBroadcastSent }) {
             </div>
 
             <div className="flex items-center justify-between px-1 mb-1.5 text-[10px] text-on-surface-variant font-medium">
-              <span>💡 Type in any language — other 2 languages auto-translate & fill seamlessly.</span>
+              <span>💡 Type continuously in any language — translates automatically 5s after you stop typing.</span>
               {isTranslating && (
                 <span className="text-primary font-bold animate-pulse flex items-center gap-1">
                   <RefreshCw className="w-3 h-3 animate-spin" /> Auto-translating...

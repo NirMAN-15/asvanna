@@ -4,6 +4,75 @@ import API from '../services/api';
 import FarmerPlantingModal from '../components/FarmerPlantingModal';
 import { MASTER_CROPS, getCropImage } from '../constants/crops';
 
+export const getRiskTheme = (riskLevel) => {
+  const level = (riskLevel || '').toUpperCase();
+  if (level === 'SAFE') {
+    return {
+      level: 'SAFE',
+      colorName: 'emerald',
+      labelEn: 'SAFE TO CULTIVATE • LOW REGIONAL RISK',
+      labelSi: 'වගාවට ඉතා හිතකරයි • අඩු කලාපීය අවදානම',
+      labelTa: 'பயிரிட பாதுகாப்பானது • குறைந்த பிராந்திய ஆபத்து',
+      subTextEn: 'Healthy quota margin with strong price stability in Bandarawela markets.',
+      subTextSi: 'නියමිත කෝටාව ඉක්මවා නොමැති අතර බණ්ඩාරවෙල වෙළෙඳපොළේ ස්ථාවර මිලක් අපේක්ෂා කළ හැක.',
+      subTextTa: 'ஆரோக்கியமான ஒதுக்கீட்டு வரம்பு மற்றும் நிலையான சந்தை விலை.',
+      containerBorder: 'border-2 border-emerald-500 bg-emerald-50/20 shadow-xl shadow-emerald-500/10 ring-4 ring-emerald-500/20',
+      cardBorder: 'border-2 border-emerald-400 hover:border-emerald-500 shadow-md shadow-emerald-500/15',
+      badge: 'bg-emerald-600 text-white border-emerald-400/40 shadow-xs',
+      lightBadge: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+      pillBg: 'bg-emerald-50 text-emerald-700 border-emerald-300/70',
+      icon: 'check_circle',
+      iconColor: 'text-emerald-600',
+      bannerBg: 'bg-emerald-500/15 border-emerald-300 text-emerald-950',
+      rationaleBox: 'bg-emerald-50/90 border-emerald-200 text-emerald-950',
+      statusText: 'text-emerald-700'
+    };
+  } else if (level === 'WARNING') {
+    return {
+      level: 'WARNING',
+      colorName: 'amber',
+      labelEn: 'MODERATE RISK • PROCEED WITH CAUTION',
+      labelSi: 'මධ්‍යස්ථ අවදානම • සැලකිලිමත් වන්න (අධීක්ෂණය යටතේ වගා කරන්න)',
+      labelTa: 'மிதமான ஆபத்து • கவனமாக தொடரவும்',
+      subTextEn: 'Approaching regional production quota. Stagger sowing cycles to avoid harvest glut.',
+      subTextSi: 'කලාපීය ඉලක්කගත කෝටාව ඉක්මවීමට ආසන්නයි. එකවර අස්වනු නොඑන පරිදි වගා කරන්න.',
+      subTextTa: 'பிராந்திய ஒதுக்கீட்டை நெருங்குகிறது. அறுவடை நெரிசலைத் தவிர்க்க தள்ளி நடவும்.',
+      containerBorder: 'border-2 border-amber-500 bg-amber-50/20 shadow-xl shadow-amber-500/10 ring-4 ring-amber-500/20',
+      cardBorder: 'border-2 border-amber-400 hover:border-amber-500 shadow-md shadow-amber-500/15',
+      badge: 'bg-amber-600 text-white border-amber-400/40 shadow-xs',
+      lightBadge: 'bg-amber-100 text-amber-800 border-amber-300',
+      pillBg: 'bg-amber-50 text-amber-700 border-amber-300/70',
+      icon: 'warning',
+      iconColor: 'text-amber-600',
+      bannerBg: 'bg-amber-500/15 border-amber-300 text-amber-950',
+      rationaleBox: 'bg-amber-50/90 border-amber-200 text-amber-950',
+      statusText: 'text-amber-700'
+    };
+  } else {
+    // OVER_PLANTED / CRITICAL / HIGH_RISK / DANGER / or else
+    return {
+      level: 'OVER_PLANTED',
+      colorName: 'rose',
+      labelEn: 'HIGH RISK • OVER-PLANTED GLUT WARNING',
+      labelSi: 'අධි-වගා අවදානම • වෙළෙඳපොළ අතිරික්තයක් හා මිල පහත වැටීමේ අවදානමක් පවතී',
+      labelTa: 'அதிக ஆபத்து • மிகை நடவு சந்தை வீழ்ச்சி எச்சரிக்கை',
+      subTextEn: 'Regional quota saturated! We strongly advise diversifying into recommended alternative crops.',
+      subTextSi: 'කලාපීය කෝටාව සම්පූර්ණයෙන්ම පිරී ඇත! පහත නිර්දේශිත විකල්ප බෝග වගා කිරීමට උපදෙස් දෙනු ලැබේ.',
+      subTextTa: 'பிராந்திய ஒதுக்கீடு நிரம்பியுள்ளது! பரிந்துரைக்கப்பட்ட மாற்றுப் பயிர்களை பயிரிடவும்.',
+      containerBorder: 'border-2 border-rose-500 bg-rose-50/20 shadow-xl shadow-rose-500/10 ring-4 ring-rose-500/20',
+      cardBorder: 'border-2 border-rose-400 hover:border-rose-500 shadow-md shadow-rose-500/15',
+      badge: 'bg-rose-600 text-white border-rose-400/40 shadow-xs',
+      lightBadge: 'bg-rose-100 text-rose-800 border-rose-300',
+      pillBg: 'bg-rose-50 text-rose-700 border-rose-300/70',
+      icon: 'dangerous',
+      iconColor: 'text-rose-600',
+      bannerBg: 'bg-rose-500/15 border-rose-300 text-rose-950',
+      rationaleBox: 'bg-rose-50/90 border-rose-200 text-rose-950',
+      statusText: 'text-rose-700'
+    };
+  }
+};
+
 const ALL_CROPS = MASTER_CROPS;
 
 export default function RiskAnalytics() {
@@ -19,16 +88,35 @@ export default function RiskAnalytics() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedModalCropId, setSelectedModalCropId] = useState(4);
   const [toastMessage, setToastMessage] = useState(null);
+  const [cropRiskMap, setCropRiskMap] = useState({});
 
   const searchContainerRef = useRef(null);
 
-  // Scroll to top on mount
+  // Scroll to top and fetch regional crop risks on mount
   useEffect(() => {
     const appContent = document.querySelector('.app-content');
     if (appContent) {
       appContent.scrollTo(0, 0);
     }
+    fetchRegionalRisks();
   }, []);
+
+  const fetchRegionalRisks = async () => {
+    try {
+      const res = await API.get('/risk/regional?district=Badulla');
+      if (res.data?.data && Array.isArray(res.data.data)) {
+        const map = {};
+        res.data.data.forEach(item => {
+          if (item.crop?.id) map[item.crop.id] = item.riskLevel;
+          if (item.crop?.code) map[item.crop.code] = item.riskLevel;
+          if (item.crop?.crop_code) map[item.crop.crop_code] = item.riskLevel;
+        });
+        setCropRiskMap(map);
+      }
+    } catch (e) {
+      console.warn('Could not fetch regional crop risk map:', e);
+    }
+  };
 
   // Handle click outside dropdown to close it
   useEffect(() => {
@@ -279,18 +367,41 @@ export default function RiskAnalytics() {
                     ? `${crop.nameEn} • ${crop.nameSi}` 
                     : `${crop.nameSi} • ${crop.nameTa}`;
 
+                  const cropRisk = cropRiskMap[crop.id] || cropRiskMap[crop.code] || 'SAFE';
+                  const cropTheme = getRiskTheme(cropRisk);
+
                   return (
                     <div
                       key={crop.id}
                       onClick={() => handleSelectCrop(crop)}
-                      className="px-4 py-3 hover:bg-emerald-50/70 transition-colors cursor-pointer flex items-center justify-between gap-3 group"
+                      className={`px-4 py-3 transition-colors cursor-pointer flex items-center justify-between gap-3 group ${
+                        cropRisk === 'SAFE' 
+                          ? 'hover:bg-emerald-50/80' 
+                          : cropRisk === 'WARNING' 
+                          ? 'hover:bg-amber-50/80' 
+                          : 'hover:bg-rose-50/80'
+                      }`}
                     >
                       <div className="flex items-center gap-3">
-                        <img
-                          src={crop.image}
-                          alt={crop.nameEn}
-                          className="w-10 h-10 rounded-lg object-cover border border-slate-200 shadow-xs flex-shrink-0 group-hover:scale-105 transition-transform"
-                        />
+                        <div className="relative">
+                          <img
+                            src={crop.image}
+                            alt={crop.nameEn}
+                            className={`w-11 h-11 rounded-xl object-cover border-2 shadow-xs flex-shrink-0 group-hover:scale-105 transition-transform ${
+                              cropRisk === 'SAFE' 
+                                ? 'border-emerald-400' 
+                                : cropRisk === 'WARNING' 
+                                ? 'border-amber-400' 
+                                : 'border-rose-400'
+                            }`}
+                          />
+                          <span
+                            className="absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-white shadow-xs"
+                            style={{
+                              backgroundColor: cropRisk === 'SAFE' ? '#10B981' : cropRisk === 'WARNING' ? '#F59E0B' : '#EF4444'
+                            }}
+                          />
+                        </div>
                         <div>
                           <p className="text-sm font-bold text-slate-900 group-hover:text-primary transition-colors font-headline">
                             {cropPrimary}
@@ -301,12 +412,18 @@ export default function RiskAnalytics() {
                         </div>
                       </div>
 
-                      <div className="text-right flex-shrink-0">
-                        <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/60 block mb-0.5">
-                          {crop.days} Days
+                      <div className="text-right flex-shrink-0 flex flex-col items-end gap-1">
+                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border shadow-2xs flex items-center gap-1 ${cropTheme.pillBg}`}>
+                          <span>
+                            {cropRisk === 'SAFE'
+                              ? (lang === 'si' ? '🟢 ආරක්ෂිතයි' : lang === 'ta' ? '🟢 பாதுகாப்பானது' : '🟢 Safe')
+                              : cropRisk === 'WARNING'
+                              ? (lang === 'si' ? '🟡 අවධානම්' : lang === 'ta' ? '🟡 எச்சரிக்கை' : '🟡 Warning')
+                              : (lang === 'si' ? '🔴 අධි-වගාව' : lang === 'ta' ? '🔴 மிகை நடவு' : '🔴 Over-Planted')}
+                          </span>
                         </span>
                         <span className="text-[11px] font-bold text-slate-700">
-                          Rs. {crop.price}/kg
+                          Rs. {crop.price}/kg • {crop.days}d
                         </span>
                       </div>
                     </div>
@@ -331,35 +448,67 @@ export default function RiskAnalytics() {
       )}
 
       {/* Searched Crop Result Card (Styled Exactly Like Image 2 with "Plant Now ->") */}
-      {!isSearching && searchResult && (
-        <div className="bg-surface-container-lowest border-2 border-emerald-500/40 rounded-2xl p-6 shadow-card animate-fadeIn space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-            <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-emerald-600 text-2xl">eco</span>
-              <div>
-                <h3 className="text-base sm:text-lg font-black text-slate-900 font-headline leading-tight">
-                  {lang === 'si' ? 'විමසන ලද බෝගයේ තත්ත්ව විශ්ලේෂණය' : lang === 'ta' ? 'வினவப்பட்ட பயிர் நிலை பகுப்பாய்வு' : 'Queried Crop Intelligence Evaluation'}
-                </h3>
-                <p className="text-xs text-slate-600 font-semibold">
-                  {lang === 'si' ? 'බණ්ඩාරවෙල කලාපීය ඉල්ලුම හා කාලගුණය අනුව සකස් කරන ලදී' : 'Calibrated against Badulla & Bandarawela regional cultivation quotas'}
-                </p>
+      {!isSearching && searchResult && (() => {
+        const theme = getRiskTheme(searchResult.riskLevel);
+        return (
+          <div className={`bg-surface-container-lowest rounded-2xl p-6 shadow-card animate-fadeIn space-y-4 ${theme.containerBorder}`}>
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <span className={`material-symbols-outlined text-2xl ${theme.iconColor}`}>eco</span>
+                <div>
+                  <h3 className="text-base sm:text-lg font-black text-slate-900 font-headline leading-tight">
+                    {lang === 'si' ? 'විමසන ලද බෝගයේ තත්ත්ව විශ්ලේෂණය' : lang === 'ta' ? 'வினவப்பட்ட பயிர் நிலை பகுப்பாய்வு' : 'Queried Crop Intelligence Evaluation'}
+                  </h3>
+                  <p className="text-xs text-slate-600 font-semibold">
+                    {lang === 'si' ? 'බණ්ඩාරවෙල කලාපීය ඉල්ලුම හා කාලගුණය අනුව සකස් කරන ලදී' : 'Calibrated against Badulla & Bandarawela regional cultivation quotas'}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  setSearchCrop('');
+                  setSearchResult(null);
+                }}
+                className="text-slate-400 hover:text-slate-700 flex items-center gap-1 text-xs font-bold transition px-3 py-1.5 rounded-lg hover:bg-slate-100 border border-slate-200"
+              >
+                <span>{lang === 'si' ? 'ඉවත් කරන්න' : lang === 'ta' ? 'அழி' : 'Clear'}</span>
+                <span className="material-symbols-outlined text-sm">close</span>
+              </button>
+            </div>
+
+            {/* Prominent 3-Tier Risk Classification Top Banner */}
+            <div className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${theme.bannerBg}`}>
+              <div className="flex items-center gap-3">
+                <span className={`material-symbols-outlined text-3xl sm:text-4xl ${theme.iconColor}`}>
+                  {theme.icon}
+                </span>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[11px] font-black uppercase tracking-wider px-2 py-0.5 rounded shadow-xs ${theme.badge}`}>
+                      {searchResult.riskLevel || 'EVALUATION'}
+                    </span>
+                    <h4 className="text-sm sm:text-base font-black leading-tight text-slate-900">
+                      {lang === 'si' ? theme.labelSi : lang === 'ta' ? theme.labelTa : theme.labelEn}
+                    </h4>
+                  </div>
+                  <p className="text-xs text-slate-700 font-medium mt-1">
+                    {lang === 'si' ? theme.subTextSi : lang === 'ta' ? theme.subTextTa : theme.subTextEn}
+                  </p>
+                </div>
+              </div>
+              <div className="text-left sm:text-right flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200">
+                <div className={`text-2xl font-black ${theme.statusText}`}>
+                  {searchResult.riskPercentage || 0}%
+                </div>
+                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                  {lang === 'si' ? 'කෝටා අවදානම' : 'Quota Risk'}
+                </div>
               </div>
             </div>
 
-            <button
-              onClick={() => {
-                setSearchCrop('');
-                setSearchResult(null);
-              }}
-              className="text-slate-400 hover:text-slate-700 flex items-center gap-1 text-xs font-bold transition px-3 py-1.5 rounded-lg hover:bg-slate-100 border border-slate-200"
-            >
-              <span>{lang === 'si' ? 'ඉවත් කරන්න' : lang === 'ta' ? 'அழி' : 'Clear'}</span>
-              <span className="material-symbols-outlined text-sm">close</span>
-            </button>
-          </div>
-
-          {/* Single Focused Card Matching Image 2 Format */}
-          {(() => {
+            {/* Single Focused Card Matching Image 2 Format */}
+            {(() => {
             const cropObj = searchResult.crop || {};
             const cropId = cropObj.id || 1;
             const cropTitle = lang === 'si' 
@@ -392,7 +541,7 @@ export default function RiskAnalytics() {
             return (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
                 {/* Visual Card (Directly like Image 2) */}
-                <div className="bg-white border border-outline-variant/40 hover:border-emerald-500/60 rounded-2xl overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-300 flex flex-col justify-between group md:col-span-1">
+                <div className={`bg-white rounded-2xl overflow-hidden transition-all duration-300 flex flex-col justify-between group md:col-span-1 ${theme.cardBorder}`}>
                   <div>
                     {/* Photo Header */}
                     <div className="relative h-48 w-full overflow-hidden bg-slate-100">
@@ -406,13 +555,9 @@ export default function RiskAnalytics() {
 
                       {/* Match Score Badge */}
                       <span className={`absolute top-3 right-3 px-2.5 py-1 backdrop-blur-md text-white text-xs font-black rounded-lg shadow-sm border ${
-                        isOverPlanted 
-                          ? 'bg-red-600/90 border-red-400/30' 
-                          : isWarning 
-                          ? 'bg-amber-600/90 border-amber-400/30' 
-                          : 'bg-emerald-600/90 border-emerald-400/30'
+                        theme.badge
                       }`}>
-                        {isOverPlanted ? `Over-Planted (${searchResult.riskPercentage}%)` : `${matchScore}% Match`}
+                        {isOverPlanted ? `Over-Planted (${searchResult.riskPercentage}%)` : isWarning ? `Moderate Risk (${searchResult.riskPercentage}%)` : `${matchScore}% Match (Safe)`}
                       </span>
 
                       {/* Crop Name on Image */}
@@ -431,11 +576,7 @@ export default function RiskAnalytics() {
 
                     {/* Card Body */}
                     <div className="p-4 space-y-4">
-                      <p className={`text-xs leading-relaxed p-3 rounded-xl border font-medium ${
-                        isOverPlanted
-                          ? 'bg-red-50/80 border-red-200 text-red-900'
-                          : 'bg-emerald-50/60 border-emerald-200/60 text-slate-700'
-                      }`}>
+                      <p className={`text-xs leading-relaxed p-3 rounded-xl border font-medium ${theme.rationaleBox}`}>
                         {rationaleText}
                       </p>
 
@@ -507,7 +648,7 @@ export default function RiskAnalytics() {
 
                     <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs col-span-2 sm:col-span-1">
                       <p className="text-[11px] font-bold text-slate-500 uppercase">{t('risk_classification', 'Risk Classification')}</p>
-                      <p className={`text-lg font-black mt-0.5 ${isOverPlanted ? 'text-red-600' : 'text-emerald-700'}`}>
+                      <p className={`text-lg font-black mt-0.5 ${theme.statusText}`}>
                         {searchResult.riskLevel || 'SAFE'}
                       </p>
                       <span className="text-[10px] text-slate-500 font-semibold">{searchResult.riskPercentage || 15}% quota saturation</span>
@@ -543,7 +684,8 @@ export default function RiskAnalytics() {
             );
           })()}
         </div>
-      )}
+        );
+      })()}
 
       {/* Recommendations Grid */}
       <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 shadow-card">
