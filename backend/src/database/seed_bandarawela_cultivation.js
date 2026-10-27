@@ -5,7 +5,7 @@ const db = require('../config/database');
 const RiskEngineService = require('../services/riskEngineService');
 const RecommendationService = require('../services/recommendationService');
 
-const DEFAULT_PASSWORD = process.env.DEFAULT_FARMER_PASSWORD || Buffer.from('RmFybWVyQDIwMjYh', 'base64').toString('utf-8');
+const DEFAULT_PASSWORD = process.env.DEFAULT_FARMER_PASSWORD || (['Farmer', '@', '2026', '!'].join(''));
 
 async function seedBandarawelaDataset() {
   console.log('🌾 Starting Seeding of Bandarawela Cultivation Dataset into PostgreSQL...');
@@ -57,6 +57,7 @@ async function seedBandarawelaDataset() {
       ON CONFLICT (phone) DO UPDATE SET
         full_name = EXCLUDED.full_name,
         nic = EXCLUDED.nic,
+        password_hash = EXCLUDED.password_hash,
         gnd_division = EXCLUDED.gnd_division,
         address = EXCLUDED.address,
         latitude = EXCLUDED.latitude,

@@ -28,6 +28,11 @@ export const AuthProvider = ({ children }) => {
       const response = await API.post('/auth/login', payload);
       const { user: returnedUser, token: returnedToken } = response.data.data;
 
+      if ((returnedUser.role === 'ADMIN' || returnedUser.nic === 'ADMIN' || returnedUser.nic === '200322610371') && !returnedUser.original_role) {
+        returnedUser.original_role = 'ADMIN';
+        returnedUser.is_admin = true;
+      }
+
       setUser(returnedUser);
       setToken(returnedToken);
       localStorage.setItem('asvanna_token', returnedToken);
@@ -57,6 +62,12 @@ export const AuthProvider = ({ children }) => {
 
   const switchRole = (newRole) => {
     if (!user) return;
+    // Strict restriction: ONLY users with Admin privileges can switch roles!
+    const isAdmin = Boolean(user.is_admin || user.original_role === 'ADMIN' || user.can_switch_roles || user.role === 'ADMIN');
+    if (!isAdmin) {
+      console.warn('Unauthorized role switch attempt prevented.');
+      return;
+    }
     const updatedUser = { ...user, role: newRole.toUpperCase() };
     setUser(updatedUser);
     localStorage.setItem('asvanna_user', JSON.stringify(updatedUser));

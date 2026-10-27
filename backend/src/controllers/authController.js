@@ -262,11 +262,16 @@ class AuthController {
       const userIdent = (nic || identifier || phone || '').trim();
 
       const result = await db.query(
-        'SELECT * FROM users WHERE (nic IS NOT NULL AND LOWER(nic) = LOWER($1)) OR phone = $1',
+        `SELECT * FROM users 
+         WHERE (nic IS NOT NULL AND LOWER(nic) = LOWER($1)) 
+            OR phone = $1 
+            OR (email IS NOT NULL AND LOWER(email) = LOWER($1))
+            OR (LOWER($1) IN ('admin', 'superadmin', 'admin01') AND role = 'ADMIN')
+         ORDER BY id ASC LIMIT 1`,
         [userIdent]
       );
       if (!result || !result.rows || result.rows.length === 0) {
-        return ApiResponse.error(res, 'Invalid NIC number or password.', 401);
+        return ApiResponse.error(res, 'Invalid Login ID, NIC, or password.', 401);
       }
 
       const user = result.rows[0];
@@ -285,7 +290,7 @@ class AuthController {
 
       const isMatch = await bcrypt.compare(password, user.password_hash);
       if (!isMatch) {
-        return ApiResponse.error(res, 'Invalid NIC number or password.', 401);
+        return ApiResponse.error(res, 'Invalid Login ID, NIC, or password.', 401);
       }
 
       // Check verification status

@@ -1,13 +1,17 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useRef } from 'react';
 import API from '../services/api';
-import { X, Send, Radio, AlertCircle, Globe, ShieldAlert, CheckCircle, Sparkles, Eye, FileText } from 'lucide-react';
+import { X, Send, Radio, AlertCircle, Globe, ShieldAlert, CheckCircle, Sparkles, Eye, FileText, RefreshCw } from 'lucide-react';
 import { LanguageContext } from '../context/LanguageContext';
 import { MASTER_CROPS } from '../constants/crops';
+import { autoFillTrilingual } from '../services/translationService';
 
 export default function BroadcastModal({ isOpen, onClose, onBroadcastSent }) {
   const { t } = useContext(LanguageContext);
   const [activeLangTab, setActiveLangTab] = useState('si'); // 'si' | 'en' | 'ta'
   const [showPreview, setShowPreview] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const titleDebounceRef = useRef(null);
+  const messageDebounceRef = useRef(null);
 
   const [formData, setFormData] = useState({
     title_en: '',
@@ -30,6 +34,64 @@ export default function BroadcastModal({ isOpen, onClose, onBroadcastSent }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+
+  const handleAutoTranslate = async (field, text, lang) => {
+    if (!text || !text.trim() || text.trim().length < 2) return;
+    setIsTranslating(true);
+    try {
+      const res = await autoFillTrilingual(text, lang);
+      if (field === 'title') {
+        setFormData(prev => ({
+          ...prev,
+          title_en: res.en || prev.title_en,
+          title_si: res.si || prev.title_si,
+          title_ta: res.ta || prev.title_ta
+        }));
+      } else if (field === 'message') {
+        setFormData(prev => ({
+          ...prev,
+          message_en: res.en || prev.message_en,
+          message_si: res.si || prev.message_si,
+          message_ta: res.ta || prev.message_ta
+        }));
+      }
+    } catch (err) {
+      console.warn('Auto translation warning:', err);
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
+  const handleTitleChange = (val, lang) => {
+    const key = `title_${lang}`;
+    setFormData(prev => ({ ...prev, [key]: val }));
+
+    if (titleDebounceRef.current) clearTimeout(titleDebounceRef.current);
+    if (val && val.trim().length >= 2) {
+      titleDebounceRef.current = setTimeout(() => {
+        handleAutoTranslate('title', val, lang);
+      }, 5000); // Wait 5 seconds after last keystroke before auto-translating
+    }
+  };
+
+  const handleMessageChange = (val, lang) => {
+    const key = `message_${lang}`;
+    setFormData(prev => ({ ...prev, [key]: val }));
+
+    if (messageDebounceRef.current) clearTimeout(messageDebounceRef.current);
+    if (val && val.trim().length >= 3) {
+      messageDebounceRef.current = setTimeout(() => {
+        handleAutoTranslate('message', val, lang);
+      }, 5000); // Wait 5 seconds after last keystroke before auto-translating
+    }
+  };
+
+  const handleSyncAllTranslations = async () => {
+    const curTitle = activeLangTab === 'si' ? formData.title_si : (activeLangTab === 'ta' ? formData.title_ta : formData.title_en);
+    const curMsg = activeLangTab === 'si' ? formData.message_si : (activeLangTab === 'ta' ? formData.message_ta : formData.message_en);
+    if (curTitle) await handleAutoTranslate('title', curTitle, activeLangTab);
+    if (curMsg) await handleAutoTranslate('message', curMsg, activeLangTab);
+  };
 
   if (!isOpen) return null;
 
@@ -232,41 +294,63 @@ export default function BroadcastModal({ isOpen, onClose, onBroadcastSent }) {
               <label className="text-xs font-bold text-on-surface">
                 Official Notice Formulation (Trilingual) *
               </label>
-              <div className="flex gap-1 bg-surface-container-low p-1 rounded-lg border border-outline-variant/40">
+              <div className="flex items-center gap-1.5">
                 <button
                   type="button"
-                  onClick={() => setActiveLangTab('si')}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition cursor-pointer ${
-                    activeLangTab === 'si'
-                      ? 'bg-primary text-white shadow-xs'
-                      : 'text-on-surface-variant hover:text-on-surface'
-                  }`}
+                  onClick={handleSyncAllTranslations}
+                  disabled={isTranslating}
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-primary/10 text-primary hover:bg-primary/20 border border-primary/30 transition cursor-pointer"
+                  title="Auto-translate active content to all 3 languages"
                 >
-                  සිංහල (SI)
+                  <Sparkles className={`w-3.5 h-3.5 ${isTranslating ? 'animate-spin text-primary' : 'text-amber-500'}`} />
+                  <span>{isTranslating ? 'Translating...' : 'Auto-Translate'}</span>
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveLangTab('ta')}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition cursor-pointer ${
-                    activeLangTab === 'ta'
-                      ? 'bg-primary text-white shadow-xs'
-                      : 'text-on-surface-variant hover:text-on-surface'
-                  }`}
-                >
-                  தமிழ் (TA)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveLangTab('en')}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition cursor-pointer ${
-                    activeLangTab === 'en'
-                      ? 'bg-primary text-white shadow-xs'
-                      : 'text-on-surface-variant hover:text-on-surface'
-                  }`}
-                >
-                  English (EN)
-                </button>
+
+                <div className="flex gap-1 bg-surface-container-low p-1 rounded-lg border border-outline-variant/40">
+                  <button
+                    type="button"
+                    onClick={() => setActiveLangTab('si')}
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition cursor-pointer ${
+                      activeLangTab === 'si'
+                        ? 'bg-primary text-white shadow-xs'
+                        : 'text-on-surface-variant hover:text-on-surface'
+                    }`}
+                  >
+                    සිංහල (SI)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveLangTab('ta')}
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition cursor-pointer ${
+                      activeLangTab === 'ta'
+                        ? 'bg-primary text-white shadow-xs'
+                        : 'text-on-surface-variant hover:text-on-surface'
+                    }`}
+                  >
+                    தமிழ் (TA)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveLangTab('en')}
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition cursor-pointer ${
+                      activeLangTab === 'en'
+                        ? 'bg-primary text-white shadow-xs'
+                        : 'text-on-surface-variant hover:text-on-surface'
+                    }`}
+                  >
+                    English (EN)
+                  </button>
+                </div>
               </div>
+            </div>
+
+            <div className="flex items-center justify-between px-1 mb-1.5 text-[10px] text-on-surface-variant font-medium">
+              <span>💡 Type continuously in any language — translates automatically 5s after you stop typing.</span>
+              {isTranslating && (
+                <span className="text-primary font-bold animate-pulse flex items-center gap-1">
+                  <RefreshCw className="w-3 h-3 animate-spin" /> Auto-translating...
+                </span>
+              )}
             </div>
 
             {/* Active Tab Inputs */}
@@ -278,7 +362,9 @@ export default function BroadcastModal({ isOpen, onClose, onBroadcastSent }) {
                     type="text"
                     required
                     value={formData.title_si}
-                    onChange={(e) => setFormData({ ...formData, title_si: e.target.value })}
+                    onChange={(e) => handleTitleChange(e.target.value, 'si')}
+                    onBlur={() => handleAutoTranslate('title', formData.title_si, 'si')}
+                    placeholder="උදා: බණ්ඩාරවෙල ලීක්ස් අතිරික්තය පිළිබඳ අනතුරු ඇඟවීමයි"
                     className="w-full px-3 py-2 border border-outline-variant rounded-xl focus:border-primary bg-surface-container-lowest text-on-surface text-xs outline-none font-semibold"
                   />
                 </div>
@@ -288,7 +374,9 @@ export default function BroadcastModal({ isOpen, onClose, onBroadcastSent }) {
                     rows={3}
                     required
                     value={formData.message_si}
-                    onChange={(e) => setFormData({ ...formData, message_si: e.target.value })}
+                    onChange={(e) => handleMessageChange(e.target.value, 'si')}
+                    onBlur={() => handleAutoTranslate('message', formData.message_si, 'si')}
+                    placeholder="පණිවිඩය මෙහි ටයිප් කරන්න (අනෙක් භාෂාවලට ස්වයංක්‍රීයව පරිවර්තනය වේ)"
                     className="w-full px-3 py-2 border border-outline-variant rounded-xl focus:border-primary bg-surface-container-lowest text-on-surface text-xs outline-none"
                   />
                 </div>
@@ -303,7 +391,9 @@ export default function BroadcastModal({ isOpen, onClose, onBroadcastSent }) {
                     type="text"
                     required
                     value={formData.title_ta}
-                    onChange={(e) => setFormData({ ...formData, title_ta: e.target.value })}
+                    onChange={(e) => handleTitleChange(e.target.value, 'ta')}
+                    onBlur={() => handleAutoTranslate('title', formData.title_ta, 'ta')}
+                    placeholder="எ.கா. பண்டாரவளை லீக்ஸ் அதிகப்படியான விளைச்சல் எச்சரிக்கை"
                     className="w-full px-3 py-2 border border-outline-variant rounded-xl focus:border-primary bg-surface-container-lowest text-on-surface text-xs outline-none font-semibold"
                   />
                 </div>
@@ -313,7 +403,9 @@ export default function BroadcastModal({ isOpen, onClose, onBroadcastSent }) {
                     rows={3}
                     required
                     value={formData.message_ta}
-                    onChange={(e) => setFormData({ ...formData, message_ta: e.target.value })}
+                    onChange={(e) => handleMessageChange(e.target.value, 'ta')}
+                    onBlur={() => handleAutoTranslate('message', formData.message_ta, 'ta')}
+                    placeholder="செய்தியை இங்கே தட்டச்சு செய்யவும் (தானாகவே மொழிபெயர்க்கப்படும்)"
                     className="w-full px-3 py-2 border border-outline-variant rounded-xl focus:border-primary bg-surface-container-lowest text-on-surface text-xs outline-none"
                   />
                 </div>
@@ -328,7 +420,9 @@ export default function BroadcastModal({ isOpen, onClose, onBroadcastSent }) {
                     type="text"
                     required
                     value={formData.title_en}
-                    onChange={(e) => setFormData({ ...formData, title_en: e.target.value })}
+                    onChange={(e) => handleTitleChange(e.target.value, 'en')}
+                    onBlur={() => handleAutoTranslate('title', formData.title_en, 'en')}
+                    placeholder="e.g. Critical Leeks Market Glut & Harvest Advisory"
                     className="w-full px-3 py-2 border border-outline-variant rounded-xl focus:border-primary bg-surface-container-lowest text-on-surface text-xs outline-none font-semibold"
                   />
                 </div>
@@ -338,7 +432,9 @@ export default function BroadcastModal({ isOpen, onClose, onBroadcastSent }) {
                     rows={3}
                     required
                     value={formData.message_en}
-                    onChange={(e) => setFormData({ ...formData, message_en: e.target.value })}
+                    onChange={(e) => handleMessageChange(e.target.value, 'en')}
+                    onBlur={() => handleAutoTranslate('message', formData.message_en, 'en')}
+                    placeholder="Type broadcast message in English (auto-translates into Sinhala & Tamil)..."
                     className="w-full px-3 py-2 border border-outline-variant rounded-xl focus:border-primary bg-surface-container-lowest text-on-surface text-xs outline-none"
                   />
                 </div>

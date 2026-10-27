@@ -15,7 +15,20 @@ export default function Sidebar() {
 
   const getRoleLinks = () => {
     const r = role?.toUpperCase();
-    if (r === 'OFFICER' || r === 'ADMIN') {
+    if (r === 'ADMIN') {
+      return [
+        { path: '/dashboard', label: t('nav_field_overview'), icon: 'agriculture' },
+        { path: '/monitoring', label: t('nav_regional_map'), icon: 'map' },
+        { path: '/risk-analytics', label: t('risk_analytics'), icon: 'bar_chart' },
+        { path: '/prices', label: t('nav_wholesale_rates', 'Wholesale Rates'), icon: 'trending_up' },
+        { path: '/weather', label: t('nav_agro_weather', 'Agro Weather'), icon: 'cloud' },
+        { path: '/farmers', label: t('nav_farmer_directory'), icon: 'group' },
+        { path: '/users', label: t('nav_user_directory', 'User Directory'), icon: 'manage_accounts' },
+        { path: '/marketplace', label: t('nav_surplus_marketplace'), icon: 'storefront' },
+        { path: '/broadcasts', label: t('nav_advisory_broadcasts'), icon: 'campaign' },
+        { path: '/settings', label: t('settings'), icon: 'settings' },
+      ];
+    } else if (r === 'OFFICER') {
       return [
         { path: '/dashboard', label: t('nav_field_overview'), icon: 'agriculture' },
         { path: '/monitoring', label: t('nav_regional_map'), icon: 'map' },

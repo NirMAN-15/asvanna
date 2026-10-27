@@ -66,7 +66,7 @@ export default function MarketplaceSurplus() {
 
   // Add Surplus Form State
   const [formData, setFormData] = useState({
-    cropId: MASTER_CROPS[2].id, // Default Carrot
+    cropId: MASTER_CROPS[1]?.id || 2, // Default Carrot
     quantityKg: '450',
     pricePerKg: '280',
     harvestDate: new Date().toISOString().split('T')[0],

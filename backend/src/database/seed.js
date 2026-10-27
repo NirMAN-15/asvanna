@@ -2,9 +2,9 @@ const db = require('../config/database');
 const seedTestFarmers = require('./seed_test_farmers');
 
 async function seedData() {
-  console.log('🌱 Seeding 11 Keppetipola Test Crops & Benchmark Intelligence for ASVANNA...');
+  console.log('🌱 Seeding 11 Pilot Crops & Benchmark Intelligence for ASVANNA...');
   try {
-    // 1. Seed 11 Master Crops for Bandarawela & Upcountry (DoA Sri Lanka & Keppetipola validated)
+    // 1. Seed 11 Pilot Crops for Bandarawela & Upcountry (DoA Sri Lanka & Keppetipola validated)
     const crops = [
       {
         code: 'BEANS', en: 'Green Beans (Butter/Bush)', si: 'බෝංචි', ta: 'போஞ்சி',
@@ -127,16 +127,16 @@ async function seedData() {
         imageUrl: 'https://images.unsplash.com/photo-1593105544559-ecb03bf76f82?w=600&auto=format&fit=crop&q=80'
       },
       {
-        code: 'POTATO', en: 'Upcountry Potato (Welimada)', si: 'අර්තාපල්', ta: 'உருளைக்கிழங்கு',
-        category: 'Upcountry Vegetable', duration: 100,
+        code: 'BROCCOLI', en: 'Broccoli', si: 'බ්‍රොකොලි', ta: 'ப்ரோக்கோலி',
+        category: 'Upcountry Vegetable', duration: 75,
         tempMin: 12.0, tempMax: 20.0, humMin: 65.0, humMax: 80.0,
-        rainMin: 1000, rainMax: 1600, soil: 'Loose Organic Loam',
-        yieldPerAcre: 8000, price: 390.00, priceMin: 250.00, priceMax: 450.00,
-        standardDemand: 150000, waterlog: true, disease: 'HIGH',
-        descEn: 'Major staple commercial crop in Bandarawela-Welimada seed potato belt.',
-        descSi: 'බණ්ඩාරවෙල-වැලිමඩ බීජ අල කලාපයේ ප්‍රධාන වාණිජ බෝගයකි.',
-        descTa: 'பண்டாரவளை-வெலிமடை உருளைக்கிழங்கு மண்டலத்தின் முக்கிய வணிகப் பயிர்.',
-        imageUrl: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=600&auto=format&fit=crop&q=80'
+        rainMin: 800, rainMax: 1400, soil: 'Deep Fertile Loam',
+        yieldPerAcre: 4000, price: 680.00, priceMin: 500.00, priceMax: 1200.00,
+        standardDemand: 20000, waterlog: false, disease: 'MODERATE',
+        descEn: 'High-value gourmet crop thriving during cooler Maha months in Bandarawela.',
+        descSi: 'බණ්ඩාරවෙල ශීත මාසවල ඉතා සරුසාරව වැඩෙන ඉහළ මිලක් ලැබෙන බෝගයකි.',
+        descTa: 'குளிர்ந்த மாதங்களில் அதிக லாபம் ஈட்டித்தரும் உயர்ரக மரக்கறி.',
+        imageUrl: 'https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?w=600&auto=format&fit=crop&q=80'
       }
     ];
 
@@ -174,7 +174,7 @@ async function seedData() {
         ]
       );
     }
-    console.log('✅ 11 Keppetipola Master crops seeded with direct cloud image URLs');
+    console.log('✅ 11 Pilot crops seeded with direct cloud image URLs');
 
     // 2. Fetch seeded crops to map IDs
     const cropsRes = await db.query('SELECT id, crop_code FROM crops');
@@ -200,8 +200,7 @@ async function seedData() {
       { code: 'BEETROOT', season: 'YALA', start: 5, end: 8, suit: 'BEST', score: 88.0, notes: 'High resilience year round' },
       { code: 'KNOLKHOL', season: 'MAHA', start: 10, end: 2, suit: 'BEST', score: 88.0, notes: 'Hardy brassica vegetable' },
       { code: 'RADISH', season: 'MAHA', start: 9, end: 2, suit: 'BEST', score: 85.0, notes: 'Quick turnaround root vegetable' },
-      { code: 'POTATO', season: 'MAHA', start: 10, end: 2, suit: 'BEST', score: 95.0, notes: 'Prime seed potato cultivation season' },
-      { code: 'POTATO', season: 'YALA', start: 6, end: 8, suit: 'POOR', score: 50.0, notes: 'Fungal blight risk during heavy rain' }
+      { code: 'BROCCOLI', season: 'MAHA', start: 11, end: 2, suit: 'BEST', score: 96.0, notes: 'Bandarawela prime winter heads' }
     ];
 
     for (const sm of seasonalMappings) {
@@ -216,7 +215,7 @@ async function seedData() {
         );
       }
     }
-    console.log('✅ Crop season suitability matrix seeded for 11 test crops');
+    console.log('✅ Crop season suitability matrix seeded for 11 pilot crops');
 
     // 4. Seed Real Keppetipola Wholesale Price History (Past 30 Days)
     const today = new Date();
@@ -231,7 +230,7 @@ async function seedData() {
       { code: 'BEETROOT', basePrice: 260.00 },
       { code: 'KNOLKHOL', basePrice: 180.00 },
       { code: 'RADISH', basePrice: 140.00 },
-      { code: 'POTATO', basePrice: 390.00 }
+      { code: 'BROCCOLI', basePrice: 680.00 }
     ];
 
     for (let dayOffset = 30; dayOffset >= 0; dayOffset--) {
@@ -254,7 +253,7 @@ async function seedData() {
         }
       }
     }
-    console.log('✅ Keppetipola wholesale price history (past 30 days) seeded for 11 test crops');
+    console.log('✅ Keppetipola wholesale price history (past 30 days) seeded for 11 pilot crops');
 
     // 5. Seed CROPIX Benchmarks for Badulla District
     const currentMonth = new Date().getMonth() + 1;
@@ -271,7 +270,7 @@ async function seedData() {
       { code: 'BEETROOT', nat: 380000, reg: 75000, gap: 32000 },
       { code: 'KNOLKHOL', nat: 200000, reg: 45000, gap: 10000 },
       { code: 'RADISH', nat: 250000, reg: 50000, gap: 14000 },
-      { code: 'POTATO', nat: 700000, reg: 150000, gap: 40000 }
+      { code: 'BROCCOLI', nat: 100000, reg: 20000, gap: 4000 }
     ];
 
     for (const cd of cropixDemands) {
@@ -287,7 +286,7 @@ async function seedData() {
         );
       }
     }
-    console.log('✅ CROPIX national & regional demand quotas seeded for 11 test crops');
+    console.log('✅ CROPIX national & regional demand quotas seeded for 11 pilot crops');
 
     // 6. Seed Rolling 3-Year Monthly Wholesale Price Benchmarks
     const monthlyMultipliers = {
@@ -347,12 +346,9 @@ async function seedData() {
         }
       }
     }
-    console.log(`✅ 3-Year Monthly Wholesale Price Benchmarks seeded (${totalBenchmarksSeeded} records across 11 test crops)`);
+    console.log(`✅ 3-Year Monthly Wholesale Price Benchmarks seeded (${totalBenchmarksSeeded} records across 11 pilot crops)`);
 
-    // 7. Seed 50 Test Farmers and Past Month Planting Records
-    await seedTestFarmers();
-
-    console.log('🌾 All 11 test data crops, 50 test farmers, and historical plantings seeded cleanly.');
+    console.log('🌾 All 11 pilot crops and baseline benchmarks seeded cleanly.');
     process.exit(0);
   } catch (error) {
     console.error('❌ Seeding failed:', error);

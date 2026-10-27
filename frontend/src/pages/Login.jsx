@@ -2,7 +2,7 @@ import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { LanguageContext } from '../context/LanguageContext';
-import { validateNIC } from '../utils/validation';
+import { validateNIC, validatePhone } from '../utils/validation';
 import farmerBg from '../assets/login-farmer-bg.jpg';
 import buyerBg from '../assets/login-buyer-bg.jpg';
 import officerBg from '../assets/login-officer-bg.jpg';
@@ -67,8 +67,18 @@ export default function Login() {
 
   const handleNicBlur = () => {
     if (nic) {
-      const res = validateNIC(nic);
-      setNicError(res.isValid ? '' : res.message);
+      const clean = nic.trim();
+      if (['admin', 'superadmin', 'admin01'].includes(clean.toLowerCase())) {
+        setNicError('');
+        return;
+      }
+      const nicRes = validateNIC(clean);
+      const phoneRes = validatePhone(clean, true);
+      if (nicRes.isValid || phoneRes.isValid || clean.length >= 4) {
+        setNicError('');
+      } else {
+        setNicError('Please enter a valid NIC (e.g. 198512345678), Phone (e.g. 0771234567), or Admin ID (admin).');
+      }
     }
   };
 
@@ -82,15 +92,32 @@ export default function Login() {
     e?.preventDefault();
     setError('');
 
-    const nicRes = validateNIC(nic);
-    if (!nicRes.isValid) {
-      setNicError(nicRes.message);
-      setError(nicRes.message);
+    const clean = nic.trim();
+    if (!clean) {
+      setNicError('Login ID or NIC number is required.');
+      setError('Login ID or NIC number is required.');
       return;
     }
 
+    let finalIdentifier = clean;
+    const isAdminAlias = ['admin', 'superadmin', 'admin01'].includes(clean.toLowerCase());
+
+    if (!isAdminAlias) {
+      const nicRes = validateNIC(clean);
+      const phoneRes = validatePhone(clean, true);
+      if (nicRes.isValid) {
+        finalIdentifier = nicRes.clean;
+      } else if (phoneRes.isValid) {
+        finalIdentifier = phoneRes.clean;
+      } else if (clean.length < 3) {
+        setNicError('Please enter a valid NIC, Phone number, or Admin ID.');
+        setError('Please enter a valid NIC, Phone number, or Admin ID.');
+        return;
+      }
+    }
+
     setLoading(true);
-    const res = await login(nicRes.clean || nic.trim().toUpperCase(), password, role);
+    const res = await login(finalIdentifier, password, role);
     setLoading(false);
 
     if (res.success) {
@@ -299,10 +326,10 @@ export default function Login() {
               <div className="flex flex-col gap-1.5">
                 <div className="flex items-center justify-between px-1">
                   <label className="font-label-md text-sm sm:text-base text-primary font-semibold" htmlFor="nic">
-                    {lang === 'si' ? 'ජාතික හැඳුනුම්පත් අංකය (NIC)' : lang === 'ta' ? 'தேசிய அடையாள அட்டை எண் (NIC)' : 'National Identity Card (NIC)'}
+                    {lang === 'si' ? 'ජාතික හැඳුනුම්පත / Login ID' : lang === 'ta' ? 'அடையாள அட்டை / Login ID' : 'NIC / Login ID'}
                   </label>
-                  <span className="text-xs text-on-surface-variant">
-                    {lang === 'si' ? 'අංක 9+V හෝ අංක 12' : lang === 'ta' ? '9 இலக்கங்கள்+V அல்லது 12 இலக்கங்கள்' : '9 digits + V or 12 digits'}
+                  <span className="text-xs text-on-surface-variant font-medium">
+                    {lang === 'si' ? 'NIC, දුරකථන අංකය, හෝ admin' : 'NIC, Phone, or admin'}
                   </span>
                 </div>
                 <div className="relative group">
@@ -315,11 +342,11 @@ export default function Login() {
                     required
                     value={nic}
                     onChange={(e) => {
-                      setNic(e.target.value.toUpperCase());
+                      setNic(e.target.value);
                       if (nicError) setNicError('');
                     }}
                     onBlur={handleNicBlur}
-                    placeholder="e.g. 198512345678 or 851234567V"
+                    placeholder="e.g. admin or 198512345678 or 0770000000"
                     className={`w-full h-[54px] sm:h-[58px] pl-12 pr-4 bg-surface-bright/50 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none font-body-md text-base text-on-surface ${
                       nicError ? 'border-error ring-1 ring-error' : 'border-outline-variant/60'
                     }`}

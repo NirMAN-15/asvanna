@@ -12,6 +12,7 @@ import Dashboard from './pages/Dashboard';
 import RegionalMonitoring from './pages/RegionalMonitoring';
 import RiskAnalytics from './pages/RiskAnalytics';
 import FarmerDirectory from './pages/FarmerDirectory';
+import UserDirectory from './pages/UserDirectory';
 import Broadcasts from './pages/Broadcasts';
 import MarketplaceSurplus from './pages/MarketplaceSurplus';
 import ProcurementHistory from './pages/ProcurementHistory';
@@ -38,6 +39,7 @@ function AppLayout() {
             <Route path="/prices" element={<ProtectedRoute allowedRoles={['ADMIN','OFFICER','FARMER','BUYER']}><PriceManagement /></ProtectedRoute>} />
             <Route path="/weather" element={<ProtectedRoute allowedRoles={['ADMIN','OFFICER','FARMER','BUYER']}><WeatherDashboard /></ProtectedRoute>} />
             <Route path="/farmers" element={<ProtectedRoute allowedRoles={['ADMIN','OFFICER']}><FarmerDirectory /></ProtectedRoute>} />
+            <Route path="/users" element={<ProtectedRoute allowedRoles={['ADMIN']}><UserDirectory /></ProtectedRoute>} />
             <Route path="/broadcasts" element={<ProtectedRoute allowedRoles={['ADMIN','OFFICER','FARMER']}><Broadcasts /></ProtectedRoute>} />
             <Route path="/marketplace" element={<ProtectedRoute allowedRoles={['ADMIN','FARMER','BUYER']}><MarketplaceSurplus /></ProtectedRoute>} />
             <Route path="/history" element={<ProtectedRoute allowedRoles={['ADMIN','OFFICER','FARMER','BUYER']}><ProcurementHistory /></ProtectedRoute>} />

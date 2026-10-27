@@ -18,4 +18,9 @@ router.get('/analytics/summary', OfficerController.getRegionalAnalytics);
 router.get('/analytics/forecast', OfficerController.getForecasting);
 router.get('/export-report', OfficerController.exportReport);
 
+// Admin-Exclusive User Management (Officers, Buyers, Admins)
+router.get('/other-users', authorizeRoles('ADMIN'), OfficerController.getOtherUsers);
+router.post('/register-officer-admin', authorizeRoles('ADMIN'), OfficerController.registerOfficerOrAdmin);
+router.delete('/users/:userId', authorizeRoles('ADMIN'), OfficerController.removeUser);
+
 module.exports = router;
