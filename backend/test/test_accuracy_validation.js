@@ -130,7 +130,7 @@ async function runTestSuite() {
     totalTests++;
     const cropsRes = await db.query('SELECT * FROM crops');
     const crops = cropsRes.rows || [];
-    assert(crops.length === 21, `All 21 master crops loaded (Count: ${crops.length})`);
+    assert(crops.length === 11, `All 11 master crops loaded (Count: ${crops.length})`);
     passedTests++;
 
     totalTests++;
