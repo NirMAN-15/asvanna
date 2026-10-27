@@ -75,53 +75,84 @@ export default function Dashboard() {
   const [vegPage, setVegPage] = useState(1);
   const [vegetableModalState, setVegetableModalState] = useState({ isOpen: false, vegetable: null });
 
+  // Dynamic recommendations for farmers
+  const [topRecommendations, setTopRecommendations] = useState([]);
+  const [loadingRecommendations, setLoadingRecommendations] = useState(false);
+  const [selectedAlternativeCropId, setSelectedAlternativeCropId] = useState(null);
+
+  const fetchTopRecommendations = async () => {
+    setLoadingRecommendations(true);
+    try {
+      const res = await API.get('/recommendations?district=Badulla');
+      if (res.data?.data && Array.isArray(res.data.data)) {
+        setTopRecommendations(res.data.data);
+      }
+    } catch (err) {
+      console.warn('Failed to load crop recommendations for dashboard:', err);
+    } finally {
+      setLoadingRecommendations(false);
+    }
+  };
+
   const [regionalVegetables, setRegionalVegetables] = useState([
-    { id: 1, crop_code: 'BEANS', name_en: 'Green Beans', name_si: 'බෝංචි', name_ta: 'போஞ்சி', planted_ha: 110, quota_ha: 160, pct: 68, yield_mt: '1,870 MT', plots: 49, status: 'SAFE', barColor: 'bg-teal-600', badgeColor: 'bg-teal-100 text-teal-800 border-teal-200', image_url: 'https://images.unsplash.com/photo-1567375698348-5d9d5ae99de0?w=600&auto=format&fit=crop&q=80' },
-    { id: 2, crop_code: 'CARROT', name_en: 'Carrot', name_si: 'කැරට්', name_ta: 'கேரட்', planted_ha: 285, quota_ha: 310, pct: 92, yield_mt: '4,275 MT', plots: 94, status: 'CRITICAL', barColor: 'bg-red-500', badgeColor: 'bg-red-100 text-red-800 border-red-200', image_url: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=600&auto=format&fit=crop&q=80' },
-    { id: 3, crop_code: 'LEEKS', name_en: 'Leeks', name_si: 'ලීක්ස්', name_ta: 'லீக்ஸ்', planted_ha: 140, quota_ha: 180, pct: 78, yield_mt: '2,520 MT', plots: 58, status: 'WARNING', barColor: 'bg-amber-500', badgeColor: 'bg-amber-100 text-amber-900 border-amber-200', image_url: 'https://images.unsplash.com/photo-1587049633312-d628ae50a8ae?w=600&auto=format&fit=crop&q=80' },
-    { id: 4, crop_code: 'CABBAGE', name_en: 'Cabbage', name_si: 'ගෝවා', name_ta: 'முட்டைக்கோஸ்', planted_ha: 210, quota_ha: 270, pct: 78, yield_mt: '5,250 MT', plots: 82, status: 'WARNING', barColor: 'bg-amber-500', badgeColor: 'bg-amber-100 text-amber-900 border-amber-200', image_url: 'https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?w=600&auto=format&fit=crop&q=80' },
-    { id: 5, crop_code: 'TOMATO', name_en: 'Tomato', name_si: 'තක්කාලි', name_ta: 'தக்காளி', planted_ha: 80, quota_ha: 140, pct: 57, yield_mt: '1,200 MT', plots: 36, status: 'SAFE', barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&auto=format&fit=crop&q=80' },
-    { id: 6, crop_code: 'CAULIFLOWER', name_en: 'Cauliflower', name_si: 'මල් ගෝවා', name_ta: 'காலிஃபிளவர்', planted_ha: 52, quota_ha: 75, pct: 69, yield_mt: '680 MT', plots: 24, status: 'SAFE', barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1568584711075-3d021a7c3ca3?w=600&auto=format&fit=crop&q=80' },
-    { id: 7, crop_code: 'CAPSICUM', name_en: 'Capsicum', name_si: 'මාළු මිරිස්', name_ta: 'குடை மிளகாய்', planted_ha: 65, quota_ha: 120, pct: 54, yield_mt: '780 MT', plots: 28, status: 'SAFE', barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=600&auto=format&fit=crop&q=80' },
-    { id: 8, crop_code: 'BEETROOT', name_en: 'Beetroot', name_si: 'බීට්රූට්', name_ta: 'பீட்ரூட்', planted_ha: 110, quota_ha: 160, pct: 68, yield_mt: '1,870 MT', plots: 49, status: 'SAFE', barColor: 'bg-teal-600', badgeColor: 'bg-teal-100 text-teal-800 border-teal-200', image_url: 'https://images.unsplash.com/photo-1528825871115-3581a5387919?w=600&auto=format&fit=crop&q=80' },
-    { id: 9, crop_code: 'KNOLKHOL', name_en: 'Knolkhol', name_si: 'නෝල්කෝල්', name_ta: 'நூல்கோல்', planted_ha: 38, quota_ha: 50, pct: 76, yield_mt: '420 MT', plots: 18, status: 'WARNING', barColor: 'bg-amber-500', badgeColor: 'bg-amber-100 text-amber-900 border-amber-200', image_url: 'https://images.unsplash.com/photo-1590779033100-9f60a05a013d?w=600&auto=format&fit=crop&q=80' },
-    { id: 10, crop_code: 'RADISH', name_en: 'Radish', name_si: 'රාබු', name_ta: 'முள்ளங்கி', planted_ha: 45, quota_ha: 90, pct: 50, yield_mt: '540 MT', plots: 22, status: 'SAFE', barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1593105544559-ecb03bf76f82?w=600&auto=format&fit=crop&q=80' },
-    { id: 15, crop_code: 'BROCCOLI', name_en: 'Broccoli', name_si: 'බ්‍රොකොලි', name_ta: 'ப்ரோக்கோலி', planted_ha: 25, quota_ha: 40, pct: 62, yield_mt: '240 MT', plots: 15, status: 'SAFE', barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?w=600&auto=format&fit=crop&q=80' }
+    { id: 1, crop_code: 'BEANS', name_en: 'Green Beans', name_si: 'බෝංචි', name_ta: 'போஞ்சி', planted_ha: 1.4, planted_acres: 3.5, quota_ha: 32, quota_mt: '80.0 MT', pct: 22, yield_mt: '17.5 MT', plots: 5, status: 'SAFE', growth_duration_days: 60, barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1567375698348-5d9d5ae99de0?w=600&auto=format&fit=crop&q=80' },
+    { id: 2, crop_code: 'CARROT', name_en: 'Carrot', name_si: 'කැරට්', name_ta: 'கேரட்', planted_ha: 5.5, planted_acres: 13.5, quota_ha: 45, quota_mt: '110.0 MT', pct: 92, yield_mt: '101.3 MT', plots: 12, status: 'CRITICAL', growth_duration_days: 85, barColor: 'bg-red-500', badgeColor: 'bg-red-100 text-red-800 border-red-200', image_url: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=600&auto=format&fit=crop&q=80' },
+    { id: 3, crop_code: 'LEEKS', name_en: 'Leeks', name_si: 'ලීක්ස්', name_ta: 'லீக்ස්', planted_ha: 3.6, planted_acres: 8.8, quota_ha: 38, quota_mt: '95.0 MT', pct: 79, yield_mt: '74.8 MT', plots: 8, status: 'WARNING', growth_duration_days: 90, barColor: 'bg-amber-500', badgeColor: 'bg-amber-100 text-amber-900 border-amber-200', image_url: 'https://images.unsplash.com/photo-1587049633312-d628ae50a8ae?w=600&auto=format&fit=crop&q=80' },
+    { id: 4, crop_code: 'CABBAGE', name_en: 'Cabbage', name_si: 'ගෝවා', name_ta: 'முட்டைக்கோස්', planted_ha: 2.6, planted_acres: 6.5, quota_ha: 48, quota_mt: '120.0 MT', pct: 65, yield_mt: '78.0 MT', plots: 6, status: 'SAFE', growth_duration_days: 75, barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?w=600&auto=format&fit=crop&q=80' },
+    { id: 5, crop_code: 'TOMATO', name_en: 'Tomato', name_si: 'තක්කාලි', name_ta: 'தக்காளி', planted_ha: 1.3, planted_acres: 3.2, quota_ha: 46, quota_mt: '115.0 MT', pct: 31, yield_mt: '35.2 MT', plots: 4, status: 'SAFE', growth_duration_days: 75, barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&auto=format&fit=crop&q=80' },
+    { id: 6, crop_code: 'CAULIFLOWER', name_en: 'Cauliflower', name_si: 'මල් ගෝවා', name_ta: 'காலிஃபிளவர்', planted_ha: 0.7, planted_acres: 1.8, quota_ha: 16, quota_mt: '40.0 MT', pct: 29, yield_mt: '11.7 MT', plots: 3, status: 'SAFE', growth_duration_days: 80, barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1568584711075-3d021a7c3ca3?w=600&auto=format&fit=crop&q=80' },
+    { id: 7, crop_code: 'CAPSICUM', name_en: 'Capsicum', name_si: 'මාළු මිරිස්', name_ta: 'குடை மிளகாய்', planted_ha: 0.9, planted_acres: 2.2, quota_ha: 26, quota_mt: '65.0 MT', pct: 19, yield_mt: '12.1 MT', plots: 3, status: 'SAFE', growth_duration_days: 80, barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=600&auto=format&fit=crop&q=80' },
+    { id: 8, crop_code: 'BEETROOT', name_en: 'Beetroot', name_si: 'බීට්රූට්', name_ta: 'பீட்ரூட்', planted_ha: 1.9, planted_acres: 4.8, quota_ha: 30, quota_mt: '75.0 MT', pct: 51, yield_mt: '38.4 MT', plots: 5, status: 'SAFE', growth_duration_days: 75, barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1528825871115-3581a5387919?w=600&auto=format&fit=crop&q=80' },
+    { id: 9, crop_code: 'KNOLKHOL', name_en: 'Knolkhol', name_si: 'නෝල්කෝල්', name_ta: 'நூல்கோல்', planted_ha: 0.6, planted_acres: 1.5, quota_ha: 18, quota_mt: '45.0 MT', pct: 25, yield_mt: '11.3 MT', plots: 3, status: 'SAFE', growth_duration_days: 65, barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1590779033100-9f60a05a013d?w=600&auto=format&fit=crop&q=80' },
+    { id: 10, crop_code: 'RADISH', name_en: 'Radish', name_si: 'රාබු', name_ta: 'முள்ளங்கி', planted_ha: 0.5, planted_acres: 1.2, quota_ha: 20, quota_mt: '50.0 MT', pct: 22, yield_mt: '10.8 MT', plots: 2, status: 'SAFE', growth_duration_days: 45, barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1593105544559-ecb03bf76f82?w=600&auto=format&fit=crop&q=80' },
+    { id: 11, crop_code: 'BROCCOLI', name_en: 'Broccoli', name_si: 'බ්‍රොකොලි', name_ta: 'ப்ரோக்கோலி', planted_ha: 4.2, planted_acres: 10.5, quota_ha: 8, quota_mt: '20.0 MT', pct: 420, yield_mt: '84.0 MT', plots: 9, status: 'CRITICAL', growth_duration_days: 70, barColor: 'bg-red-500', badgeColor: 'bg-red-100 text-red-800 border-red-200', image_url: 'https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?w=600&auto=format&fit=crop&q=80' }
   ]);
 
   const fetchRegionalVegetables = async () => {
     try {
-      const res = await API.get('/crops');
+      const res = await API.get('/risk/regional?district=Badulla');
       if (res.data?.data && res.data.data.length > 0) {
-        setRegionalVegetables(prev => {
-          return prev.map(veg => {
-            const match = res.data.data.find(c =>
-              c.crop_code === veg.crop_code ||
-              (c.name_en && c.name_en.toLowerCase().includes(veg.name_en.toLowerCase().split(' ')[0]))
-            );
-            if (!match) return veg;
-            const quota = match.standard_demand_kg ? Math.round(match.standard_demand_kg / 1000) : veg.quota_ha;
-            const planted = veg.planted_ha;
-            const pct = Math.round((planted / quota) * 100);
-            return {
-              ...veg,
-              ...match,
-              name_en: veg.name_en,
-              name_si: veg.name_si,
-              name_ta: match.name_ta || veg.name_ta,
-              image_url: match.image_url || veg.image_url,
-              planted_ha: planted,
-              quota_ha: quota,
-              pct: pct,
-              status: pct > 85 ? 'CRITICAL' : pct > 70 ? 'WARNING' : 'SAFE',
-              barColor: pct > 85 ? 'bg-red-500' : pct > 70 ? 'bg-amber-500' : 'bg-emerald-600',
-              badgeColor: pct > 85 ? 'bg-red-100 text-red-800 border-red-200' : pct > 70 ? 'bg-amber-100 text-amber-900 border-amber-200' : 'bg-emerald-100 text-emerald-800 border-emerald-200'
-            };
-          });
+        const mapped = res.data.data.map(item => {
+          const crop = item.crop || {};
+          const ratio = item.factors?.overPlanting?.ratio || 0;
+          const status = ratio > 85 ? 'CRITICAL' : ratio >= 70 ? 'WARNING' : 'SAFE';
+          const plantedAcres = parseFloat(item.totalPlantedAcres) || 0;
+          const plantedHa = parseFloat((plantedAcres * 0.4047).toFixed(1));
+          const supplyKg = parseFloat(item.estimatedSupplyKg) || 0;
+          const quotaKg = parseFloat(item.targetDemandKg) || 100000;
+          const yieldMt = (supplyKg / 1000).toFixed(1) + ' MT';
+          const quotaMt = (quotaKg / 1000).toFixed(1) + ' MT';
+          const quotaHa = Math.max(1, Math.round(quotaKg / 2500));
+
+          return {
+            id: crop.id,
+            crop_code: crop.code,
+            name_en: crop.nameEn || crop.name_en,
+            name_si: crop.nameSi || crop.name_si,
+            name_ta: crop.nameTa || crop.name_ta,
+            image_url: crop.imageUrl || crop.image_url || item.imageUrl,
+            planted_ha: plantedHa,
+            planted_acres: plantedAcres,
+            quota_ha: quotaHa,
+            quota_mt: quotaMt,
+            yield_mt: yieldMt,
+            plots: item.activePlotsCount || 0,
+            pct: ratio,
+            status,
+            growth_duration_days: item.growthDurationDays || crop.growthDurationDays || 75,
+            projected_harvest_month: item.projectedHarvestMonth,
+            barColor: status === 'CRITICAL' ? 'bg-red-500' : status === 'WARNING' ? 'bg-amber-500' : 'bg-emerald-600',
+            badgeColor: status === 'CRITICAL'
+              ? 'bg-red-100 text-red-800 border-red-200'
+              : status === 'WARNING'
+              ? 'bg-amber-100 text-amber-900 border-amber-200'
+              : 'bg-emerald-100 text-emerald-800 border-emerald-200'
+          };
         });
+        setRegionalVegetables(mapped);
       }
     } catch (err) {
-      console.warn('Failed to load crops from API:', err);
+      console.warn('Failed to load regional risk data from API:', err);
     }
   };
 
@@ -136,6 +167,9 @@ export default function Dashboard() {
         .catch(err => console.error(err));
 
       fetchRegionalVegetables();
+    }
+    if (role === 'FARMER' || role === 'ADMIN') {
+      fetchTopRecommendations();
     }
   }, [role]);
 
@@ -768,100 +802,71 @@ export default function Dashboard() {
                 {t('smart_rec_title')}
               </span>
             </div>
-            <h3 className="font-headline text-xl sm:text-2xl font-bold text-white mb-2 leading-tight">
-              {t('smart_rec_subtitle')}
+            <h3 className="font-headline text-xl sm:text-2xl font-bold text-white mb-2 leading-tight flex flex-wrap items-center gap-2">
+              <span>{t('smart_rec_subtitle')}</span>
+              {topRecommendations.length > 0 && (
+                <span className="text-secondary-fixed text-base sm:text-xl font-bold">
+                  : {topRecommendations.slice(0, 3).map(r => lang === 'si' ? (r.name_si || r.name_en) : lang === 'ta' ? (r.name_ta || r.name_en) : r.name_en).join(' • ')}
+                </span>
+              )}
             </h3>
             <p className="text-primary-fixed-dim text-sm max-w-3xl leading-relaxed mb-6">
               {t('smart_rec_desc')}
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {/* Option 1: Beetroot */}
-              <div className="bg-white/10 backdrop-blur-md border border-white/20 p-5 rounded-xl hover:bg-white/15 transition flex flex-col justify-between overflow-hidden">
-                <div>
-                  <div className="h-32 w-full rounded-lg overflow-hidden mb-3 border border-white/10 shadow-inner bg-black/20">
-                    <img
-                      src="https://images.unsplash.com/photo-1528825871115-3581a5387919?w=600&auto=format&fit=crop&q=80"
-                      alt={t('crop_beetroot')}
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                    />
-                  </div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-secondary-fixed font-bold text-xs uppercase tracking-wider">{t('option_label', { num: 1 })}</span>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-secondary-fixed text-on-secondary-fixed">
-                      {t('profit_label', { pct: 42 })}
-                    </span>
-                  </div>
-                  <h4 className="font-headline font-bold text-white text-lg">{t('crop_beetroot')}</h4>
-                  <p className="text-xs text-white/80 mt-1">{t('safe_saturation', { sat: '42.4' })}</p>
-                  <p className="text-[11px] text-primary-fixed-dim mt-2">{t('harvest_cycle_label', { days: '70–85' })}</p>
-                </div>
-                <button
-                  onClick={() => setIsFarmerModalOpen(true)}
-                  className="mt-4 w-full py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer"
-                >
-                  <span>{t('select_alternative')}</span>
-                  <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                </button>
-              </div>
+              {(topRecommendations.length > 0 ? topRecommendations.slice(0, 3) : [
+                { id: 10, crop_id: 10, name_en: 'Radish', name_si: 'රාබු', name_ta: 'முள்ளங்கி', score: 93, growthDurationDays: 45, scores: { marketGapScore: 91 }, image_url: 'https://images.unsplash.com/photo-1593105544559-ecb03bf76f82?w=600&auto=format&fit=crop&q=80' },
+                { id: 9, crop_id: 9, name_en: 'Knol-Khol (Kohlrabi)', name_si: 'නෝල්කෝල්', name_ta: 'நூல்கோல்', score: 92, growthDurationDays: 65, scores: { marketGapScore: 90 }, image_url: 'https://images.unsplash.com/photo-1590779033100-9f60a05a013d?w=600&auto=format&fit=crop&q=80' },
+                { id: 1, crop_id: 1, name_en: 'Green Beans', name_si: 'බෝංචි', name_ta: 'போஞ்சி', score: 91, growthDurationDays: 60, scores: { marketGapScore: 91 }, image_url: 'https://images.unsplash.com/photo-1567375698348-5d9d5ae99de0?w=600&auto=format&fit=crop&q=80' }
+              ]).map((rec, idx) => {
+                const displayName = lang === 'si' ? (rec.name_si || rec.name_en) : lang === 'ta' ? (rec.name_ta || rec.name_en) : rec.name_en;
+                const cropImg = rec.crop?.imageUrl || rec.crop?.image_url || rec.image_url || 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=600&auto=format&fit=crop&q=80';
+                const days = rec.crop?.growthDurationDays || rec.growthDurationDays || 75;
+                const marketGap = rec.scores?.marketGapScore || 85;
 
-              {/* Option 2: Carrots */}
-              <div className="bg-white/10 backdrop-blur-md border border-white/20 p-5 rounded-xl hover:bg-white/15 transition flex flex-col justify-between overflow-hidden">
-                <div>
-                  <div className="h-32 w-full rounded-lg overflow-hidden mb-3 border border-white/10 shadow-inner bg-black/20">
-                    <img
-                      src="https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=600&auto=format&fit=crop&q=80"
-                      alt={t('crop_carrots')}
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                    />
+                return (
+                  <div key={rec.crop_id || rec.id || idx} className="bg-white/10 backdrop-blur-md border border-white/20 p-5 rounded-xl hover:bg-white/15 transition flex flex-col justify-between overflow-hidden shadow-sm">
+                    <div>
+                      <div className="h-32 w-full rounded-lg overflow-hidden mb-3 border border-white/10 shadow-inner bg-black/20">
+                        <img
+                          src={cropImg}
+                          alt={displayName}
+                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                          onError={(e) => {
+                            e.target.src = 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=600&auto=format&fit=crop&q=80';
+                          }}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-secondary-fixed font-bold text-xs uppercase tracking-wider">{t('option_label', { num: idx + 1 })}</span>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-secondary-fixed text-on-secondary-fixed">
+                          {lang === 'si' ? `ගැළපීම: ${rec.score || 90}%` : `${rec.score || 90}% Match`}
+                        </span>
+                      </div>
+                      <h4 className="font-headline font-bold text-white text-lg">{displayName}</h4>
+                      <p className="text-xs text-white/80 mt-1">
+                        {lang === 'si' ? `වෙළෙඳපොළ ඉඩ: ${marketGap}% • ආරක්ෂිතයි` : `${marketGap}% Market Quota Open • SAFE`}
+                      </p>
+                      <p className="text-[11px] text-primary-fixed-dim mt-2 flex items-center gap-1">
+                        <span className="material-symbols-outlined text-xs">schedule</span>
+                        <span>{t('harvest_cycle_label', { days })}</span>
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedAlternativeCropId(rec.crop_id || rec.id);
+                        setIsFarmerModalOpen(true);
+                      }}
+                      className="mt-4 w-full py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer"
+                    >
+                      <span>{t('select_alternative')}</span>
+                      <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                    </button>
                   </div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-secondary-fixed font-bold text-xs uppercase tracking-wider">{t('option_label', { num: 2 })}</span>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-secondary-fixed text-on-secondary-fixed">
-                      {t('profit_label', { pct: 35 })}
-                    </span>
-                  </div>
-                  <h4 className="font-headline font-bold text-white text-lg">{t('crop_carrots')}</h4>
-                  <p className="text-xs text-white/80 mt-1">{t('safe_saturation', { sat: '54.2' })}</p>
-                  <p className="text-[11px] text-primary-fixed-dim mt-2">{t('harvest_cycle_label', { days: '90–110' })}</p>
-                </div>
-                <button
-                  onClick={() => setIsFarmerModalOpen(true)}
-                  className="mt-4 w-full py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer"
-                >
-                  <span>{t('select_alternative')}</span>
-                  <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                </button>
-              </div>
-
-              {/* Option 3: Bush Beans */}
-              <div className="bg-white/10 backdrop-blur-md border border-white/20 p-5 rounded-xl hover:bg-white/15 transition flex flex-col justify-between overflow-hidden">
-                <div>
-                  <div className="h-32 w-full rounded-lg overflow-hidden mb-3 border border-white/10 shadow-inner bg-black/20">
-                    <img
-                      src="https://images.unsplash.com/photo-1567375698348-5d9d5ae99de0?w=600&auto=format&fit=crop&q=80"
-                      alt={t('crop_bush_beans')}
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                    />
-                  </div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-secondary-fixed font-bold text-xs uppercase tracking-wider">{t('option_label', { num: 3 })}</span>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-secondary-fixed text-on-secondary-fixed">
-                      {t('profit_label', { pct: 48 })}
-                    </span>
-                  </div>
-                  <h4 className="font-headline font-bold text-white text-lg">{t('crop_bush_beans')}</h4>
-                  <p className="text-xs text-white/80 mt-1">{t('safe_saturation', { sat: '38.0' })}</p>
-                  <p className="text-[11px] text-primary-fixed-dim mt-2">{t('harvest_cycle_label', { days: '60–70' })}</p>
-                </div>
-                <button
-                  onClick={() => setIsFarmerModalOpen(true)}
-                  className="mt-4 w-full py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer"
-                >
-                  <span>{t('select_alternative')}</span>
-                  <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                </button>
-              </div>
+                );
+              })}
             </div>
           </div>
         </section>
@@ -870,10 +875,15 @@ export default function Dashboard() {
         {/* Farmer Planting Modal */}
         <FarmerPlantingModal
           isOpen={isFarmerModalOpen}
-          onClose={() => setIsFarmerModalOpen(false)}
+          initialCropId={selectedAlternativeCropId}
+          onClose={() => {
+            setIsFarmerModalOpen(false);
+            setSelectedAlternativeCropId(null);
+          }}
           onSuccess={() => {
             triggerToast(t('toast_crop_logged'));
             fetchFarmerCrops();
+            fetchTopRecommendations();
           }}
         />
       </div>
@@ -1272,16 +1282,18 @@ export default function Dashboard() {
                         <div>
                           <h4 className="font-bold text-sm text-on-surface">{displayName}</h4>
                           <div className="text-[11px] text-on-surface-variant flex items-center gap-2 mt-0.5 font-medium">
-                            <span>Yield: <strong className="text-on-surface">{veg.yield_mt || `${Math.round((veg.planted_ha || 50) * 12)} MT`}</strong></span>
+                            <span>Yield: <strong className="text-on-surface">{veg.yield_mt}</strong></span>
                             <span>•</span>
-                            <span>Plots: <strong className="text-on-surface">{veg.plots || Math.round((veg.planted_ha || 50) / 2.5)}</strong></span>
+                            <span>Plots: <strong className="text-on-surface">{veg.plots}</strong></span>
+                            <span>•</span>
+                            <span>Cycle: <strong className="text-on-surface">{veg.growth_duration_days || 75}d</strong></span>
                           </div>
                         </div>
                       </div>
 
                       <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
                         <span className={`px-2 py-0.5 text-[10px] font-extrabold rounded-md border ${veg.badgeColor || 'bg-emerald-100 text-emerald-800 border-emerald-200'}`}>
-                          {veg.status === 'CRITICAL' ? 'OVERPLANTED' : veg.status === 'WARNING' ? 'WARNING' : 'SAFE'} ({veg.pct || 50}%)
+                          {veg.status === 'CRITICAL' ? 'OVERPLANTED' : veg.status === 'WARNING' ? 'WARNING' : 'SAFE'} ({veg.pct || 0}%)
                         </span>
                         <button
                           type="button"
@@ -1296,14 +1308,22 @@ export default function Dashboard() {
 
                     <div>
                       <div className="flex justify-between text-xs font-semibold mb-1">
-                        <span className="text-on-surface-variant">{veg.planted_ha || 50} Ha Planted</span>
-                        <span className="text-outline">Quota: {veg.quota_ha || 100} Ha</span>
+                        <span className="text-on-surface-variant font-medium">
+                          {veg.planted_ha} Ha ({veg.planted_acres} Ac)
+                        </span>
+                        <span className="text-outline font-medium">
+                          Quota: {veg.quota_mt}
+                        </span>
                       </div>
                       <div className="w-full bg-surface-variant h-2.5 rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full transition-all duration-700 ${veg.barColor || 'bg-emerald-600'}`}
-                          style={{ width: `${Math.min(veg.pct || 50, 100)}%` }}
+                          style={{ width: `${Math.min(veg.pct || 0, 100)}%` }}
                         />
+                      </div>
+                      <div className="flex justify-between items-center text-[10px] text-on-surface-variant/70 mt-1">
+                        <span>{lang === 'si' ? `අස්වනු චක්‍රය: දින ${veg.growth_duration_days || 75}` : `Cycle: ${veg.growth_duration_days || 75} Days`}</span>
+                        <span>{lang === 'si' ? `අපේක්ෂිත සැපයුම: ${veg.yield_mt}` : `Est. Yield: ${veg.yield_mt}`}</span>
                       </div>
                     </div>
                   </div>
