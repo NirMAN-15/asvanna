@@ -96,20 +96,21 @@ You should see:
 * `asvanna-web-admin` (React Web on port `3000`)
 
 ### Step 5: Initialize Schema & Seed Data (11 Crops & 52 Users)
-Run the migration and seeding scripts inside the running backend container:
+> [!TIP]
+> **Automatic Seeding**: The backend container automatically runs `migrate.js` on startup, which automatically checks the database and seeds the 11 pilot crops, 2 admin accounts, and 50 test farmers if they are not already present.
+
+If you wish to manually verify or force initialize all baseline data at any time, run:
 
 ```bash
-# 1. Run database schema migrations
+# Run one-command database initialization (Schema + 11 Crops + Admins + 50 Farmers + 105 Cultivations)
+docker exec asvanna-backend npm run db:init
+```
+*(Or run individual seed scripts if needed)*:
+```bash
 docker exec asvanna-backend node src/database/migrate.js
-
-# 2. Seed the 11 Bandarawela pilot crops & 36-month price benchmarks
 docker exec asvanna-backend node src/database/seed.js
-
-# 3. Provision Super Admin & Nirman's Master User
 docker exec asvanna-backend node src/database/seed_admin.js
-
-# 4. Seed the 50 Bandarawela test farmers & initial crop plots
-docker exec asvanna-backend node src/database/seed_test_farmers.js
+docker exec asvanna-backend node src/database/seed_bandarawela_cultivation.js
 ```
 
 ### Step 6: Run Automated Accuracy Verification Suite
@@ -156,12 +157,16 @@ docker compose up -d
 ```
 
 ### Step 4: Synchronize Database (Clean to 11 Crops & 52 Users)
-If your existing database still has old 21 crops or old user tables, re-run the seeders to align with the current specification:
+If your existing database still has old 21 crops or needs synchronization with the 50 Bandarawela test farmers and 105 cultivation records, simply run:
 
+```bash
+docker exec asvanna-backend npm run db:init
+```
+*(Or run individual seeders if needed)*:
 ```bash
 docker exec asvanna-backend node src/database/seed.js
 docker exec asvanna-backend node src/database/seed_admin.js
-docker exec asvanna-backend node src/database/seed_test_farmers.js
+docker exec asvanna-backend node src/database/seed_bandarawela_cultivation.js
 ```
 
 ### Step 5: Verify
@@ -295,11 +300,18 @@ docker compose up -d --build
 ```
 
 ### Step 5.8: Run Migrations and Seed Database on Cloud
+The backend container automatically validates and seeds baseline data on startup. If you ever need to manually verify or initialize the complete baseline dataset (11 crops, 2 admins, 50 farmers, 105 cultivation records):
+
+```bash
+docker exec asvanna-backend npm run db:init
+```
+
+*(Or run manually if needed)*:
 ```bash
 docker exec asvanna-backend node src/database/migrate.js
 docker exec asvanna-backend node src/database/seed.js
 docker exec asvanna-backend node src/database/seed_admin.js
-docker exec asvanna-backend node src/database/seed_test_farmers.js
+docker exec asvanna-backend node src/database/seed_bandarawela_cultivation.js
 ```
 
 ### Step 5.9: Verify Cloud Deployment
@@ -362,11 +374,8 @@ docker compose down -v
 # Start clean
 docker compose up -d --build
 
-# Run migrations and seeders
-docker exec asvanna-backend node src/database/migrate.js
-docker exec asvanna-backend node src/database/seed.js
-docker exec asvanna-backend node src/database/seed_admin.js
-docker exec asvanna-backend node src/database/seed_test_farmers.js
+# Run one-command migrations and seeders
+docker exec asvanna-backend npm run db:init
 ```
 
 ### Export or Backup Database

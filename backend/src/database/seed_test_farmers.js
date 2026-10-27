@@ -60,6 +60,15 @@ const DEFAULT_PASSWORD = process.env.DEFAULT_FARMER_PASSWORD || (['Farmer', '@',
 
 async function seedTestFarmers() {
   console.log('🌱 Generating 50 Test Farmers and Past Month Planting Records...');
+
+  // 1. Seed PostgreSQL database with 50 farmers, approvals, and 105 active/past planting records
+  try {
+    const seedBandarawelaDataset = require('./seed_bandarawela_cultivation');
+    await seedBandarawelaDataset();
+  } catch (err) {
+    console.warn('PostgreSQL cultivation seeding note:', err.message);
+  }
+
   const salt = await bcrypt.genSalt(10);
   const passwordHash = await bcrypt.hash(DEFAULT_PASSWORD, salt);
 
@@ -73,7 +82,7 @@ async function seedTestFarmers() {
     fileDb = { users: [], crops: [], planting_records: [] };
   }
 
-  // 1. Ensure crops are strictly the 11 Keppetipola test crops
+  // 2. Ensure crops are strictly the 11 Keppetipola test crops
   const cropsRes = await db.query('SELECT * FROM crops ORDER BY id ASC');
   const crops = cropsRes.rows && cropsRes.rows.length === 11 ? cropsRes.rows : fileDb.crops;
   console.log(`🌾 Available Test Crops: ${crops.length}`);
@@ -260,7 +269,7 @@ ${DEFAULT_PASSWORD}
   8. Beetroot (\`BEETROOT\`)
   9. Knolkhol (\`KNOLKHOL\`)
   10. Radish (\`RADISH\`)
-  11. Potato (Welimada) (\`POTATO\`)
+  11. Broccoli (\`BROCCOLI\`)
 - **Land Extent Units**: Supports dual input — Perches (e.g. 15, 20, 40 perches) and fractional Acres (e.g. 0.094, 0.125, 0.250 acres). 1 Acre = 160 Perches.
 `;
 
