@@ -188,11 +188,21 @@ async function seedAdmin() {
     console.log('   - Portals Access:  FARMER | OFFICER | BUYER | ADMIN (All Portals)');
     console.log('============================================================\n');
 
-    process.exit(0);
+    if (require.main === module) {
+      process.exit(0);
+    }
+    return true;
   } catch (error) {
     console.error('❌ Failed to seed admin accounts:', error);
-    process.exit(1);
+    if (require.main === module) {
+      process.exit(1);
+    }
+    throw error;
   }
 }
 
-seedAdmin();
+if (require.main === module) {
+  seedAdmin();
+}
+
+module.exports = seedAdmin;
