@@ -8,5 +8,6 @@ router.get('/:cropId', CropController.getCropProfile);
 
 router.post('/', authenticate, authorizeRoles('OFFICER', 'ADMIN'), CropController.createCrop);
 router.put('/:cropId', authenticate, authorizeRoles('OFFICER', 'ADMIN'), CropController.updateCrop);
+router.delete('/:cropId', authenticate, authorizeRoles('OFFICER', 'ADMIN'), CropController.deleteCrop);
 
 module.exports = router;

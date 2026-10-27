@@ -89,6 +89,9 @@ export default function Dashboard() {
   const [vegPage, setVegPage] = useState(1);
   const [vegetableModalState, setVegetableModalState] = useState({ isOpen: false, vegetable: null });
   const [selectedTrendCrop, setSelectedTrendCrop] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [cropToDeleteId, setCropToDeleteId] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const [regionalVegetables, setRegionalVegetables] = useState(() => {
     try {
@@ -143,27 +146,80 @@ export default function Dashboard() {
     .sort((a, b) => (Number(a.planted_ha) || 0) - (Number(b.planted_ha) || 0))
     .slice(0, 4);
 
+  const handleOpenDeleteModal = (crop = null) => {
+    if (crop && (crop.id || crop.crop_code)) {
+      setCropToDeleteId(crop.id || crop.crop_code);
+    } else if (activeTrendCrop && (activeTrendCrop.id || activeTrendCrop.crop_code)) {
+      setCropToDeleteId(activeTrendCrop.id || activeTrendCrop.crop_code);
+    } else if (regionalVegetables.length > 0) {
+      setCropToDeleteId(regionalVegetables[0].id || regionalVegetables[0].crop_code);
+    }
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDeleteCrop = async () => {
+    if (!cropToDeleteId) return;
+    setDeleteLoading(true);
+    try {
+      try {
+        await API.delete('/crops/' + cropToDeleteId);
+      } catch (apiErr) {
+        console.warn('API delete crop error, continuing with local updates:', apiErr);
+      }
+
+      let nextTrendCrop = null;
+      setRegionalVegetables(prev => {
+        const updated = prev.filter(c => Number(c.id) !== Number(cropToDeleteId) && c.crop_code !== String(cropToDeleteId));
+        try {
+          localStorage.setItem('asvanna_regional_vegetables', JSON.stringify(updated));
+        } catch (e) {}
+        nextTrendCrop = updated.length > 0 ? updated[0] : null;
+        return updated;
+      });
+
+      setVegPage(p => {
+        const remainingCount = regionalVegetables.filter(c => Number(c.id) !== Number(cropToDeleteId) && c.crop_code !== String(cropToDeleteId)).length;
+        const maxP = Math.max(1, Math.ceil(remainingCount / 6));
+        return p > maxP ? maxP : p;
+      });
+
+      if (selectedTrendCrop && (Number(selectedTrendCrop.id) === Number(cropToDeleteId) || selectedTrendCrop.crop_code === String(cropToDeleteId))) {
+        setSelectedTrendCrop(nextTrendCrop);
+      }
+
+      setIsDeleteModalOpen(false);
+      setCropToDeleteId(null);
+      triggerToast(t('toast_veg_deleted') || (lang === 'si' ? 'එළවළු බෝගය සාර්ථකව ඉවත් කරන ලදී!' : 'Vegetable crop removed successfully!'));
+    } catch (err) {
+      console.error('Failed to remove vegetable crop:', err);
+      triggerToast(lang === 'si' ? 'එළවළු බෝගය ඉවත් කිරීමට නොහැකි විය' : 'Failed to remove vegetable crop', 'error');
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
   const fetchRegionalVegetables = async () => {
     try {
       const res = await API.get('/crops');
       if (res.data?.data && res.data.data.length > 0) {
         setRegionalVegetables(prev => {
-          const updated = prev.map(veg => {
-            const match = res.data.data.find(c =>
-              c.crop_code === veg.crop_code ||
-              (c.name_en && c.name_en.toLowerCase().includes(veg.name_en.toLowerCase().split(' ')[0]))
+          const apiCrops = res.data.data;
+          const updated = apiCrops.map(apiCrop => {
+            const match = prev.find(v =>
+              v.id === apiCrop.id ||
+              v.crop_code === apiCrop.crop_code ||
+              (v.name_en && apiCrop.name_en && v.name_en.toLowerCase().includes(apiCrop.name_en.toLowerCase().split(' ')[0]))
             );
-            if (!match) return veg;
-            const quota = match.standard_demand_kg ? Math.round(match.standard_demand_kg / 1000) : (veg.quota_ha || 100);
-            const planted = veg.planted_ha || 50;
+            const quota = apiCrop.standard_demand_kg ? Math.round(apiCrop.standard_demand_kg / 1000) : (match?.quota_ha || 100);
+            const planted = match?.planted_ha || 50;
             const pct = Math.round((planted / quota) * 100);
             return {
-              ...veg,
-              ...match,
-              name_en: match.name_en || veg.name_en,
-              name_si: match.name_si || veg.name_si,
-              name_ta: match.name_ta || veg.name_ta,
-              image_url: match.image_url || veg.image_url,
+              ...(match || {}),
+              ...apiCrop,
+              name_en: apiCrop.name_en,
+              name_si: apiCrop.name_si || match?.name_si || apiCrop.name_en,
+              name_ta: apiCrop.name_ta || match?.name_ta || apiCrop.name_en,
+              image_url: apiCrop.image_url || match?.image_url || '',
               planted_ha: planted,
               quota_ha: quota,
               pct: pct,
@@ -171,30 +227,6 @@ export default function Dashboard() {
               barColor: pct > 85 ? 'bg-red-500' : pct > 70 ? 'bg-amber-500' : 'bg-emerald-600',
               badgeColor: pct > 85 ? 'bg-red-100 text-red-800 border-red-200' : pct > 70 ? 'bg-amber-100 text-amber-900 border-amber-200' : 'bg-emerald-100 text-emerald-800 border-emerald-200'
             };
-          });
-
-          // Check if any crops from API are completely new
-          res.data.data.forEach(apiCrop => {
-            const alreadyExists = updated.some(v => v.crop_code === apiCrop.crop_code || v.id === apiCrop.id);
-            if (!alreadyExists) {
-              const quota = apiCrop.standard_demand_kg ? Math.round(apiCrop.standard_demand_kg / 1000) : 100;
-              const planted = 50;
-              const pct = Math.round((planted / quota) * 100);
-              updated.push({
-                id: apiCrop.id,
-                crop_code: apiCrop.crop_code,
-                name_en: apiCrop.name_en,
-                name_si: apiCrop.name_si || apiCrop.name_en,
-                name_ta: apiCrop.name_ta || apiCrop.name_en,
-                image_url: apiCrop.image_url || '',
-                planted_ha: planted,
-                quota_ha: quota,
-                pct: pct,
-                status: pct > 85 ? 'CRITICAL' : pct > 70 ? 'WARNING' : 'SAFE',
-                barColor: pct > 85 ? 'bg-red-500' : pct > 70 ? 'bg-amber-500' : 'bg-emerald-600',
-                badgeColor: pct > 85 ? 'bg-red-100 text-red-800 border-red-200' : pct > 70 ? 'bg-amber-100 text-amber-900 border-amber-200' : 'bg-emerald-100 text-emerald-800 border-emerald-200'
-              });
-            }
           });
 
           try {
@@ -1320,14 +1352,24 @@ export default function Dashboard() {
                 <span className="w-2 h-2 rounded-full bg-red-600"></span>
                 {t('legend_overplanted')}
               </span>
-              <button
-                type="button"
-                onClick={() => setVegetableModalState({ isOpen: true, vegetable: null })}
-                className="bg-primary hover:bg-primary/90 text-white px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-xs cursor-pointer ml-auto"
-              >
-                <span className="material-symbols-outlined text-sm">add_circle</span>
-                <span>{lang === 'si' ? '+ නව එළවළු බෝගයක්' : '+ Add Vegetable'}</span>
-              </button>
+              <div className="flex flex-col gap-1.5 ml-auto">
+                <button
+                  type="button"
+                  onClick={() => setVegetableModalState({ isOpen: true, vegetable: null })}
+                  className="bg-primary hover:bg-primary/90 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-xs cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-sm">add_circle</span>
+                  <span>{lang === 'si' ? '+ නව එළවළු බෝගයක්' : '+ Add Vegetable'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleOpenDeleteModal()}
+                  className="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-xs cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-sm text-red-600">delete</span>
+                  <span>{t('btn_delete_vegetable') || (lang === 'si' ? '- එළවළු බෝගයක් ඉවත් කරන්න' : '- Delete Vegetable')}</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1383,17 +1425,31 @@ export default function Dashboard() {
                         <span className={`px-2 py-0.5 text-[10px] font-extrabold rounded-md border ${veg.badgeColor || 'bg-emerald-100 text-emerald-800 border-emerald-200'}`}>
                           {veg.status === 'CRITICAL' ? 'OVERPLANTED' : veg.status === 'WARNING' ? 'WARNING' : 'SAFE'} ({veg.pct || 50}%)
                         </span>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setVegetableModalState({ isOpen: true, vegetable: veg });
-                          }}
-                          className="text-[11px] font-bold text-primary hover:text-primary/80 flex items-center gap-1 hover:underline cursor-pointer"
-                        >
-                          <span className="material-symbols-outlined text-xs">edit</span>
-                          <span>{lang === 'si' ? 'සංස්කරණය' : 'Edit'}</span>
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setVegetableModalState({ isOpen: true, vegetable: veg });
+                            }}
+                            className="text-[11px] font-bold text-primary hover:text-primary/80 flex items-center gap-1 hover:underline cursor-pointer"
+                          >
+                            <span className="material-symbols-outlined text-xs">edit</span>
+                            <span>{lang === 'si' ? 'සංස්කරණය' : 'Edit'}</span>
+                          </button>
+                          <span className="text-outline-variant/40 text-xs">•</span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenDeleteModal(veg);
+                            }}
+                            className="text-[11px] font-bold text-red-600 hover:text-red-700 flex items-center gap-1 hover:underline cursor-pointer"
+                          >
+                            <span className="material-symbols-outlined text-xs">delete</span>
+                            <span>{lang === 'si' ? 'ඉවත් කරන්න' : 'Delete'}</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
 
@@ -1683,6 +1739,135 @@ export default function Dashboard() {
           triggerToast(lang === 'si' ? 'එළවළු දත්ත සාර්ථකව යාවත්කාලීන විය!' : 'Vegetable details saved successfully!');
         }}
       />
+
+      {/* Delete Vegetable Confirmation Modal */}
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-surface border border-outline-variant/40 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden p-6 space-y-5 animate-scaleUp">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center flex-shrink-0">
+                  <span className="material-symbols-outlined text-2xl">delete_forever</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-on-surface">
+                    {t('modal_delete_veg_title') || (lang === 'si' ? 'එළවළු බෝගයක් ඉවත් කිරීම' : 'Delete Vegetable Crop')}
+                  </h3>
+                  <p className="text-xs text-on-surface-variant">
+                    {t('modal_delete_veg_sub') || (lang === 'si' ? 'කලාපීය ලැයිස්තුවෙන් සහ දත්ත ගබඩාවෙන් ඉවත් කරන්න' : 'Remove vegetable crop from regional list and database')}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="text-on-surface-variant hover:text-on-surface p-1 rounded-lg hover:bg-surface-variant cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-xl">close</span>
+              </button>
+            </div>
+
+            {/* Crop Selector dropdown */}
+            <div>
+              <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">
+                {lang === 'si' ? 'ඉවත් කිරීමට බෝගය තෝරන්න' : 'Select Vegetable to Delete'}
+              </label>
+              <select
+                value={cropToDeleteId || ''}
+                onChange={(e) => setCropToDeleteId(Number(e.target.value) || e.target.value)}
+                className="w-full bg-surface-container-low border border-outline-variant rounded-xl px-3.5 py-2.5 text-sm font-semibold text-on-surface focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-500"
+              >
+                {regionalVegetables.map((crop) => (
+                  <option key={crop.id} value={crop.id}>
+                    {lang === 'si' ? (crop.name_si || crop.name_en) : crop.name_en} ({crop.crop_code}) — {crop.planted_ha || 0} Ha Planted
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Selected Crop Preview Card */}
+            {(() => {
+              const selectedCrop = regionalVegetables.find(c => Number(c.id) === Number(cropToDeleteId) || c.crop_code === String(cropToDeleteId));
+              if (!selectedCrop) return null;
+              return (
+                <div className="p-3.5 rounded-xl border border-red-200/60 bg-red-50/40 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    {selectedCrop.image_url ? (
+                      <img
+                        src={selectedCrop.image_url}
+                        alt={selectedCrop.name_en}
+                        className="w-12 h-12 rounded-lg object-cover border border-red-200"
+                        onError={(e) => { e.target.style.display = 'none'; }}
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-lg bg-red-100 text-red-600 flex items-center justify-center">
+                        <span className="material-symbols-outlined text-xl">eco</span>
+                      </div>
+                    )}
+                    <div>
+                      <h4 className="font-bold text-sm text-on-surface">
+                        {lang === 'si' ? (selectedCrop.name_si || selectedCrop.name_en) : selectedCrop.name_en}
+                      </h4>
+                      <p className="text-xs text-on-surface-variant font-medium">
+                        {selectedCrop.category || 'Upcountry Vegetable'} • {selectedCrop.crop_code}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs font-bold text-red-700 bg-red-100 px-2 py-0.5 rounded-md">
+                      {selectedCrop.planted_ha || 0} Ha
+                    </span>
+                    <p className="text-[10px] text-on-surface-variant mt-0.5">
+                      Quota: {selectedCrop.quota_ha || 0} Ha
+                    </p>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Warning Callout */}
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2.5 text-xs text-amber-900 font-medium">
+              <span className="material-symbols-outlined text-amber-600 text-base mt-0.5">warning</span>
+              <span>
+                {t('modal_delete_veg_warning') || (lang === 'si'
+                  ? 'මෙම බෝගය ඉවත් කළ පසු, එය කලාපීය වගා සන්තෘප්ත ලැයිස්තුවෙන් සහ දත්ත ගබඩාවෙන් ස්ථිරවම ඉවත් කෙරේ.'
+                  : 'Permanently removes this crop and its cultivation data from regional quota tracking and the database.')}
+              </span>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setIsDeleteModalOpen(false)}
+                disabled={deleteLoading}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-on-surface-variant hover:bg-surface-variant transition cursor-pointer"
+              >
+                {t('btn_cancel') || 'Cancel'}
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDeleteCrop}
+                disabled={deleteLoading || !cropToDeleteId}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-red-600 hover:bg-red-700 text-white transition flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50"
+              >
+                {deleteLoading ? (
+                  <>
+                    <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
+                    <span>{lang === 'si' ? 'ඉවත් කරමින්...' : 'Deleting...'}</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined text-sm">delete</span>
+                    <span>{t('btn_confirm_delete') || (lang === 'si' ? 'බෝගය ඉවත් කරන්න' : 'Delete Vegetable')}</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

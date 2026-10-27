@@ -914,6 +914,21 @@ module.exports = {
       return { rows: [newCrop] };
     }
 
+    // DELETE crops
+    if (lower.includes('delete from crops')) {
+      const cropId = Number(params[0]);
+      const idx = (fileDb.crops || []).findIndex(c => Number(c.id) === cropId || (params[0] && String(c.crop_code).toUpperCase() === String(params[0]).toUpperCase()));
+      if (idx >= 0) {
+        const deletedCrop = fileDb.crops.splice(idx, 1)[0];
+        if (fileDb.crop_seasons) {
+          fileDb.crop_seasons = fileDb.crop_seasons.filter(s => Number(s.crop_id) !== cropId);
+        }
+        saveDb(fileDb);
+        return { rows: [deletedCrop] };
+      }
+      return { rows: [] };
+    }
+
     if (lower.startsWith('update users set') || lower.includes('update users\n         set') || lower.includes('update users set')) {
       const lastParam = params[params.length - 1];
       const user = fileDb.users.find(u => Number(u.id) === Number(lastParam));

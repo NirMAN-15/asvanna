@@ -40,6 +40,16 @@ class CropController {
       next(err);
     }
   }
+
+  static async deleteCrop(req, res, next) {
+    try {
+      const { cropId } = req.params;
+      const deleted = await CropService.deleteCrop(cropId);
+      return ApiResponse.success(res, deleted, 'Crop deleted successfully');
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 module.exports = CropController;
