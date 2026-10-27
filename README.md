@@ -72,6 +72,7 @@ docker compose up -d --build
 - **Backend REST API**: [http://localhost:5000](http://localhost:5000)
 - **API Health Check**: [http://localhost:5000/health](http://localhost:5000/health)
 - **Detailed Deployment Guide**: Refer to [docs/DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md) for VPS, Cloud PaaS, Nginx, SSL, and mobile configuration.
+- **Team Setup & Cloud Guide**: Refer to [docs/TEAM_AND_CLOUD_DEPLOYMENT_GUIDE.md](docs/TEAM_AND_CLOUD_DEPLOYMENT_GUIDE.md) for cloning/updating code as another member, database seeding, and cloud hosting.
 - **Team Collaboration & Testing Workflow**: Refer to [docs/GIT_WORKFLOW_GUIDE.md](docs/GIT_WORKFLOW_GUIDE.md) for branch guidelines, member PR workflows, and testing procedures.
 
 ---
