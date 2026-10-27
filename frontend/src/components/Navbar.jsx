@@ -41,9 +41,30 @@ export default function Navbar() {
     return t('verified');
   };
 
+  const canSwitchRole = Boolean(
+    user?.is_admin ||
+    user?.original_role === 'ADMIN' ||
+    user?.role === 'ADMIN' ||
+    user?.nic === 'ADMIN' ||
+    user?.nic === '200322610371'
+  );
+
   const getRoleLinks = () => {
     const r = role?.toUpperCase();
-    if (r === 'OFFICER' || r === 'ADMIN') {
+    if (r === 'ADMIN') {
+      return [
+        { path: '/dashboard', label: t('nav_field_overview'), icon: 'agriculture' },
+        { path: '/monitoring', label: t('nav_regional_map'), icon: 'map' },
+        { path: '/risk-analytics', label: t('risk_analytics'), icon: 'bar_chart' },
+        { path: '/prices', label: t('nav_wholesale_rates', 'Wholesale Rates'), icon: 'trending_up' },
+        { path: '/weather', label: t('nav_agro_weather', 'Agro Weather'), icon: 'cloud' },
+        { path: '/farmers', label: t('nav_farmer_directory'), icon: 'group' },
+        { path: '/users', label: t('nav_user_directory', 'User Directory'), icon: 'manage_accounts' },
+        { path: '/marketplace', label: t('nav_surplus_marketplace'), icon: 'storefront' },
+        { path: '/broadcasts', label: t('nav_advisory_broadcasts'), icon: 'campaign' },
+        { path: '/settings', label: t('settings'), icon: 'settings' },
+      ];
+    } else if (r === 'OFFICER') {
       return [
         { path: '/dashboard', label: t('nav_field_overview'), icon: 'agriculture' },
         { path: '/monitoring', label: t('nav_regional_map'), icon: 'map' },
@@ -128,7 +149,7 @@ export default function Navbar() {
         {/* Right Controls: Role Switcher, Language Switcher, Notifications, Avatar */}
         <div className="flex items-center gap-2 sm:gap-3 md:gap-4 flex-shrink-0">
           {/* Super User / Master Role Switcher */}
-          {(user?.is_admin || user?.original_role === 'ADMIN' || user?.nic === '200322610371') && (
+          {canSwitchRole && (
             <div className="hidden lg:flex items-center bg-surface-container-high rounded-full p-1 border border-outline-variant/60 gap-1 text-xs shadow-xs">
               <span className="text-[10px] text-on-surface-variant pl-2 pr-1 font-bold uppercase tracking-wider">View:</span>
               <button
@@ -294,7 +315,7 @@ export default function Navbar() {
             </div>
 
             {/* Mobile Super User Role Switcher */}
-            {(user?.is_admin || user?.original_role === 'ADMIN' || user?.nic === '200322610371') && (
+            {canSwitchRole && (
               <div className="px-5 py-3 bg-surface-container-high/60 border-b border-outline-variant/30">
                 <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-2">Switch Active View:</p>
                 <div className="grid grid-cols-2 gap-1.5 text-xs">

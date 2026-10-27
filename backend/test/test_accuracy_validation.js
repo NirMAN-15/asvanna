@@ -130,7 +130,7 @@ async function runTestSuite() {
     totalTests++;
     const cropsRes = await db.query('SELECT * FROM crops');
     const crops = cropsRes.rows || [];
-    assert(crops.length === 11, `All 11 Keppetipola test crops loaded (Count: ${crops.length})`);
+    assert(crops.length === 21, `All 21 master crops loaded (Count: ${crops.length})`);
     passedTests++;
 
     totalTests++;
@@ -142,13 +142,14 @@ async function runTestSuite() {
 
     totalTests++;
     // Test Leeks price trend across past 3 years for September (historically glut month)
-    const leeksTrend = await PriceService.getThreeYearMonthlyPriceTrend(3, 9);
-    assert(leeksTrend !== null && leeksTrend.sample_count >= 1, `Leeks (Crop 3) Month 9 has 3-year cyclical benchmark data (Avg: Rs. ${leeksTrend.avg_price_per_kg}/kg, Risk: ${leeksTrend.cyclical_glut_risk})`);
+    const leeksCrop = crops.find(c => c.crop_code === 'LEEKS') || { id: 3 };
+    const leeksTrend = await PriceService.getThreeYearMonthlyPriceTrend(leeksCrop.id, 9);
+    assert(leeksTrend !== null && leeksTrend.sample_count >= 1, `Leeks (Crop ${leeksCrop.id}) Month 9 has 3-year cyclical benchmark data (Avg: Rs. ${leeksTrend.avg_price_per_kg}/kg, Risk: ${leeksTrend.cyclical_glut_risk})`);
     passedTests++;
 
     totalTests++;
     // Test April New Year high price multiplier
-    const leeksApril = await PriceService.getThreeYearMonthlyPriceTrend(3, 4);
+    const leeksApril = await PriceService.getThreeYearMonthlyPriceTrend(leeksCrop.id, 4);
     assert(leeksApril && leeksApril.avg_price_per_kg > leeksTrend.avg_price_per_kg, `April festival prices (Rs. ${leeksApril.avg_price_per_kg}) correctly exceed September glut prices (Rs. ${leeksTrend.avg_price_per_kg})`);
     passedTests++;
   } catch (err) {

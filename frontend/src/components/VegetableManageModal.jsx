@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useContext } from 'react';
 import API from '../services/api';
-import { X, CheckCircle, AlertCircle, Sprout, Image, DollarSign, Clock, Layers } from 'lucide-react';
+import { X, CheckCircle, AlertCircle, Sprout, Image, DollarSign, Clock, Layers, Sparkles } from 'lucide-react';
 import { LanguageContext } from '../context/LanguageContext';
+import { autoFillTrilingual } from '../services/translationService';
 
 export default function VegetableManageModal({ isOpen, onClose, vegetable, onSaved }) {
   const { lang } = useContext(LanguageContext);
   const isEditing = Boolean(vegetable && vegetable.id);
+  const [isTranslating, setIsTranslating] = useState(false);
 
   const [formData, setFormData] = useState({
     name_en: '',
@@ -25,6 +27,25 @@ export default function VegetableManageModal({ isOpen, onClose, vegetable, onSav
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  const handleNameAutoTranslate = async (text, fromLang) => {
+    if (!text || !text.trim() || isEditing) return;
+    setIsTranslating(true);
+    try {
+      const res = await autoFillTrilingual(text, fromLang);
+      setFormData(prev => ({
+        ...prev,
+        name_en: res.en || prev.name_en,
+        name_si: res.si || prev.name_si,
+        name_ta: res.ta || prev.name_ta,
+        crop_code: prev.crop_code || (res.en ? res.en.toUpperCase().replace(/[^A-Z0-9]/g, '_') : prev.crop_code)
+      }));
+    } catch (e) {
+      console.warn('Auto translate warning:', e);
+    } finally {
+      setIsTranslating(false);
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -153,44 +174,57 @@ export default function VegetableManageModal({ isOpen, onClose, vegetable, onSav
 
         <form onSubmit={handleSubmit} className="space-y-3.5 text-xs font-medium">
           {/* Names in 3 languages */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div>
-              <label className="block text-on-surface-variant font-semibold mb-1">
-                {lang === 'si' ? 'ඉංග්‍රීසි නම (English)' : 'Name (English)'} *
-              </label>
-              <input
-                type="text"
-                required
-                placeholder="e.g. Carrot"
-                value={formData.name_en}
-                onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
-                className="w-full px-3 py-2 border border-outline-variant rounded-xl bg-surface focus:outline-primary"
-              />
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[11px] font-bold text-on-surface">Crop Name (Trilingual Auto-Translating)</span>
+              {isTranslating && (
+                <span className="text-primary text-[10px] font-bold animate-pulse flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-amber-500 animate-spin" /> Auto-translating name...
+                </span>
+              )}
             </div>
-            <div>
-              <label className="block text-on-surface-variant font-semibold mb-1">
-                {lang === 'si' ? 'සිංහල නම' : 'Name (Sinhala)'} *
-              </label>
-              <input
-                type="text"
-                required
-                placeholder="උදා. කැරට්"
-                value={formData.name_si}
-                onChange={(e) => setFormData({ ...formData, name_si: e.target.value })}
-                className="w-full px-3 py-2 border border-outline-variant rounded-xl bg-surface focus:outline-primary"
-              />
-            </div>
-            <div>
-              <label className="block text-on-surface-variant font-semibold mb-1">
-                {lang === 'si' ? 'දෙමළ නම' : 'Name (Tamil)'}
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. கேரட்"
-                value={formData.name_ta}
-                onChange={(e) => setFormData({ ...formData, name_ta: e.target.value })}
-                className="w-full px-3 py-2 border border-outline-variant rounded-xl bg-surface focus:outline-primary"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-on-surface-variant font-semibold mb-1">
+                  {lang === 'si' ? 'ඉංග්‍රීසි නම (English)' : 'Name (English)'} *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Carrot"
+                  value={formData.name_en}
+                  onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
+                  onBlur={() => handleNameAutoTranslate(formData.name_en, 'en')}
+                  className="w-full px-3 py-2 border border-outline-variant rounded-xl bg-surface focus:outline-primary"
+                />
+              </div>
+              <div>
+                <label className="block text-on-surface-variant font-semibold mb-1">
+                  {lang === 'si' ? 'සිංහල නම' : 'Name (Sinhala)'} *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="උදා. කැරට්"
+                  value={formData.name_si}
+                  onChange={(e) => setFormData({ ...formData, name_si: e.target.value })}
+                  onBlur={() => handleNameAutoTranslate(formData.name_si, 'si')}
+                  className="w-full px-3 py-2 border border-outline-variant rounded-xl bg-surface focus:outline-primary"
+                />
+              </div>
+              <div>
+                <label className="block text-on-surface-variant font-semibold mb-1">
+                  {lang === 'si' ? 'දෙමළ නම' : 'Name (Tamil)'}
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. கேரட்"
+                  value={formData.name_ta}
+                  onChange={(e) => setFormData({ ...formData, name_ta: e.target.value })}
+                  onBlur={() => handleNameAutoTranslate(formData.name_ta, 'ta')}
+                  className="w-full px-3 py-2 border border-outline-variant rounded-xl bg-surface focus:outline-primary"
+                />
+              </div>
             </div>
           </div>
 
