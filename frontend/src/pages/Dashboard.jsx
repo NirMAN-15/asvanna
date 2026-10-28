@@ -131,7 +131,8 @@ export default function Dashboard() {
           const code = (c.crop_code || '').toUpperCase().trim();
           const normKey = (c.name_en || '').toLowerCase().replace(/[^a-z]/g, '');
           const alreadyExists = (code && seenCodes.has(code)) || (normKey && seenNames.has(normKey));
-          if (!alreadyExists && normKey) {
+          const isUserCustom = c.is_custom === true || (typeof c.id === 'string' && c.id.startsWith('crop_'));
+          if (!alreadyExists && normKey && isUserCustom) {
             if (code) seenCodes.add(code);
             seenNames.add(normKey);
             list.push(c);
@@ -320,7 +321,8 @@ export default function Dashboard() {
           const additional = prev.filter(p => {
             const code = (p.crop_code || '').toUpperCase().trim();
             const name = (p.name_en || '').toLowerCase().replace(/[^a-z]/g, '');
-            return (!code || !seenCodes.has(code)) && (!name || !seenNames.has(name));
+            const isUserCustom = p.is_custom === true || (typeof p.id === 'string' && p.id.startsWith('crop_'));
+            return isUserCustom && (!code || !seenCodes.has(code)) && (!name || !seenNames.has(name));
           });
           const combined = [...mappedApi, ...additional];
           try {

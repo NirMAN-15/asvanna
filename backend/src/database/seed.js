@@ -7,7 +7,7 @@ async function seedData() {
     // 1. Seed 11 Pilot Crops for Bandarawela & Upcountry (DoA Sri Lanka & Keppetipola validated)
     const crops = [
       {
-        code: 'BEANS', en: 'Green Beans (Butter/Bush)', si: 'බෝංචි', ta: 'போஞ்சி',
+        code: 'BEANS', en: 'Green Beans', si: 'බෝංචි', ta: 'போஞ்சி',
         category: 'Upcountry Vegetable', duration: 60,
         tempMin: 15.0, tempMax: 26.0, humMin: 60.0, humMax: 80.0,
         rainMin: 800, rainMax: 1300, soil: 'Loam with Organic Compost',
@@ -67,7 +67,7 @@ async function seedData() {
         imageUrl: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&auto=format&fit=crop&q=80'
       },
       {
-        code: 'CAULIFLOWER', en: 'Cauliflower', si: 'මල්ගෝවා', ta: 'காலிஃபிளவர்',
+        code: 'CAULIFLOWER', en: 'Cauliflower', si: 'මල් ගෝවා', ta: 'காலிஃபிளவர்',
         category: 'Upcountry Vegetable', duration: 80,
         tempMin: 14.0, tempMax: 22.0, humMin: 65.0, humMax: 80.0,
         rainMin: 850, rainMax: 1500, soil: 'Clay Loam',
@@ -79,7 +79,7 @@ async function seedData() {
         imageUrl: 'https://images.unsplash.com/photo-1568584711075-3d021a7c3ca3?w=600&auto=format&fit=crop&q=80'
       },
       {
-        code: 'CAPSICUM', en: 'Capsicum (Bell Pepper)', si: 'මාළු මිරිස්', ta: 'குடை மிளகாய்',
+        code: 'CAPSICUM', en: 'Capsicum', si: 'මාළු මිරිස්', ta: 'குடை மிளகாய்',
         category: 'Upcountry Vegetable', duration: 80,
         tempMin: 16.0, tempMax: 26.0, humMin: 60.0, humMax: 75.0,
         rainMin: 750, rainMax: 1300, soil: 'Fertile Rich Loam',
@@ -103,7 +103,7 @@ async function seedData() {
         imageUrl: 'https://images.unsplash.com/photo-1528825871115-3581a5387919?w=600&auto=format&fit=crop&q=80'
       },
       {
-        code: 'KNOLKHOL', en: 'Knol-Khol (Kohlrabi)', si: 'නෝල්කෝල්', ta: 'நூல்கோல்',
+        code: 'KNOLKHOL', en: 'Knolkhol', si: 'නෝල්කෝල්', ta: 'நூல்கோல்',
         category: 'Upcountry Vegetable', duration: 65,
         tempMin: 14.0, tempMax: 24.0, humMin: 65.0, humMax: 80.0,
         rainMin: 800, rainMax: 1400, soil: 'Clay Loam',
