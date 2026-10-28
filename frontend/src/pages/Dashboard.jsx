@@ -180,6 +180,14 @@ export default function Dashboard() {
     });
   };
 
+  const topPlantedCrops = [...regionalVegetables]
+    .sort((a, b) => (Number(b.planted_ha) || 0) - (Number(a.planted_ha) || 0))
+    .slice(0, 4);
+
+  const lessPlantedCrops = [...regionalVegetables]
+    .sort((a, b) => (Number(a.planted_ha) || 0) - (Number(b.planted_ha) || 0))
+    .slice(0, 4);
+
   // Dynamic recommendations for farmers
   const [topRecommendations, setTopRecommendations] = useState([]);
   const [loadingRecommendations, setLoadingRecommendations] = useState(false);
