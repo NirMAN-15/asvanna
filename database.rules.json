@@ -1,0 +1,14 @@
+{
+  "rules": {
+    ".read": "auth != null",
+    ".write": "auth != null",
+    "marketplace_listings": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+    "chat_negotiations": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    }
+  }
+}

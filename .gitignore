@@ -49,6 +49,8 @@ postgres_data/
 # Firebase & Keys
 firebase-service-account.json
 serviceAccountKey.json
+*firebase-adminsdk*.json
+*-adminsdk-*.json
 *.keystore
 *.jks
 
@@ -94,9 +96,14 @@ docs/generate_*.py
 docs/implementation_plan*.md
 docs/walkthrough.md
 
+# Test Data & Datasets
+Test_data/
+test_data/
+
 # Temporary & Scratch Scripts
-scripts/parse_test_farmers.py
-scripts/simulate_recommendations.py
+scripts/
+*.pyc
+__pycache__/
 
 
 # Manual Testing Spreadsheets & QA Documentation

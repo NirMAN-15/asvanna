@@ -22,6 +22,12 @@ class RiskEngineService {
     if (cropRes.rows.length === 0) throw new Error('Crop not found');
     const crop = cropRes.rows[0];
 
+    // Compute Growth Duration and Projected Harvest Window (e.g. 45-110 days)
+    const growthDurationDays = crop.growth_duration_days || 75;
+    const growthMonths = Math.max(1, Math.round(growthDurationDays / 30));
+    const projectedHarvestMonth = ((currentMonth + growthMonths - 1) % 12) + 1;
+    const projectedHarvestYear = (currentMonth + growthMonths > 12) ? (currentYear + 1) : currentYear;
+
     // 2. FACTOR 1: Over-Planting Risk (45% weight)
     const plantingAgg = await db.query(
       `SELECT
@@ -38,8 +44,8 @@ class RiskEngineService {
     const rawEstimatedSupplyKg = parseFloat(plantingRow.total_yield) || (totalPlantedAcres * crop.avg_yield_per_acre_kg);
     const activePlotsCount = parseInt(plantingRow.plot_count, 10) || 0;
 
-    // Retrieve Demand Benchmark via CropixService
-    const demandBenchmark = await CropixService.getDemandBenchmark(crop.id, district, currentMonth, currentYear);
+    // Retrieve Demand Benchmark via CropixService calibrated for the harvest maturity month
+    const demandBenchmark = await CropixService.getDemandBenchmark(crop.id, district, projectedHarvestMonth, projectedHarvestYear);
     const targetDemandKg = parseFloat(demandBenchmark.regional_quota_kg) || (crop.avg_yield_per_acre_kg * 12);
 
     // Calculate overplanting ratio
@@ -94,8 +100,6 @@ class RiskEngineService {
     }
 
     // 5B. Long-term 3-Year Cyclical Glut Risk for projected harvest month
-    const growthMonths = Math.max(1, Math.round((crop.growth_duration_days || 75) / 30));
-    const projectedHarvestMonth = ((currentMonth + growthMonths - 1) % 12) + 1;
     const threeYearPriceTrend = await PriceService.getThreeYearMonthlyPriceTrend(crop.id, projectedHarvestMonth);
     const cyclicalGlutRiskScore = threeYearPriceTrend.cyclicalRiskScore || 20;
 
@@ -145,16 +149,20 @@ class RiskEngineService {
         name_ta: crop.name_ta,
         category: crop.category,
         imageUrl: crop.image_url,
-        image_url: crop.image_url,
-        growthDurationDays: crop.growth_duration_days,
-        growth_duration_days: crop.growth_duration_days,
-        avgYieldPerAcreKg: crop.avg_yield_per_acre_kg,
-        avg_yield_per_acre_kg: crop.avg_yield_per_acre_kg,
-        standardDemandKg: crop.standard_demand_kg,
-        standard_demand_kg: crop.standard_demand_kg,
-        standardPricePerKg: crop.standard_price_per_kg,
-        standard_price_per_kg: crop.standard_price_per_kg
+    image_url: crop.image_url,
+    growthDurationDays,
+    growth_duration_days: crop.growth_duration_days || growthDurationDays,
+    avgYieldPerAcreKg: crop.avg_yield_per_acre_kg,
+    avg_yield_per_acre_kg: crop.avg_yield_per_acre_kg,
+    standardDemandKg: crop.standard_demand_kg,
+    standard_demand_kg: crop.standard_demand_kg,
+    standardPricePerKg: crop.standard_price_per_kg,
+    standard_price_per_kg: crop.standard_price_per_kg
       },
+      imageUrl: crop.image_url,
+      growthDurationDays,
+      projectedHarvestMonth,
+      projectedHarvestYear,
       district,
       division: 'Bandarawela',
       activePlotsCount,
@@ -170,7 +178,9 @@ class RiskEngineService {
           weight: '45%',
           ratio: Math.round(supplyDemandRatio),
           demandQuotaKg: targetDemandKg,
-          currentPlantedKg: rawEstimatedSupplyKg
+          currentPlantedKg: rawEstimatedSupplyKg,
+          projectedHarvestMonth,
+          harvestCycleDays: growthDurationDays
         },
         weather: {
           score: weatherRiskScore,
@@ -198,7 +208,9 @@ class RiskEngineService {
           weight: '45%',
           ratio: Math.round(supplyDemandRatio),
           demandQuotaKg: targetDemandKg,
-          currentPlantedKg: rawEstimatedSupplyKg
+          currentPlantedKg: rawEstimatedSupplyKg,
+          projectedHarvestMonth,
+          harvestCycleDays: growthDurationDays
         },
         weather: {
           score: weatherRiskScore,

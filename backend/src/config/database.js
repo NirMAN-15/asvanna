@@ -21,7 +21,7 @@ const initialCrops = [
   {
     id: 1,
     crop_code: 'BEANS',
-    name_en: 'Green Beans (Butter/Bush)',
+    name_en: 'Green Beans',
     name_si: 'බෝංචි',
     name_ta: 'போஞ்சி',
     category: 'Upcountry Vegetable',
@@ -117,7 +117,7 @@ const initialCrops = [
     id: 6,
     crop_code: 'CAULIFLOWER',
     name_en: 'Cauliflower',
-    name_si: 'මල්ගෝවා',
+    name_si: 'මල් ගෝවා',
     name_ta: 'காலிஃபிளவர்',
     category: 'Upcountry Vegetable',
     growth_duration_days: 80,
@@ -135,7 +135,7 @@ const initialCrops = [
   {
     id: 7,
     crop_code: 'CAPSICUM',
-    name_en: 'Capsicum (Bell Pepper)',
+    name_en: 'Capsicum',
     name_si: 'මාළු මිරිස්',
     name_ta: 'குடை மிளகாய்',
     category: 'Upcountry Vegetable',
@@ -173,7 +173,7 @@ const initialCrops = [
   {
     id: 9,
     crop_code: 'KNOLKHOL',
-    name_en: 'Knol-Khol (Kohlrabi)',
+    name_en: 'Knolkhol',
     name_si: 'නෝල්කෝල්',
     name_ta: 'நூல்கோல்',
     category: 'Upcountry Vegetable',
@@ -209,7 +209,7 @@ const initialCrops = [
     image_url: 'https://images.unsplash.com/photo-1593105544559-ecb03bf76f82?w=600&auto=format&fit=crop&q=80'
   },
   {
-    id: 15,
+    id: 11,
     crop_code: 'BROCCOLI',
     name_en: 'Broccoli',
     name_si: 'බ්‍රොකොලි',
