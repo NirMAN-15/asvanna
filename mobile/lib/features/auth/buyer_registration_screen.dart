@@ -16,14 +16,14 @@ class BuyerRegistrationScreen extends StatefulWidget {
 
 class _BuyerRegistrationScreenState extends State<BuyerRegistrationScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _businessNameController = TextEditingController();
-  final _contactPersonController = TextEditingController();
-  final _nicController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _deliveryAddressController = TextEditingController();
+  final _businessNameController = TextEditingController(text: 'Green Leaf Caterings');
+  final _contactPersonController = TextEditingController(text: 'Niroshan Perera');
+  final _nicController = TextEditingController(text: '198812345678');
+  final _phoneController = TextEditingController(text: '77 123 4567');
+  final _deliveryAddressController = TextEditingController(text: 'No. 42, Temple Road, Bandarawela, 90100');
 
-  String? _selectedCategory;
-  bool _agreedToTerms = false;
+  String? _selectedCategory = 'Event Catering';
+  bool _agreedToTerms = true;
   bool _isLoading = false;
 
   final List<String> _categories = [

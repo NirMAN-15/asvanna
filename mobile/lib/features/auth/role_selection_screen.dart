@@ -5,6 +5,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/providers/app_state_provider.dart';
 import '../../core/localization/app_translations.dart';
+import '../../core/widgets/language_selection_dialog.dart';
 import 'farmer_registration_screen.dart';
 import 'buyer_registration_screen.dart';
 import '../farmer/farmer_main_nav.dart';
@@ -14,70 +15,7 @@ class RoleSelectionScreen extends StatelessWidget {
   const RoleSelectionScreen({super.key});
 
   void _showLanguageDialog(BuildContext context, AppStateProvider appState) {
-    final isDark = context.isDarkMode;
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: context.cardBg,
-        title: Text(
-          'Select Language / භාෂාව / மொழி',
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-            color: context.titleText,
-          ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Text('🇬🇧', style: TextStyle(fontSize: 22)),
-              title: Text(
-                'English',
-                style: GoogleFonts.inter(color: context.titleText),
-              ),
-              trailing: appState.currentLanguage == AppLanguage.english
-                  ? Icon(Icons.check_circle, color: isDark ? const Color(0xFF4ADE80) : AppColors.primary)
-                  : null,
-              onTap: () {
-                appState.setLanguage(AppLanguage.english);
-                Navigator.pop(context);
-              },
-            ),
-            Divider(color: context.dividerColor),
-            ListTile(
-              leading: const Text('🇱🇰', style: TextStyle(fontSize: 22)),
-              title: Text(
-                'සිංහල (Sinhala)',
-                style: GoogleFonts.inter(color: context.titleText),
-              ),
-              trailing: appState.currentLanguage == AppLanguage.sinhala
-                  ? Icon(Icons.check_circle, color: isDark ? const Color(0xFF4ADE80) : AppColors.primary)
-                  : null,
-              onTap: () {
-                appState.setLanguage(AppLanguage.sinhala);
-                Navigator.pop(context);
-              },
-            ),
-            Divider(color: context.dividerColor),
-            ListTile(
-              leading: const Text('🇱🇰', style: TextStyle(fontSize: 22)),
-              title: Text(
-                'தமிழ் (Tamil)',
-                style: GoogleFonts.inter(color: context.titleText),
-              ),
-              trailing: appState.currentLanguage == AppLanguage.tamil
-                  ? Icon(Icons.check_circle, color: isDark ? const Color(0xFF4ADE80) : AppColors.primary)
-                  : null,
-              onTap: () {
-                appState.setLanguage(AppLanguage.tamil);
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
+    showLanguageSelectionDialog(context, appState);
   }
 
   @override
@@ -111,18 +49,10 @@ class RoleSelectionScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Top controls: Dark mode toggle & language switch
+                // Top controls: Language switch
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    IconButton(
-                      tooltip: isDark ? 'Light Mode' : 'Dark Mode',
-                      icon: Icon(
-                        isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-                        color: isDark ? const Color(0xFFFBBF24) : AppColors.asvannaButtonGreen,
-                      ),
-                      onPressed: () => appState.toggleDarkMode(),
-                    ),
                     OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(
                         backgroundColor: context.cardBg,
@@ -140,11 +70,23 @@ class RoleSelectionScreen extends StatelessWidget {
                             : lang == AppLanguage.sinhala
                                 ? 'සිංහල'
                                 : 'தமிழ்',
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? const Color(0xFF4ADE80) : AppColors.primaryDark,
-                        ),
+                        style: lang == AppLanguage.tamil
+                            ? GoogleFonts.notoSansTamil(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? const Color(0xFF4ADE80) : AppColors.primaryDark,
+                              )
+                            : (lang == AppLanguage.sinhala
+                                ? GoogleFonts.notoSansSinhala(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark ? const Color(0xFF4ADE80) : AppColors.primaryDark,
+                                  )
+                                : GoogleFonts.inter(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark ? const Color(0xFF4ADE80) : AppColors.primaryDark,
+                                  )),
                       ),
                       onPressed: () => _showLanguageDialog(context, appState),
                     ),

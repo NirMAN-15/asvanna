@@ -23,7 +23,7 @@ class FarmerProfile {
 
   double get usedAcres {
     return activePlantings
-        .where((p) => p.status == 'growing')
+        .where((p) => p.status != 'harvested' && p.status != 'cancelled')
         .fold(0.0, (sum, item) => sum + item.allocatedAcres);
   }
 
@@ -35,5 +35,27 @@ class FarmerProfile {
   double get landUtilizationPercentage {
     if (totalLandAcres <= 0) return 0.0;
     return (usedAcres / totalLandAcres * 100).clamp(0.0, 100.0);
+  }
+
+  FarmerProfile copyWith({
+    String? id,
+    String? fullName,
+    String? phone,
+    String? nic,
+    String? agrarianDivision,
+    String? gndDivision,
+    double? totalLandAcres,
+    List<PlantedCropEntry>? activePlantings,
+  }) {
+    return FarmerProfile(
+      id: id ?? this.id,
+      fullName: fullName ?? this.fullName,
+      phone: phone ?? this.phone,
+      nic: nic ?? this.nic,
+      agrarianDivision: agrarianDivision ?? this.agrarianDivision,
+      gndDivision: gndDivision ?? this.gndDivision,
+      totalLandAcres: totalLandAcres ?? this.totalLandAcres,
+      activePlantings: activePlantings ?? this.activePlantings,
+    );
   }
 }

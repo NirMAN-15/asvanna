@@ -293,18 +293,36 @@ function saveDb(dbData) {
 const fileDb = loadDb();
 
 let pool = null;
-if (Pool) {
+let postgresAvailable = null;
+
+async function checkPostgres() {
+  if (postgresAvailable !== null) return postgresAvailable;
+  if (!Pool) {
+    postgresAvailable = false;
+    return false;
+  }
   try {
-    pool = new Pool(config.db);
-    pool.on('connect', () => console.log('📦 Connected to PostgreSQL database:', config.db.database));
-  } catch (e) {
-    // Silence error
+    const testPool = new Pool({ ...config.db, connectionTimeoutMillis: 1000 });
+    const client = await testPool.connect();
+    client.release();
+    pool = testPool;
+    postgresAvailable = true;
+    console.log('📦 Connected to PostgreSQL database:', config.db.database);
+    return true;
+  } catch (err) {
+    postgresAvailable = false;
+    pool = null;
+    return false;
   }
 }
 
 module.exports = {
   query: async (text, params = []) => {
-    if (pool) {
+    if (postgresAvailable === null) {
+      await checkPostgres();
+    }
+
+    if (postgresAvailable && pool) {
       try {
         const res = await pool.query(text, params);
         if (res && res.rows) return res;

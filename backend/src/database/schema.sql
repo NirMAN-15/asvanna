@@ -34,6 +34,8 @@ CREATE TABLE IF NOT EXISTS users (
     preferred_search_radius DECIMAL(4, 1) DEFAULT 5.0,
     business_name VARCHAR(200),
     business_type VARCHAR(50),
+    procurement_preferences TEXT,
+    notification_settings TEXT,
     profile_photo_url TEXT,
     fcm_token TEXT,
     verification_status VARCHAR(20) DEFAULT 'PENDING' CHECK (verification_status IN ('PENDING', 'APPROVED', 'REJECTED')),

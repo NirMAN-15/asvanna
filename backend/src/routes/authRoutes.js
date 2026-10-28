@@ -1,7 +1,7 @@
 const express = require('express');
 const { body } = require('express-validator');
 const AuthController = require('../controllers/authController');
-const { authenticate, authorizeRoles } = require('../middlewares/authMiddleware');
+const { authenticate, authorizeRoles, optionalAuth } = require('../middlewares/authMiddleware');
 const { validateRequest } = require('../middlewares/validationMiddleware');
 
 const router = express.Router();
@@ -83,6 +83,10 @@ router.get('/me', authenticate, AuthController.getProfile);
 router.get('/profile', authenticate, AuthController.getProfile);
 router.put('/profile', authenticate, AuthController.updateProfile);
 router.post('/fcm-token', authenticate, AuthController.updateFcmToken);
-router.put('/change-password', authenticate, AuthController.changePassword);
+router.put('/change-password', optionalAuth, AuthController.changePassword);
+router.get('/procurement-preferences', optionalAuth, AuthController.getProcurementPreferences);
+router.put('/procurement-preferences', optionalAuth, AuthController.updateProcurementPreferences);
+router.get('/notification-settings', optionalAuth, AuthController.getNotificationSettings);
+router.put('/notification-settings', optionalAuth, AuthController.updateNotificationSettings);
 
 module.exports = router;

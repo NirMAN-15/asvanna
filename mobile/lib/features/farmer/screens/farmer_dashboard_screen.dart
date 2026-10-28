@@ -1,32 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/app_state_provider.dart';
-import '../../../core/models/crop_model.dart';
-import '../../../core/models/notice_model.dart';
 import '../../../core/localization/app_translations.dart';
-import 'crop_detail_screen.dart';
-import 'farm_land_map_screen.dart';
-import 'pre_planting_risk_screen.dart';
+import '../../../core/widgets/language_selection_dialog.dart';
 import 'weather_screen.dart';
-import 'notice_board_screen.dart';
-import 'farmer_profile_screen.dart';
+import 'pre_planting_risk_screen.dart';
 import 'planting_entry_screen.dart';
 import 'price_trends_screen.dart';
 import '../widgets/post_surplus_modal.dart';
 
-class FarmerDashboardScreen extends StatefulWidget {
-  const FarmerDashboardScreen({super.key});
+class FarmerDashboardScreen extends StatelessWidget {
+  final void Function(int tabIndex)? onTabSelected;
 
-  @override
-  State<FarmerDashboardScreen> createState() => _FarmerDashboardScreenState();
-}
+  const FarmerDashboardScreen({super.key, this.onTabSelected});
 
-class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
-  String _cropFilter = 'all'; // 'all', 'at_risk', 'safe'
+  String _getDynamicGreeting(String Function(String) tr) {
+    final hour = DateTime.now().hour;
+    if (hour < 12) {
+      return tr('greeting_morning');
+    } else if (hour < 17) {
+      return tr('greeting_afternoon');
+    } else {
+      return tr('greeting_evening');
+    }
+  }
+
+  void _showLanguageDialog(BuildContext context, AppStateProvider appState) {
+    showLanguageSelectionDialog(context, appState);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,424 +39,464 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
     final lang = appState.currentLanguage;
     String tr(String key) => AppTranslations.tr(lang, key);
 
-    // Identify which of the farmer's planted crops have active risk
-    final List<Map<String, dynamic>> atRiskPlantings = [];
-    final List<Map<String, dynamic>> safePlantings = [];
+    final greetingText = _getDynamicGreeting(tr);
+    final rawFarmerName = farmer.fullName.trim();
+    final farmerName = rawFarmerName.isNotEmpty ? rawFarmerName : 'Nirman Senanayake';
+    final firstName = farmerName.split(' ').first;
+    final farmerDistrict = appState.selectedWeatherDivision.trim().isNotEmpty
+        ? appState.selectedWeatherDivision.trim()
+        : 'Anuradhapura';
 
-    for (final planting in farmer.activePlantings) {
-      final risk = appState.getRiskForCrop(planting.cropId);
-      final isCritical = risk != null && risk.riskLevel == CropRiskLevel.critical;
-      final isModerate = risk != null && risk.riskLevel == CropRiskLevel.moderate;
+    String langLabel = 'සිංහල';
+    if (lang == AppLanguage.english) langLabel = 'English';
+    if (lang == AppLanguage.tamil) langLabel = 'தமிழ்';
 
-      // Fallback heuristics for demo crops
-      final nameLower = planting.cropName.toLowerCase();
-      final hasGlutRisk = isCritical || (risk == null && nameLower.contains('leek'));
-      final hasModerateRisk = isModerate || (risk == null && nameLower.contains('carrot'));
-
-      if (hasGlutRisk || hasModerateRisk) {
-        atRiskPlantings.add({
-          'planting': planting,
-          'risk': risk,
-          'isCritical': hasGlutRisk,
-        });
-      } else {
-        safePlantings.add({
-          'planting': planting,
-          'risk': risk,
-          'isCritical': false,
-        });
-      }
-    }
-
-    final int riskAlertsCount = atRiskPlantings.length;
-    final bool hasRedAlert = riskAlertsCount > 0 ||
-        appState.notices.any((n) => n.priority == NoticePriority.urgent || n.priority == NoticePriority.high);
-
-    final String formattedDate = DateFormat('EEEE, d MMM yyyy').format(DateTime.now());
-
-    // Filter crops based on selected chip
-    List<PlantedCropEntry> displayedPlantings = farmer.activePlantings;
-    if (_cropFilter == 'at_risk') {
-      displayedPlantings = atRiskPlantings.map((e) => e['planting'] as PlantedCropEntry).toList();
-    } else if (_cropFilter == 'safe') {
-      displayedPlantings = safePlantings.map((e) => e['planting'] as PlantedCropEntry).toList();
-    }
+    final isDark = context.isDarkMode;
 
     return Scaffold(
       backgroundColor: context.scaffoldBg,
       body: SafeArea(
-        child: RefreshIndicator(
-          color: AppColors.asvannaButtonGreen,
-          onRefresh: () async {
-            await appState.syncOfflineQueue();
-            await Future.delayed(const Duration(milliseconds: 300));
-          },
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 1. Clean Top Header (Profile Avatar & Greeting on left, Notification Bell on right)
-                _buildTopGreetingHeader(context, farmer.fullName, formattedDate, hasRedAlert, tr),
-                const SizedBox(height: 14),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return RefreshIndicator(
+              color: AppColors.asvannaButtonGreen,
+              onRefresh: () async {
+                await appState.syncOfflineQueue();
+                await Future.delayed(const Duration(milliseconds: 300));
+              },
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // ── 1. HEADER BAR ──
+                      _buildHeaderBar(context, appState, langLabel),
 
-                // 2. Localized Agro-Weather Intelligence Card
-                _buildAgroWeatherCard(context, appState, tr),
-                const SizedBox(height: 16),
+                      // ── Content ──
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 16),
 
-                // 3. 2x2 High-Contrast Big Action Grid (Age 30-50 Farmer Friendly)
-                _buildBigActionGrid(context, tr),
-                const SizedBox(height: 22),
+                            // ── 2. GREETING + PROFILE AVATAR ──
+                            _buildGreetingSection(context, greetingText, firstName, farmerName, farmerDistrict, isDark),
+                            const SizedBox(height: 16),
 
-                // 5. "My Planted Crops" Section Header with Filter Chips & Risk Status
-                _buildCurrentCropsHeader(
-                  context: context,
-                  totalCount: farmer.activePlantings.length,
-                  atRiskCount: atRiskPlantings.length,
-                  safeCount: safePlantings.length,
-                  tr: tr,
-                ),
-                const SizedBox(height: 12),
+                            // ── 3. WEATHER CARD ──
+                            _buildWeatherCard(context, appState, tr, isDark),
+                            const SizedBox(height: 16),
 
-                // 6. Active Crops List / Grid Cards with detailed Risk Status
-                _buildCurrentCropsList(context, appState, displayedPlantings, tr),
-                const SizedBox(height: 20),
+                            // ── 4. QUICK STATS ROW ──
+                            _buildQuickStatsRow(context, appState, tr, isDark),
+                            const SizedBox(height: 16),
 
-                // 7. Farmland Acreage Utilization Card
-                _buildLandUtilizationCard(context, farmer, tr),
-                const SizedBox(height: 24),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // 1. Top Greeting Header: Farmer Avatar + Greeting on Left, Bell on Right
-  Widget _buildTopGreetingHeader(
-    BuildContext context,
-    String fullName,
-    String dateText,
-    bool hasRedAlert,
-    String Function(String) tr,
-  ) {
-    final firstName = fullName.trim().isEmpty ? 'Nirman' : fullName.split(' ').first;
-    final greetingText = '${tr('greeting')}, $firstName';
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        // Left side: Farmer Profile Avatar + Greeting & Date
-        Expanded(
-          child: Row(
-            children: [
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const FarmerProfileScreen()),
-                  );
-                },
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.asvannaButtonGreen.withOpacity(0.35), width: 2),
-                    image: const DecorationImage(
-                      image: NetworkImage(
-                        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80',
-                      ),
-                      fit: BoxFit.cover,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.06),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
+                            // ── 5. QUICK ACTIONS GRID ──
+                            _buildQuickActionsGrid(context, tr, isDark),
+                            const SizedBox(height: 24),
+                          ],
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      greetingText,
-                      style: GoogleFonts.poppins(
-                        fontSize: 18.5,
-                        fontWeight: FontWeight.w700,
-                        color: context.titleText,
-                        letterSpacing: -0.3,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      dateText,
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w400,
-                        color: context.subText,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  // ══════════════════════════════════════════════
+  // 1. HEADER BAR
+  // ══════════════════════════════════════════════
+  Widget _buildHeaderBar(
+    BuildContext context,
+    AppStateProvider appState,
+    String langLabel,
+  ) {
+    final isDark = context.isDarkMode;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0F172A) : Colors.white,
+        border: Border(
+          bottom: BorderSide(
+            color: isDark
+                ? const Color(0xFF1E293B)
+                : const Color(0xFFE8F0E8),
+            width: 1,
+          ),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Image.asset(
+                'assets/images/aswanna_logo.png',
+                width: 32,
+                height: 32,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: AppColors.asvannaButtonGreen,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.eco_rounded, color: Colors.white, size: 18),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Aswenna',
+                style: GoogleFonts.poppins(
+                  fontSize: 21,
+                  fontWeight: FontWeight.w800,
+                  color: isDark ? const Color(0xFF4ADE80) : AppColors.asvannaButtonGreen,
+                  letterSpacing: -0.5,
+                  height: 1.0,
                 ),
               ),
             ],
           ),
-        ),
-        const SizedBox(width: 10),
-
-        // Right side: Notification bell button with red alert indicator
-        Consumer<AppStateProvider>(
-          builder: (context, state, _) {
-            final unreadCount = state.unreadNoticesCount;
-            final isAlertActive = hasRedAlert || unreadCount > 0;
-
-            return GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const NoticeBoardScreen()),
-                );
-              },
-              child: Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: isAlertActive ? const Color(0xFFFEE2E2) : context.cardBg,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: isAlertActive ? const Color(0xFFFCA5A5) : context.cardBorder,
-                    width: 1.2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: (isAlertActive ? AppColors.dashAlertRed : Colors.black).withValues(alpha: 0.06),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Icon(
-                      isAlertActive ? Icons.notifications_active_rounded : Icons.notifications_outlined,
-                      color: isAlertActive ? AppColors.dashAlertRed : context.titleText,
-                      size: 22,
-                    ),
-                    if (isAlertActive)
-                      Positioned(
-                        top: 4,
-                        right: 4,
-                        child: Container(
-                          padding: const EdgeInsets.all(3),
-                          decoration: BoxDecoration(
-                            color: AppColors.dashAlertRed,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 1.5),
-                          ),
-                          constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                          child: Text(
-                            unreadCount > 0 ? '$unreadCount' : '!',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.inter(
-                              color: Colors.white,
-                              fontSize: 9,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
+          const Spacer(),
+          GestureDetector(
+            onTap: () => _showLanguageDialog(context, appState),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? const Color(0xFF1E293B)
+                    : const Color(0xFFF1F5F1),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isDark ? const Color(0xFF334155) : const Color(0xFFD4E6D4),
+                  width: 1,
                 ),
               ),
-            );
-          },
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    langLabel,
+                    style: appState.currentLanguage == AppLanguage.tamil
+                        ? GoogleFonts.notoSansTamil(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: context.titleText,
+                          )
+                        : (appState.currentLanguage == AppLanguage.sinhala
+                            ? GoogleFonts.notoSansSinhala(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: context.titleText,
+                              )
+                            : GoogleFonts.inter(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: context.titleText,
+                              )),
+                  ),
+                  const SizedBox(width: 3),
+                  Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    size: 16,
+                    color: context.subText,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ══════════════════════════════════════════════
+  // 2. GREETING + PROFILE AVATAR
+  // ══════════════════════════════════════════════
+  Widget _buildGreetingSection(
+    BuildContext context,
+    String greeting,
+    String firstName,
+    String fullName,
+    String district,
+    bool isDark,
+  ) {
+    final initial = firstName.isNotEmpty ? firstName[0].toUpperCase() : 'F';
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '$greeting 👋',
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: context.subText,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                firstName,
+                style: GoogleFonts.poppins(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w800,
+                  color: context.titleText,
+                  letterSpacing: -0.5,
+                  height: 1.15,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 4),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.location_on_rounded,
+                    size: 14,
+                    color: context.subText,
+                  ),
+                  const SizedBox(width: 3),
+                  Text(
+                    district,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: context.subText,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        // Profile Avatar
+        Container(
+          width: 46,
+          height: 46,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF34D399), Color(0xFF059669)],
+            ),
+            border: Border.all(
+              color: isDark
+                  ? const Color(0xFF6EE7B7).withValues(alpha: 0.3)
+                  : const Color(0xFFA7F3D0),
+              width: 2.5,
+            ),
+          ),
+          child: Center(
+            child: Text(
+              initial,
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+            ),
+          ),
         ),
       ],
     );
   }
 
-  // 2. Agro-Weather Intelligence Card
-  Widget _buildAgroWeatherCard(
+  // ══════════════════════════════════════════════
+  // 3. WEATHER CARD — Gradient Glass Design
+  // ══════════════════════════════════════════════
+  Widget _buildWeatherCard(
     BuildContext context,
     AppStateProvider appState,
     String Function(String) tr,
+    bool isDark,
   ) {
-    final isDark = context.isDarkMode;
     final weather = appState.currentWeather;
     final current = weather?.current;
     final locationName = weather?.location.name ?? appState.selectedWeatherDivision;
-    final tempStr = current?.temp ?? '21°C';
+    final tempStr = current?.temp ?? '29°C';
     final emojiStr = current?.emoji ?? '⛅';
-    final conditionStr = current?.condition ?? 'Scattered Showers';
+    final conditionStr = current?.condition ?? 'Scattered Clouds';
     final rainProbStr = current?.rainProb ?? '75%';
     final advisoryText = (weather != null && weather.diseases.isNotEmpty)
         ? weather.diseases.first.advice
-        : tr('soil_advisory_text');
+        : 'Rain expected at 4 PM • Good for irrigation';
 
-    return InkWell(
+    return GestureDetector(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const WeatherScreen()),
-        );
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const WeatherScreen()));
       },
-      borderRadius: BorderRadius.circular(20),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: context.cardBg,
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDark
+                ? [const Color(0xFF0C4A6E), const Color(0xFF075985)]
+                : [const Color(0xFF0369A1), const Color(0xFF0EA5E9)],
+          ),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: context.cardBorder, width: 1.2),
           boxShadow: [
             BoxShadow(
-              color: isDark ? Colors.black.withOpacity(0.2) : Colors.black.withOpacity(0.03),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
+              color: const Color(0xFF0284C7).withValues(alpha: isDark ? 0.3 : 0.2),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  tr('agro_weather_title'),
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: context.subText,
-                    letterSpacing: 0.3,
-                  ),
+            // Decorative circles
+            Positioned(
+              right: -20,
+              top: -20,
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.08),
                 ),
-                if (weather != null && weather.source == 'OPEN_METEO_LIVE')
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF16A34A).withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      '● LIVE RADAR',
-                      style: GoogleFonts.inter(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF16A34A),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
-                      children: [
-                        Text(
-                          tempStr,
-                          style: GoogleFonts.poppins(
-                            fontSize: 26,
-                            fontWeight: FontWeight.w800,
-                            color: context.titleText,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          locationName,
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF374151),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 3),
-                    Row(
-                      children: [
-                        Text(emojiStr, style: const TextStyle(fontSize: 13)),
-                        const SizedBox(width: 5),
-                        Text(
-                          '$rainProbStr rain • $conditionStr',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1E3A2B) : const Color(0xFFF0FDF4),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: isDark ? const Color(0xFF2E5E43) : const Color(0xFFDCFCE7),
-                      width: 1.5,
-                    ),
-                  ),
-                  child: Center(
-                    child: Text(emojiStr, style: const TextStyle(fontSize: 26)),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-              decoration: BoxDecoration(
-                color: context.softGreenBg,
-                borderRadius: BorderRadius.circular(10),
               ),
-              child: Row(
+            ),
+            Positioned(
+              right: 30,
+              bottom: -15,
+              child: Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.04),
+                ),
+              ),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
                 children: [
-                  const Text('🌱', style: TextStyle(fontSize: 13)),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      advisoryText,
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: isDark ? const Color(0xFF86EFAC) : AppColors.asvannaButtonGreen,
+                  // Top row: emoji + temp + rain badge
+                  Row(
+                    children: [
+                      Text(emojiStr, style: const TextStyle(fontSize: 44)),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              tempStr,
+                              style: GoogleFonts.poppins(
+                                fontSize: 30,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                                height: 1.0,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              conditionStr,
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFFBAE6FD),
+                              ),
+                            ),
+                            Text(
+                              locationName,
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: Colors.white.withValues(alpha: 0.6),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+
+                      // Rain badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.18),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text('💧', style: TextStyle(fontSize: 12)),
+                            const SizedBox(width: 4),
+                            Text(
+                              rainProbStr,
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    size: 16,
-                    color: isDark ? const Color(0xFF86EFAC) : AppColors.asvannaButtonGreen,
+                  const SizedBox(height: 12),
+
+                  // Advisory strip
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        const Text('🌱', style: TextStyle(fontSize: 13)),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            advisoryText,
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: const Color(0xFFE0F2FE),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        const Icon(
+                          Icons.chevron_right_rounded,
+                          size: 16,
+                          color: Color(0xFFBAE6FD),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -463,54 +507,164 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
     );
   }
 
-  // 3. 2x2 Big High-Contrast Action Grid (Age 30-50 Friendly)
-  Widget _buildBigActionGrid(BuildContext context, String Function(String) tr) {
-    return Column(
+  // ══════════════════════════════════════════════
+  // 4. QUICK STATS ROW — 3 Chips
+  // ══════════════════════════════════════════════
+  Widget _buildQuickStatsRow(
+    BuildContext context,
+    AppStateProvider appState,
+    String Function(String) tr,
+    bool isDark,
+  ) {
+    final cropsCount = appState.farmerProfile.activePlantings.length;
+    final ordersCount = appState.pendingOrdersCount;
+    final noticesCount = appState.unreadNoticesCount;
+
+    return Row(
       children: [
+        Expanded(
+          child: _buildStatChip(
+            context: context,
+            emoji: '🌾',
+            count: cropsCount,
+            label: tr('nav_my_crops'),
+            isDark: isDark,
+            onTap: () => onTabSelected?.call(1),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _buildStatChip(
+            context: context,
+            emoji: '📦',
+            count: ordersCount,
+            label: tr('nav_orders'),
+            isDark: isDark,
+            onTap: () => onTabSelected?.call(2),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _buildStatChip(
+            context: context,
+            emoji: '🔔',
+            count: noticesCount,
+            label: 'Notices',
+            isDark: isDark,
+            onTap: () => onTabSelected?.call(3),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatChip({
+    required BuildContext context,
+    required String emoji,
+    required int count,
+    required String label,
+    required bool isDark,
+    VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 22)),
+            const SizedBox(height: 4),
+            Text(
+              '$count',
+              style: GoogleFonts.poppins(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: context.titleText,
+              ),
+            ),
+            Text(
+              label,
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: context.subText,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ══════════════════════════════════════════════
+  // 5. QUICK ACTIONS — Icon-based 2×2 Grid
+  // ══════════════════════════════════════════════
+  Widget _buildQuickActionsGrid(
+    BuildContext context,
+    String Function(String) tr,
+    bool isDark,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Quick Actions',
+          style: GoogleFonts.poppins(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: context.titleText,
+          ),
+        ),
+        const SizedBox(height: 12),
+
         Row(
           children: [
-            // Card 1: Add Planting
+            // Crop Risk — Dark green card
             Expanded(
-              child: _buildBigActionButton(
+              child: _buildActionCard(
                 context: context,
-                icon: Icons.eco_rounded,
-                title: tr('add_planting_btn'),
-                subtitle: 'Add Planting',
-                bgGradient: const LinearGradient(
-                  colors: [Color(0xFF155437), Color(0xFF1B6B46)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+                icon: Icons.analytics_outlined,
+                title: tr('crop_status'),
+                subtitle: 'Check before planting',
+                isDark: isDark,
+                isHero: true,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const PrePlantingRiskScreen()),
                 ),
-                iconBg: Colors.white.withOpacity(0.18),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const PlantingEntryScreen()),
-                  );
-                },
               ),
             ),
             const SizedBox(width: 12),
-
-            // Card 2: Safe Crops (Risk Engine)
+            // Plant Crop — Bordered accent card
             Expanded(
-              child: _buildBigActionButton(
+              child: _buildActionCard(
                 context: context,
-                icon: Icons.shield_rounded,
-                title: tr('safe_crops_btn'),
-                subtitle: 'Safe Crops',
-                bgGradient: const LinearGradient(
-                  colors: [Color(0xFF059669), Color(0xFF10B981)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+                icon: Icons.add_circle_outline_rounded,
+                title: tr('plant_new_crop'),
+                subtitle: 'Register new planting',
+                isDark: isDark,
+                isPrimary: true,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const PlantingEntryScreen()),
                 ),
-                iconBg: Colors.white.withOpacity(0.18),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const PrePlantingRiskScreen()),
-                  );
-                },
               ),
             ),
           ],
@@ -518,50 +672,39 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
         const SizedBox(height: 12),
         Row(
           children: [
-            // Card 3: Sell Surplus
+            // Sell Surplus
             Expanded(
-              child: _buildBigActionButton(
+              child: _buildActionCard(
                 context: context,
-                icon: Icons.shopping_basket_rounded,
-                title: tr('sell_surplus_btn'),
-                subtitle: 'Sell Surplus',
-                bgGradient: const LinearGradient(
-                  colors: [Color(0xFFD97706), Color(0xFFF59E0B)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+                icon: Icons.storefront_outlined,
+                title: tr('sell_surplus'),
+                subtitle: '5km marketplace',
+                isDark: isDark,
+                iconColor: const Color(0xFFF59E0B),
+                iconBg: isDark ? const Color(0xFF3D2E0A) : const Color(0xFFFFFBEB),
+                onTap: () => showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (_) => const PostSurplusModal(),
                 ),
-                iconBg: Colors.white.withOpacity(0.18),
-                onTap: () {
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
-                    builder: (_) => const PostSurplusModal(),
-                  );
-                },
               ),
             ),
             const SizedBox(width: 12),
-
-            // Card 4: Market Prices
+            // Market Prices
             Expanded(
-              child: _buildBigActionButton(
+              child: _buildActionCard(
                 context: context,
-                icon: Icons.local_offer_rounded,
-                title: tr('market_prices_btn'),
-                subtitle: 'Market Prices',
-                bgGradient: const LinearGradient(
-                  colors: [Color(0xFF0D9488), Color(0xFF14B8A6)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+                icon: Icons.trending_up_rounded,
+                title: tr('market_price'),
+                subtitle: 'HARTI daily rates',
+                isDark: isDark,
+                iconColor: const Color(0xFF3B82F6),
+                iconBg: isDark ? const Color(0xFF1E3A5F) : const Color(0xFFEFF6FF),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const PriceTrendsScreen()),
                 ),
-                iconBg: Colors.white.withOpacity(0.18),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const PriceTrendsScreen()),
-                  );
-                },
               ),
             ),
           ],
@@ -570,55 +713,127 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
     );
   }
 
-  Widget _buildBigActionButton({
+  Widget _buildActionCard({
     required BuildContext context,
     required IconData icon,
     required String title,
     required String subtitle,
-    required Gradient bgGradient,
-    required Color iconBg,
+    required bool isDark,
     required VoidCallback onTap,
+    bool isHero = false,
+    bool isPrimary = false,
+    Color? iconColor,
+    Color? iconBg,
   }) {
-    return InkWell(
+    final bgColor = isHero
+        ? (isDark ? const Color(0xFF0D3320) : const Color(0xFF064E3B))
+        : (isDark ? const Color(0xFF1E293B) : Colors.white);
+
+    final textColor = isHero
+        ? Colors.white
+        : context.titleText;
+
+    final subColor = isHero
+        ? Colors.white.withValues(alpha: 0.6)
+        : context.subText;
+
+    final defaultIconColor = isHero
+        ? const Color(0xFF6EE7B7)
+        : (isDark ? const Color(0xFF4ADE80) : const Color(0xFF059669));
+
+    final defaultIconBg = isHero
+        ? Colors.white.withValues(alpha: 0.12)
+        : (isDark ? const Color(0xFF143E23) : const Color(0xFFECFDF5));
+
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
       child: Container(
-        height: 114,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        height: 130,
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          gradient: bgGradient,
+          color: bgColor,
           borderRadius: BorderRadius.circular(20),
+          border: isPrimary
+              ? Border.all(
+                  color: isDark ? const Color(0xFF22C55E) : const Color(0xFF10B981),
+                  width: 2,
+                )
+              : (isHero
+                  ? null
+                  : Border.all(
+                      color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                      width: 1,
+                    )),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: isHero
+                  ? const Color(0xFF064E3B).withValues(alpha: 0.3)
+                  : Colors.black.withValues(alpha: isDark ? 0.15 : 0.04),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Stack(
           children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: iconBg,
-                borderRadius: BorderRadius.circular(10),
+            if (isHero)
+              Positioned(
+                right: -10,
+                bottom: -10,
+                child: Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withValues(alpha: 0.05),
+                  ),
+                ),
               ),
-              child: Icon(icon, color: Colors.white, size: 20),
-            ),
+
+            if (isPrimary)
+              Positioned(
+                top: 0,
+                right: 0,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF22C55E) : const Color(0xFF10B981),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'NEW',
+                    style: GoogleFonts.inter(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: iconBg ?? defaultIconBg,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 22,
+                    color: iconColor ?? defaultIconColor,
+                  ),
+                ),
+                const Spacer(),
                 Text(
                   title,
                   style: GoogleFonts.poppins(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    height: 1.1,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: textColor,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -627,361 +842,8 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
                 Text(
                   subtitle,
                   style: GoogleFonts.inter(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white.withOpacity(0.88),
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // 5. Section Header with Filter Chips: My Planted Crops
-  Widget _buildCurrentCropsHeader({
-    required BuildContext context,
-    required int totalCount,
-    required int atRiskCount,
-    required int safeCount,
-    required String Function(String) tr,
-  }) {
-    final isDark = context.isDarkMode;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: Text(
-                '${tr('my_current_crops')} ($totalCount)',
-                style: GoogleFonts.poppins(
-                  fontSize: 16.5,
-                  fontWeight: FontWeight.w700,
-                  color: context.titleText,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const PrePlantingRiskScreen()),
-                );
-              },
-              child: Text(
-                tr('manage'),
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? const Color(0xFF4ADE80) : AppColors.asvannaButtonGreen,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-
-        // Filter Chips Row (All | At Risk | Safe)
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              _buildFilterChip(
-                context: context,
-                label: '${tr('filter_all')} ($totalCount)',
-                value: 'all',
-                isSelected: _cropFilter == 'all',
-                activeBg: isDark ? const Color(0xFF334155) : AppColors.dashHeaderTitle,
-                activeText: Colors.white,
-              ),
-              const SizedBox(width: 8),
-              _buildFilterChip(
-                context: context,
-                label: '⚠️ ${tr('filter_at_risk')} ($atRiskCount)',
-                value: 'at_risk',
-                isSelected: _cropFilter == 'at_risk',
-                activeBg: const Color(0xFFDC2626),
-                activeText: Colors.white,
-                badgeDotColor: AppColors.dashAlertRed,
-              ),
-              const SizedBox(width: 8),
-              _buildFilterChip(
-                context: context,
-                label: '✅ ${tr('filter_safe')} ($safeCount)',
-                value: 'safe',
-                isSelected: _cropFilter == 'safe',
-                activeBg: AppColors.primary,
-                activeText: Colors.white,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFilterChip({
-    required BuildContext context,
-    required String label,
-    required String value,
-    required bool isSelected,
-    required Color activeBg,
-    required Color activeText,
-    Color? badgeDotColor,
-  }) {
-    final isDark = context.isDarkMode;
-    return InkWell(
-      onTap: () {
-        setState(() {
-          _cropFilter = value;
-        });
-      },
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected ? activeBg : context.cardBg,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected ? activeBg : context.cardBorder,
-            width: 1.2,
-          ),
-        ),
-        child: Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: 11.5,
-            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected ? activeText : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF4B5563)),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // 6. List of Planted Crop Cards with prominent Risk Indicators
-  Widget _buildCurrentCropsList(
-    BuildContext context,
-    AppStateProvider appState,
-    List<PlantedCropEntry> plantings,
-    String Function(String) tr,
-  ) {
-    if (plantings.isEmpty) {
-      return Container(
-        height: 110,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: context.cardBg,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: context.cardBorder),
-        ),
-        child: Center(
-          child: Text(
-            tr('no_active_crops'),
-            style: GoogleFonts.inter(color: context.subText),
-          ),
-        ),
-      );
-    }
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      physics: const BouncingScrollPhysics(),
-      child: Row(
-        children: plantings.map((p) {
-          final risk = appState.getRiskForCrop(p.cropId);
-          return Padding(
-            padding: const EdgeInsets.only(right: 12.0),
-            child: _buildCropCard(context, appState, p, risk, tr),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  Widget _buildCropCard(
-    BuildContext context,
-    AppStateProvider appState,
-    PlantedCropEntry planting,
-    dynamic risk,
-    String Function(String) tr,
-  ) {
-    final isDark = context.isDarkMode;
-    Color pillBg = isDark ? const Color(0xFF143E23) : AppColors.dashPillGreenBg;
-    Color pillTextColor = isDark ? const Color(0xFF86EFAC) : AppColors.dashSafeText;
-    Color borderColor = context.cardBorder;
-    String badgeText = tr('safe_badge');
-    String riskSubNote = 'Market Demand Healthy';
-    String emoji = planting.cropEmoji.isNotEmpty ? planting.cropEmoji : '🌱';
-
-    final nameLower = planting.cropName.toLowerCase();
-    if (emoji == '🌱') {
-      if (nameLower.contains('carrot')) emoji = '🥕';
-      else if (nameLower.contains('leek')) emoji = '🥬';
-      else if (nameLower.contains('beet')) emoji = '🟣';
-      else if (nameLower.contains('cabbage')) emoji = '🥗';
-      else if (nameLower.contains('potato')) emoji = '🥔';
-      else if (nameLower.contains('tomato')) emoji = '🍅';
-      else if (nameLower.contains('capsicum') || nameLower.contains('pepper')) emoji = '🫑';
-      else if (nameLower.contains('bean')) emoji = '🫘';
-    }
-
-    if (risk != null) {
-      if (risk.riskLevel == CropRiskLevel.critical) {
-        pillBg = isDark ? const Color(0xFF450A0A) : AppColors.dashPillRedBg;
-        pillTextColor = isDark ? const Color(0xFFFCA5A5) : AppColors.dashAlertRed;
-        borderColor = const Color(0xFFFCA5A5);
-        badgeText = tr('overplanted_badge');
-        riskSubNote = '⚠️ ${risk.priceDropRiskPercentage.toStringAsFixed(0)}% Price Drop Risk';
-      } else if (risk.riskLevel == CropRiskLevel.moderate) {
-        pillBg = isDark ? const Color(0xFF451A03) : AppColors.dashPillAmberBg;
-        pillTextColor = isDark ? const Color(0xFFFCD34D) : AppColors.dashCautionText;
-        borderColor = const Color(0xFFFCD34D);
-        badgeText = tr('caution_badge');
-        riskSubNote = '⚡ ${risk.saturationPercentage.toStringAsFixed(0)}% Quota Saturated';
-      }
-    } else {
-      if (nameLower.contains('leek')) {
-        pillBg = isDark ? const Color(0xFF450A0A) : AppColors.dashPillRedBg;
-        pillTextColor = isDark ? const Color(0xFFFCA5A5) : AppColors.dashAlertRed;
-        borderColor = const Color(0xFFFCA5A5);
-        badgeText = tr('overplanted_badge');
-        riskSubNote = '⚠️ Over-Planted Glut Risk';
-      } else if (nameLower.contains('carrot')) {
-        pillBg = isDark ? const Color(0xFF451A03) : AppColors.dashPillAmberBg;
-        pillTextColor = isDark ? const Color(0xFFFCD34D) : AppColors.dashCautionText;
-        borderColor = const Color(0xFFFCD34D);
-        badgeText = tr('caution_badge');
-        riskSubNote = '⚡ Approaching Saturation';
-      }
-    }
-
-    return InkWell(
-      onTap: () {
-        final matchedCrop = appState.availableCrops.firstWhere(
-          (c) => c.id == planting.cropId,
-          orElse: () => appState.availableCrops.first,
-        );
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => CropDetailScreen(crop: matchedCrop),
-          ),
-        );
-      },
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        width: 165,
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: context.cardBg,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: borderColor, width: 1.4),
-          boxShadow: [
-            BoxShadow(
-              color: isDark ? Colors.black.withOpacity(0.2) : Colors.black.withOpacity(0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Emoji and Status Pill
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(emoji, style: const TextStyle(fontSize: 28)),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: pillBg,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    badgeText,
-                    style: GoogleFonts.inter(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w700,
-                      color: pillTextColor,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-
-            // Crop Name & Acreage
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  planting.cropName,
-                  style: GoogleFonts.poppins(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: context.titleText,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '${planting.allocatedAcres.toStringAsFixed(1)} ${tr('acre_unit')}',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: context.subText,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '${planting.daysRemaining} ${tr('days_to_harvest')}',
-                  style: GoogleFonts.inter(
                     fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    color: context.subText,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-
-            // Risk Sub-Note & Progress Bar
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: planting.growthProgress,
-                    minHeight: 5,
-                    backgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFE5E7EB),
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      badgeText == tr('safe_badge')
-                          ? AppColors.primary
-                          : (badgeText == tr('caution_badge')
-                              ? AppColors.dashCautionAmber
-                              : AppColors.dashAlertRed),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  riskSubNote,
-                  style: GoogleFonts.inter(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: pillTextColor,
+                    color: subColor,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -991,131 +853,6 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  // 7. Farmland Utilization Card
-  Widget _buildLandUtilizationCard(BuildContext context, dynamic farmer, String Function(String) tr) {
-    final isDark = context.isDarkMode;
-    final used = farmer.usedAcres;
-    final total = farmer.totalLandAcres;
-    final percent = farmer.landUtilizationPercentage / 100.0;
-
-    return InkWell(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const FarmLandMapScreen()),
-        );
-      },
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: context.cardBg,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: context.cardBorder),
-          boxShadow: [
-            BoxShadow(
-              color: isDark ? Colors.black.withOpacity(0.2) : Colors.black.withOpacity(0.03),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      tr('land_usage'),
-                      style: GoogleFonts.poppins(
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w600,
-                        color: context.titleText,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Icon(
-                      Icons.map_outlined,
-                      size: 15,
-                      color: isDark ? const Color(0xFF4ADE80) : AppColors.asvannaButtonGreen,
-                    ),
-                  ],
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: context.softGreenBg,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Text(
-                    '${(percent * 100).toStringAsFixed(0)}% ${tr('utilized')}',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? const Color(0xFF86EFAC) : AppColors.asvannaButtonGreen,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(6),
-              child: LinearProgressIndicator(
-                value: percent,
-                minHeight: 8,
-                backgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFE8EFE8),
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  isDark ? const Color(0xFF4ADE80) : AppColors.asvannaButtonGreen,
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildStatItem(context, tr('total_land'), '$total ${tr('acre_unit')}', Icons.landscape_outlined),
-                _buildStatItem(context, tr('cultivated_label'), '${used.toStringAsFixed(1)} ${tr('acre_unit')}', Icons.eco_outlined),
-                _buildStatItem(context, tr('available_land'), '${farmer.availableAcres.toStringAsFixed(1)} ${tr('acre_unit')}', Icons.check_circle_outline),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatItem(BuildContext context, String label, String value, IconData icon) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(icon, size: 12, color: context.subText),
-            const SizedBox(width: 4),
-            Text(
-              label,
-              style: GoogleFonts.inter(fontSize: 10.5, color: context.subText),
-            ),
-          ],
-        ),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            fontWeight: FontWeight.bold,
-            color: context.titleText,
-          ),
-        ),
-      ],
     );
   }
 }
-

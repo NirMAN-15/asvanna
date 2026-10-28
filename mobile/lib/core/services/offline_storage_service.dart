@@ -2,12 +2,16 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/crop_model.dart';
 import '../models/farmer_model.dart';
+import '../models/buyer_preferences_model.dart';
 
 class OfflineStorageService {
   static const String _keyFarmerProfile = 'asvanna_farmer_profile';
   static const String _keyLanguage = 'asvanna_language';
   static const String _keyOfflineQueue = 'asvanna_offline_queue';
   static const String _keyDarkMode = 'asvanna_dark_mode';
+  static const String _keyAuthToken = 'asvanna_auth_token';
+  static const String _keyProcurementPrefs = 'asvanna_procurement_prefs';
+  static const String _keyNotificationSettings = 'asvanna_notification_settings';
 
   // Save Dark Mode state
   static Future<void> saveDarkMode(bool isDark) async {
@@ -50,20 +54,9 @@ class OfflineStorageService {
 
       final Map<String, dynamic> map = jsonDecode(jsonStr);
       final plantingsList = (map['activePlantings'] as List?) ?? [];
-      final activePlantings = plantingsList.map((p) {
-        return PlantedCropEntry(
-          id: p['id'] ?? '',
-          cropId: p['crop_id'] ?? '',
-          cropName: p['crop_name'] ?? '',
-          cropEmoji: p['crop_emoji'] ?? '🌱',
-          allocatedAcres: (p['allocated_acres'] as num?)?.toDouble() ?? 1.0,
-          plantingDate: DateTime.tryParse(p['planting_date'] ?? '') ?? DateTime.now(),
-          expectedHarvestDate: DateTime.tryParse(p['expected_harvest_date'] ?? '') ?? DateTime.now().add(const Duration(days: 90)),
-          projectedYieldKg: (p['projected_yield_kg'] as num?)?.toDouble() ?? 5000.0,
-          status: p['status'] ?? 'growing',
-          agrarianDivision: p['agrarian_division'] ?? 'Bandarawela',
-        );
-      }).toList();
+      final activePlantings = plantingsList
+          .map((p) => PlantedCropEntry.fromJson(p as Map<String, dynamic>))
+          .toList();
 
       return FarmerProfile(
         id: map['id'] ?? 'farmer_001',
@@ -114,5 +107,59 @@ class OfflineStorageService {
   static Future<void> clearOfflineQueue() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_keyOfflineQueue);
+  }
+
+  // Save Auth Token
+  static Future<void> saveAuthToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyAuthToken, token);
+  }
+
+  // Load Auth Token
+  static Future<String?> loadAuthToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_keyAuthToken);
+  }
+
+  // Clear Auth Token
+  static Future<void> clearAuthToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_keyAuthToken);
+  }
+
+  // Save Procurement Preferences
+  static Future<void> saveProcurementPreferences(ProcurementPreferences preferences) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyProcurementPrefs, jsonEncode(preferences.toJson()));
+  }
+
+  // Load Procurement Preferences
+  static Future<ProcurementPreferences?> loadProcurementPreferences() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final str = prefs.getString(_keyProcurementPrefs);
+      if (str != null && str.isNotEmpty) {
+        return ProcurementPreferences.fromJson(jsonDecode(str) as Map<String, dynamic>);
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  // Save Notification Settings
+  static Future<void> saveNotificationSettings(NotificationSettingsModel settings) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyNotificationSettings, jsonEncode(settings.toJson()));
+  }
+
+  // Load Notification Settings
+  static Future<NotificationSettingsModel?> loadNotificationSettings() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final str = prefs.getString(_keyNotificationSettings);
+      if (str != null && str.isNotEmpty) {
+        return NotificationSettingsModel.fromJson(jsonDecode(str) as Map<String, dynamic>);
+      }
+    } catch (_) {}
+    return null;
   }
 }

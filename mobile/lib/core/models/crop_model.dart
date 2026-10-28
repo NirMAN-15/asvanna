@@ -30,30 +30,48 @@ class Crop {
     final rawId = json['id']?.toString() ?? code.toLowerCase();
     final normalizedId = rawId.startsWith('crop_') ? rawId : (code.isNotEmpty ? 'crop_${code.toLowerCase()}' : rawId);
 
-    final name = json['name_en'] ?? json['nameEn'] ?? json['name'] ?? 'Crop';
-    final sinhala = json['name_si'] ?? json['nameSi'] ?? json['sinhalaName'] ?? name;
+    final name = json['name_en']?.toString() ?? json['nameEn']?.toString() ?? json['name']?.toString() ?? 'Crop';
+    final sinhala = json['name_si']?.toString() ?? json['nameSi']?.toString() ?? json['sinhalaName']?.toString() ?? name;
     
     // Auto map emoji
     final lower = (code.isNotEmpty ? code : name).toLowerCase();
-    String emoji = json['iconEmoji'] ?? '🌱';
+    String emoji = json['iconEmoji']?.toString() ?? '🌱';
     if (emoji == '🌱') {
-      if (lower.contains('leek')) emoji = '🥬';
-      else if (lower.contains('cabbage')) emoji = '🥗';
-      else if (lower.contains('carrot')) emoji = '🥕';
-      else if (lower.contains('beet')) emoji = '🟣';
-      else if (lower.contains('potato')) emoji = '🥔';
-      else if (lower.contains('bean')) emoji = '🫘';
-      else if (lower.contains('tomato')) emoji = '🍅';
-      else if (lower.contains('capsicum') || lower.contains('pepper') || lower.contains('bell')) emoji = '🫑';
-      else if (lower.contains('radish')) emoji = '🥢';
-      else if (lower.contains('knol')) emoji = '🥦';
-      else if (lower.contains('onion') || lower.contains('spring')) emoji = '🧅';
-      else if (lower.contains('lettuce')) emoji = '🥬';
-      else if (lower.contains('celery')) emoji = '🌿';
-      else if (lower.contains('broccoli') || lower.contains('cauliflower')) emoji = '🥦';
-      else if (lower.contains('pumpkin')) emoji = '🎃';
-      else if (lower.contains('gourd') || lower.contains('cucumber')) emoji = '🥒';
-      else if (lower.contains('chili')) emoji = '🌶️';
+      if (lower.contains('leek')) {
+        emoji = '🥬';
+      } else if (lower.contains('cabbage')) {
+        emoji = '🥗';
+      } else if (lower.contains('carrot')) {
+        emoji = '🥕';
+      } else if (lower.contains('beet')) {
+        emoji = '🟣';
+      } else if (lower.contains('potato')) {
+        emoji = '🥔';
+      } else if (lower.contains('bean')) {
+        emoji = '🫘';
+      } else if (lower.contains('tomato')) {
+        emoji = '🍅';
+      } else if (lower.contains('capsicum') || lower.contains('pepper') || lower.contains('bell')) {
+        emoji = '🫑';
+      } else if (lower.contains('radish')) {
+        emoji = '🥢';
+      } else if (lower.contains('knol')) {
+        emoji = '🥦';
+      } else if (lower.contains('onion') || lower.contains('spring')) {
+        emoji = '🧅';
+      } else if (lower.contains('lettuce')) {
+        emoji = '🥬';
+      } else if (lower.contains('celery')) {
+        emoji = '🌿';
+      } else if (lower.contains('broccoli') || lower.contains('cauliflower')) {
+        emoji = '🥦';
+      } else if (lower.contains('pumpkin')) {
+        emoji = '🎃';
+      } else if (lower.contains('gourd') || lower.contains('cucumber')) {
+        emoji = '🥒';
+      } else if (lower.contains('chili')) {
+        emoji = '🌶️';
+      }
     }
 
     final price = (json['standard_price_per_kg'] as num?)?.toDouble() ??
@@ -69,59 +87,166 @@ class Crop {
     final maturity = (json['growth_duration_days'] as num?)?.toInt() ??
         (json['maturityDays'] as num?)?.toInt() ?? 90;
 
+    String imageUrl = json['image_url']?.toString() ?? json['imageUrl']?.toString() ?? '';
+    if (imageUrl.isEmpty) {
+      if (lower.contains('leek')) {
+        imageUrl = 'https://images.unsplash.com/photo-1592417817098-8f3d6eb22509?w=600&auto=format&fit=crop&q=80';
+      } else if (lower.contains('cabbage')) {
+        imageUrl = 'https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?w=600&auto=format&fit=crop&q=80';
+      } else if (lower.contains('carrot')) {
+        imageUrl = 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=600&auto=format&fit=crop&q=80';
+      } else if (lower.contains('beet')) {
+        imageUrl = 'https://images.unsplash.com/photo-1593105544559-ecb03bf76f82?w=600&auto=format&fit=crop&q=80';
+      } else if (lower.contains('bean')) {
+        imageUrl = 'https://images.unsplash.com/photo-1551462147-ff29053bfc14?w=600&auto=format&fit=crop&q=80';
+      } else if (lower.contains('tomato')) {
+        imageUrl = 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&auto=format&fit=crop&q=80';
+      } else if (lower.contains('capsicum') || lower.contains('pepper') || lower.contains('bell')) {
+        imageUrl = 'https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=600&auto=format&fit=crop&q=80';
+      } else if (lower.contains('radish')) {
+        imageUrl = 'https://images.unsplash.com/photo-1590779033100-9f60a05a013d?w=600&auto=format&fit=crop&q=80';
+      } else if (lower.contains('onion') || lower.contains('spring')) {
+        imageUrl = 'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=600&auto=format&fit=crop&q=80';
+      } else if (lower.contains('potato')) {
+        imageUrl = 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=600&auto=format&fit=crop&q=80';
+      } else if (lower.contains('pumpkin')) {
+        imageUrl = 'https://images.unsplash.com/photo-1506917728037-b6af01a7d403?w=600&auto=format&fit=crop&q=80';
+      } else if (lower.contains('gourd') || lower.contains('cucumber')) {
+        imageUrl = 'https://images.unsplash.com/photo-1449300079323-02e209d9d3a6?w=600&auto=format&fit=crop&q=80';
+      } else if (lower.contains('chili')) {
+        imageUrl = 'https://images.unsplash.com/photo-1588252303782-cb80119abd6d?w=600&auto=format&fit=crop&q=80';
+      }
+    }
+
     return Crop(
-      id: normalizedId,
+      id: normalizedId.isNotEmpty ? normalizedId : 'crop_unknown',
       name: name,
       sinhalaName: sinhala,
-      category: json['category'] ?? 'Upcountry Vegetable',
+      category: json['category']?.toString() ?? 'Upcountry Vegetable',
       maturityDays: maturity,
       expectedYieldKgPerAcre: yieldKg,
       currentMarketPricePerKg: price,
       historicalAveragePricePerKg: histPrice,
       iconEmoji: emoji,
-      imageUrl: json['image_url'] ?? json['imageUrl'] ?? '',
+      imageUrl: imageUrl,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Crop && runtimeType == other.runtimeType && id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class PlantedCropEntry {
   final String id;
   final String cropId;
   final String cropName;
+  final String? cropSinhalaName;
   final String cropEmoji;
   final double allocatedAcres;
   final DateTime plantingDate;
   final DateTime expectedHarvestDate;
   final double projectedYieldKg;
+  final double? actualYieldKg;
   final String status; // 'growing', 'harvest_ready', 'harvested'
   final String agrarianDivision;
+  final String? harvestNotes;
 
   PlantedCropEntry({
     required this.id,
     required this.cropId,
     required this.cropName,
+    this.cropSinhalaName,
     required this.cropEmoji,
     required this.allocatedAcres,
     required this.plantingDate,
     required this.expectedHarvestDate,
     required this.projectedYieldKg,
+    this.actualYieldKg,
     this.status = 'growing',
     this.agrarianDivision = 'Bandarawela',
+    this.harvestNotes,
   });
+
+  bool get isHarvested => status == 'harvested';
+
+  String get displayName {
+    if (cropSinhalaName != null && cropSinhalaName!.isNotEmpty) {
+      return '$cropName ($cropSinhalaName)';
+    }
+    return cropName;
+  }
+
+  PlantedCropEntry copyWith({
+    String? id,
+    String? cropId,
+    String? cropName,
+    String? cropSinhalaName,
+    String? cropEmoji,
+    double? allocatedAcres,
+    DateTime? plantingDate,
+    DateTime? expectedHarvestDate,
+    double? projectedYieldKg,
+    double? actualYieldKg,
+    String? status,
+    String? agrarianDivision,
+    String? harvestNotes,
+  }) {
+    return PlantedCropEntry(
+      id: id ?? this.id,
+      cropId: cropId ?? this.cropId,
+      cropName: cropName ?? this.cropName,
+      cropSinhalaName: cropSinhalaName ?? this.cropSinhalaName,
+      cropEmoji: cropEmoji ?? this.cropEmoji,
+      allocatedAcres: allocatedAcres ?? this.allocatedAcres,
+      plantingDate: plantingDate ?? this.plantingDate,
+      expectedHarvestDate: expectedHarvestDate ?? this.expectedHarvestDate,
+      projectedYieldKg: projectedYieldKg ?? this.projectedYieldKg,
+      actualYieldKg: actualYieldKg ?? this.actualYieldKg,
+      status: status ?? this.status,
+      agrarianDivision: agrarianDivision ?? this.agrarianDivision,
+      harvestNotes: harvestNotes ?? this.harvestNotes,
+    );
+  }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'crop_id': cropId,
       'crop_name': cropName,
+      'crop_sinhala_name': cropSinhalaName,
       'crop_emoji': cropEmoji,
       'allocated_acres': allocatedAcres,
       'planting_date': plantingDate.toIso8601String(),
       'expected_harvest_date': expectedHarvestDate.toIso8601String(),
       'projected_yield_kg': projectedYieldKg,
+      'actual_yield_kg': actualYieldKg,
       'status': status,
       'agrarian_division': agrarianDivision,
+      'harvest_notes': harvestNotes,
     };
+  }
+
+  factory PlantedCropEntry.fromJson(Map<String, dynamic> json) {
+    return PlantedCropEntry(
+      id: json['id'] ?? '',
+      cropId: json['crop_id'] ?? json['cropId'] ?? '',
+      cropName: json['crop_name'] ?? json['cropName'] ?? '',
+      cropSinhalaName: json['crop_sinhala_name'] ?? json['cropSinhalaName'],
+      cropEmoji: json['crop_emoji'] ?? json['cropEmoji'] ?? '🌱',
+      allocatedAcres: (json['allocated_acres'] ?? json['allocatedAcres'] as num?)?.toDouble() ?? 1.0,
+      plantingDate: DateTime.tryParse(json['planting_date'] ?? json['plantingDate'] ?? '') ?? DateTime.now(),
+      expectedHarvestDate: DateTime.tryParse(json['expected_harvest_date'] ?? json['expectedHarvestDate'] ?? '') ?? DateTime.now().add(const Duration(days: 90)),
+      projectedYieldKg: (json['projected_yield_kg'] ?? json['projectedYieldKg'] as num?)?.toDouble() ?? 5000.0,
+      actualYieldKg: (json['actual_yield_kg'] ?? json['actualYieldKg'] as num?)?.toDouble(),
+      status: json['status'] ?? 'growing',
+      agrarianDivision: json['agrarian_division'] ?? json['agrarianDivision'] ?? 'Bandarawela',
+      harvestNotes: json['harvest_notes'] ?? json['harvestNotes'],
+    );
   }
 
   int get daysRemaining {

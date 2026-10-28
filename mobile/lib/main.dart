@@ -29,8 +29,7 @@ class AsvannaApp extends StatelessWidget {
           title: 'Asvanna - The Zero-Waste Marketplace',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
-          darkTheme: AppTheme.darkTheme,
-          themeMode: appState.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+          themeMode: ThemeMode.light,
           home: Builder(
             builder: (ctx) {
               switch (appState.currentUserRole) {

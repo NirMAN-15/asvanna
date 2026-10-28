@@ -384,121 +384,207 @@ class _NoticeBoardScreenState extends State<NoticeBoardScreen> {
                         priorityLabel = tr('high_priority');
                       }
 
+                      // Icon per priority
+                      IconData priorityIcon = Icons.info_rounded;
+                      if (n.priority == NoticePriority.urgent) {
+                        priorityIcon = Icons.warning_amber_rounded;
+                      } else if (n.priority == NoticePriority.high) {
+                        priorityIcon = Icons.priority_high_rounded;
+                      } else if (n.priority == NoticePriority.medium) {
+                        priorityIcon = Icons.notifications_rounded;
+                      }
+
                       return GestureDetector(
                         onTap: () => _showNoticeDetailDialog(context, n),
                         child: Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.all(16),
+                          margin: const EdgeInsets.only(bottom: 14),
                           decoration: BoxDecoration(
                             color: context.cardBg,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: priorityColor.withValues(alpha: 0.3),
-                              width: 1.2,
-                            ),
+                            borderRadius: BorderRadius.circular(18),
                             boxShadow: [
                               BoxShadow(
                                 color: isDark
-                                    ? Colors.black.withValues(alpha: 0.2)
-                                    : Colors.black.withValues(alpha: 0.03),
-                                blurRadius: 8,
-                                offset: const Offset(0, 3),
+                                    ? Colors.black.withValues(alpha: 0.25)
+                                    : priorityColor.withValues(alpha: 0.08),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
                               ),
                             ],
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(18),
+                            child: IntrinsicHeight(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
+                                  // Left accent bar
                                   Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 10, vertical: 4),
+                                    width: 5,
                                     decoration: BoxDecoration(
-                                      color: priorityBg,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      priorityLabel,
-                                      style: GoogleFonts.inter(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                        color: priorityColor,
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        colors: [
+                                          priorityColor,
+                                          priorityColor.withValues(alpha: 0.5),
+                                        ],
                                       ),
                                     ),
                                   ),
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        Icons.verified,
-                                        size: 14,
-                                        color: isDark
-                                            ? const Color(0xFF4ADE80)
-                                            : AppColors.primary,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        tr('official_badge'),
-                                        style: GoogleFonts.inter(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w600,
-                                          color: isDark
-                                              ? const Color(0xFF4ADE80)
-                                              : AppColors.primary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 10),
-                              Text(
-                                n.title,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                  color: context.titleText,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                n.description,
-                                style: GoogleFonts.inter(
-                                  fontSize: 13,
-                                  color: context.subText,
-                                  height: 1.4,
-                                ),
-                                maxLines: 3,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 12),
-                              Divider(color: context.dividerColor),
-                              const SizedBox(height: 6),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
+                                  // Card content
                                   Expanded(
-                                    child: Text(
-                                      'Issued by: ${noticeDepartmentSignature(n)}',
-                                      style: GoogleFonts.inter(
-                                        fontSize: 11,
-                                        fontStyle: FontStyle.italic,
-                                        color: context.mutedText,
+                                    child: Padding(
+                                      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          // Top row: priority badge + official badge
+                                          Row(
+                                            children: [
+                                              // Priority icon bubble
+                                              Container(
+                                                padding: const EdgeInsets.all(6),
+                                                decoration: BoxDecoration(
+                                                  color: priorityBg,
+                                                  borderRadius: BorderRadius.circular(10),
+                                                ),
+                                                child: Icon(
+                                                  priorityIcon,
+                                                  size: 15,
+                                                  color: priorityColor,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              // Priority label
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(
+                                                    horizontal: 9, vertical: 4),
+                                                decoration: BoxDecoration(
+                                                  color: priorityBg,
+                                                  borderRadius: BorderRadius.circular(8),
+                                                ),
+                                                child: Text(
+                                                  priorityLabel,
+                                                  style: GoogleFonts.inter(
+                                                    fontSize: 10.5,
+                                                    fontWeight: FontWeight.w800,
+                                                    color: priorityColor,
+                                                    letterSpacing: 0.3,
+                                                  ),
+                                                ),
+                                              ),
+                                              const Spacer(),
+                                              // Official badge
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(
+                                                    horizontal: 8, vertical: 4),
+                                                decoration: BoxDecoration(
+                                                  color: isDark
+                                                      ? const Color(0xFF143E23)
+                                                      : const Color(0xFFECFDF5),
+                                                  borderRadius: BorderRadius.circular(8),
+                                                ),
+                                                child: Row(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    Icon(
+                                                      Icons.verified_rounded,
+                                                      size: 12,
+                                                      color: isDark
+                                                          ? const Color(0xFF4ADE80)
+                                                          : AppColors.primary,
+                                                    ),
+                                                    const SizedBox(width: 3),
+                                                    Text(
+                                                      tr('official_badge'),
+                                                      style: GoogleFonts.inter(
+                                                        fontSize: 10.5,
+                                                        fontWeight: FontWeight.w700,
+                                                        color: isDark
+                                                            ? const Color(0xFF4ADE80)
+                                                            : AppColors.primary,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 11),
+                                          // Title
+                                          Text(
+                                            n.title,
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 14.5,
+                                              fontWeight: FontWeight.w700,
+                                              color: context.titleText,
+                                              height: 1.3,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 6),
+                                          // Description
+                                          Text(
+                                            n.description,
+                                            style: GoogleFonts.inter(
+                                              fontSize: 12.5,
+                                              color: context.subText,
+                                              height: 1.45,
+                                            ),
+                                            maxLines: 3,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          const SizedBox(height: 12),
+                                          // Footer divider + meta
+                                          Container(
+                                            height: 1,
+                                            color: isDark
+                                                ? const Color(0xFF334155)
+                                                : const Color(0xFFF1F5F9),
+                                          ),
+                                          const SizedBox(height: 9),
+                                          Row(
+                                            children: [
+                                              Icon(
+                                                Icons.account_circle_rounded,
+                                                size: 13,
+                                                color: context.mutedText,
+                                              ),
+                                              const SizedBox(width: 5),
+                                              Expanded(
+                                                child: Text(
+                                                  noticeDepartmentSignature(n),
+                                                  style: GoogleFonts.inter(
+                                                    fontSize: 11,
+                                                    fontStyle: FontStyle.italic,
+                                                    color: context.mutedText,
+                                                  ),
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Icon(
+                                                Icons.calendar_today_rounded,
+                                                size: 11,
+                                                color: context.mutedText,
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                dateFormat.format(n.date),
+                                                style: GoogleFonts.inter(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: context.mutedText,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
                                       ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  Text(
-                                    dateFormat.format(n.date),
-                                    style: GoogleFonts.inter(
-                                      fontSize: 11,
-                                      color: context.mutedText,
                                     ),
                                   ),
                                 ],
                               ),
-                            ],
+                            ),
                           ),
                         ),
                       );
