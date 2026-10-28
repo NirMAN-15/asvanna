@@ -349,10 +349,16 @@ async function seedData() {
     console.log(`✅ 3-Year Monthly Wholesale Price Benchmarks seeded (${totalBenchmarksSeeded} records across 11 pilot crops)`);
 
     console.log('🌾 All 11 pilot crops and baseline benchmarks seeded cleanly.');
-    process.exit(0);
+    if (require.main === module) {
+      process.exit(0);
+    }
+    return true;
   } catch (error) {
     console.error('❌ Seeding failed:', error);
-    process.exit(1);
+    if (require.main === module) {
+      process.exit(1);
+    }
+    throw error;
   }
 }
 
