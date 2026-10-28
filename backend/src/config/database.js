@@ -596,10 +596,10 @@ module.exports = {
     }
     if (lower.includes('from marketplace_orders')) {
       let rows = (fileDb.marketplace_orders || []).map(o => {
-        const listing = (fileDb.marketplace_listings || []).find(l => l.id === o.listing_id) || {};
-        const crop = fileDb.crops.find(c => c.id === listing.crop_id) || {};
-        const farmer = fileDb.users.find(u => u.id === listing.farmer_id) || {};
-        const buyer = fileDb.users.find(u => u.id === o.buyer_id) || {};
+        const listing = (fileDb.marketplace_listings || []).find(l => Number(l.id) === Number(o.listing_id)) || {};
+        const crop = (fileDb.crops || []).find(c => Number(c.id) === Number(listing.crop_id)) || {};
+        const farmer = (fileDb.users || []).find(u => Number(u.id) === Number(listing.farmer_id)) || {};
+        const buyer = (fileDb.users || []).find(u => Number(u.id) === Number(o.buyer_id)) || {};
         return {
           ...o,
           crop_id: listing.crop_id,
@@ -615,11 +615,13 @@ module.exports = {
         };
       });
       if (lower.includes('where o.id =')) {
-        rows = rows.filter(r => r.id === Number(params[0]));
+        rows = rows.filter(r => String(r.id) === String(params[0]) || Number(r.id) === Number(params[0]));
+      } else if (lower.includes('where o.order_code =')) {
+        rows = rows.filter(r => r.order_code === params[0] || r.validation_token === params[0]);
       } else if (lower.includes('where o.buyer_id =')) {
-        rows = rows.filter(r => r.buyer_id === Number(params[0]));
+        rows = rows.filter(r => Number(r.buyer_id) === Number(params[0]));
       } else if (lower.includes('where l.farmer_id =')) {
-        rows = rows.filter(r => r.farmer_id === Number(params[0]));
+        rows = rows.filter(r => Number(r.farmer_id) === Number(params[0]));
       }
       return { rows };
     }
@@ -779,6 +781,27 @@ module.exports = {
       return { rows: [newListing] };
     }
 
+    if (lower.includes('update planting_records')) {
+      const id = params[params.length - 1];
+      const record = (fileDb.planting_records || []).find(p => String(p.id) === String(id) || Number(p.id) === Number(id));
+      if (record) {
+        if (lower.includes("status = 'harvested'")) {
+          record.status = 'HARVESTED';
+          record.actual_yield_kg = Number(params[0]);
+          record.harvested_date = new Date().toISOString();
+        } else {
+          record.land_size_acres = params[0] !== undefined ? Number(params[0]) : record.land_size_acres;
+          record.planting_date = params[1] || record.planting_date;
+          record.notes = params[2] !== undefined ? params[2] : record.notes;
+          record.status = params[3] || record.status;
+        }
+        record.updated_at = new Date().toISOString();
+        saveDb(fileDb);
+        return { rows: [record] };
+      }
+      return { rows: [] };
+    }
+
     if (lower.includes('update marketplace_listings')) {
       if (lower.includes("status = 'expired'")) {
         const id = Number(params[0]);
@@ -818,6 +841,8 @@ module.exports = {
         status: 'PENDING',
         response_deadline: params[6],
         notes: params[7],
+        validation_token: params[8] || ('VAL-BW-2026-' + Math.random().toString(36).substring(2, 10).toUpperCase()),
+        qr_code_hash: params[9] || ('QR-ASV-' + params[0]),
         created_at: new Date().toISOString()
       };
       if (!fileDb.marketplace_orders) fileDb.marketplace_orders = [];
@@ -827,12 +852,13 @@ module.exports = {
     }
 
     if (lower.includes('update marketplace_orders')) {
-      const id = Number(params[3]);
-      const order = fileDb.marketplace_orders.find(o => o.id === id);
+      const id = String(params[3]);
+      const order = fileDb.marketplace_orders.find(o => String(o.id) === id || Number(o.id) === Number(id));
       if (order) {
         order.status = params[0];
         order.offered_price_per_kg = params[1] !== null ? Number(params[1]) : order.offered_price_per_kg;
         order.total_price = Number(params[2]);
+        order.updated_at = new Date().toISOString();
         saveDb(fileDb);
         return { rows: [order] };
       }

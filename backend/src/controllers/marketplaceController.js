@@ -400,7 +400,7 @@ class MarketplaceController {
       }
 
       const order = orderRes.rows[0];
-      if (userId && order.farmer_id !== userId) {
+      if (userId && Number(order.farmer_id) !== Number(userId)) {
         return ApiResponse.error(res, 'Unauthorized: only listing owner can respond to order', 403);
       }
 

@@ -7,24 +7,29 @@ const { validateRequest } = require('../middlewares/validationMiddleware');
 const router = express.Router();
 
 router.post(
-  '/log',
+  ['/', '/log'],
   authenticate,
   authorizeRoles('FARMER', 'OFFICER', 'ADMIN'),
   [
-    body('crop_id').isInt().withMessage('Valid crop ID required'),
-    body('land_size_acres').isFloat({ min: 0.1 }).withMessage('Land size must be > 0 acres'),
-    body('planting_date').isISO8601().withMessage('Valid ISO planting date required'),
-    body('latitude').isFloat().withMessage('Valid latitude required'),
-    body('longitude').isFloat().withMessage('Valid longitude required')
+    body('crop_id').custom(v => v !== undefined && v !== null && v !== '').withMessage('Valid crop ID required'),
+    body().custom(b => {
+      const acres = parseFloat(b.land_size_acres || b.allocated_acres || b.acreage);
+      const perches = parseFloat(b.land_size_perches);
+      if ((isNaN(acres) || acres <= 0) && (isNaN(perches) || perches <= 0)) {
+        throw new Error('Valid land extent (acres or perches) greater than 0 required');
+      }
+      return true;
+    })
   ],
   validateRequest,
   PlantingController.logPlanting
 );
 
-router.get('/farmer/:farmerId?', authenticate, PlantingController.getFarmerPlantings);
-router.get('/regional-map', authenticate, PlantingController.getRegionalPlantings);
-router.get('/history/all', authenticate, PlantingController.getAllFarmHistory);
+router.get(['/', '/farmer', '/farmer/:farmerId?', '/my-crops'], authenticate, PlantingController.getFarmerPlantings);
+router.get(['/regional-map', '/history/regional-map'], authenticate, PlantingController.getRegionalPlantings);
+router.get(['/history/all', '/all'], authenticate, PlantingController.getAllFarmHistory);
 router.put('/:id/harvest', authenticate, authorizeRoles('FARMER', 'OFFICER', 'ADMIN'), PlantingController.completeHarvest);
+router.put('/:id', authenticate, authorizeRoles('FARMER', 'OFFICER', 'ADMIN'), PlantingController.updatePlanting);
 router.delete('/:id', authenticate, authorizeRoles('FARMER', 'OFFICER', 'ADMIN'), PlantingController.deletePlanting);
 
 

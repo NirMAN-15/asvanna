@@ -182,6 +182,10 @@ CREATE TABLE IF NOT EXISTS marketplace_orders (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Ensure columns exist for upgraded/pre-existing installations
+ALTER TABLE marketplace_orders ADD COLUMN IF NOT EXISTS validation_token VARCHAR(100);
+ALTER TABLE marketplace_orders ADD COLUMN IF NOT EXISTS qr_code_hash VARCHAR(100);
+
 -- 9. Divisional Officer Broadcast Warnings Table
 CREATE TABLE IF NOT EXISTS broadcast_warnings (
     id SERIAL PRIMARY KEY,

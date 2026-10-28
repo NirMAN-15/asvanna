@@ -34,19 +34,29 @@ class PlantingController {
         }
       }
 
-      // 1. Fetch Crop details for duration and yield
-      const cropRes = await db.query('SELECT * FROM crops WHERE id = $1', [crop_id]);
+      // 1. Resolve crop_id (supports numeric, 'crop_1', or string code)
+      let resolvedCropId = crop_id;
+      if (typeof resolvedCropId === 'string') {
+        const num = parseInt(resolvedCropId.replace(/\D/g, ''), 10);
+        if (!isNaN(num) && num > 0) resolvedCropId = num;
+      }
+      let cropRes = await db.query('SELECT * FROM crops WHERE id = $1', [resolvedCropId]);
+      if (cropRes.rows.length === 0) {
+        cropRes = await db.query('SELECT * FROM crops WHERE LOWER(crop_code) = LOWER($1)', [String(crop_id)]);
+      }
       if (cropRes.rows.length === 0) return ApiResponse.error(res, 'Invalid crop ID', 400);
       const crop = cropRes.rows[0];
+      resolvedCropId = crop.id;
 
       // Calculate Acres and Perches (1 Acre = 160 Perches)
+      const rawAcres = parseFloat(land_size_acres || req.body.allocated_acres || req.body.acreage);
       let acres = 0;
       let perches = 0;
       if (land_unit === 'PERCHES' || (land_size_perches !== undefined && land_size_perches !== null && land_size_perches !== '')) {
-        perches = parseFloat(land_size_perches || land_size_acres);
+        perches = parseFloat(land_size_perches || rawAcres);
         acres = Math.round((perches / 160) * 10000) / 10000;
       } else {
-        acres = parseFloat(land_size_acres);
+        acres = !isNaN(rawAcres) && rawAcres > 0 ? rawAcres : 0.5;
         perches = Math.round(acres * 160 * 100) / 100;
       }
 
@@ -55,9 +65,11 @@ class PlantingController {
       }
 
       const expectedYieldKg = Math.round(acres * parseFloat(crop.avg_yield_per_acre_kg) * 100) / 100;
-
-      const pDate = new Date(planting_date);
-      const expectedHarvestDate = new Date(pDate.getTime() + crop.growth_duration_days * 24 * 60 * 60 * 1000);
+      const resolvedLat = latitude !== undefined && latitude !== null ? parseFloat(latitude) : (req.user.latitude ? parseFloat(req.user.latitude) : 6.8270);
+      const resolvedLng = longitude !== undefined && longitude !== null ? parseFloat(longitude) : (req.user.longitude ? parseFloat(req.user.longitude) : 80.9980);
+      const rawPDate = planting_date ? new Date(planting_date) : new Date();
+      const pDateStr = isNaN(rawPDate.getTime()) ? new Date().toISOString().split('T')[0] : rawPDate.toISOString().split('T')[0];
+      const expectedHarvestDate = new Date((isNaN(rawPDate.getTime()) ? new Date() : rawPDate).getTime() + crop.growth_duration_days * 24 * 60 * 60 * 1000);
 
       // 2. Insert Record
       const insertRes = await db.query(
@@ -65,15 +77,17 @@ class PlantingController {
          (farmer_id, crop_id, land_size_acres, expected_yield_kg, planting_date, expected_harvest_date, latitude, longitude, district, division, status, entered_by_type, officer_id, sync_status, land_size_perches, land_unit)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'PLANTED', $11, $12, 'SYNCED', $13, $14)
          RETURNING *`,
-        [targetFarmerId, crop_id, acres, expectedYieldKg, planting_date, expectedHarvestDate.toISOString().split('T')[0], latitude, longitude, district, division, enteredByType, officerId, perches, land_unit]
+        [targetFarmerId, resolvedCropId, acres, expectedYieldKg, pDateStr, expectedHarvestDate.toISOString().split('T')[0], resolvedLat, resolvedLng, district, division, enteredByType, officerId, perches, land_unit]
       );
 
       // 3. Immediately evaluate updated crop risk
-      const riskStatus = await RiskEngineService.evaluateCropRisk(crop_id, district);
+      const riskStatus = await RiskEngineService.evaluateCropRisk(resolvedCropId, district);
 
       return ApiResponse.success(
         res,
         {
+          id: insertRes.rows[0].id,
+          ...insertRes.rows[0],
           record: insertRes.rows[0],
           riskAssessment: riskStatus
         },
@@ -224,6 +238,43 @@ class PlantingController {
     }
   }
 
+  static async updatePlanting(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { acreage, land_size_acres, status, planting_date } = req.body;
+
+      const checkRes = await db.query('SELECT * FROM planting_records WHERE id = $1', [id]);
+      if (checkRes.rows.length === 0) return ApiResponse.error(res, 'Planting record not found', 404);
+      const record = checkRes.rows[0];
+
+      if (req.user.role === 'FARMER' && Number(record.farmer_id) !== Number(req.user.id)) {
+        return ApiResponse.error(res, 'Unauthorized to update this planting record', 403);
+      }
+
+      const acres = (acreage !== undefined || land_size_acres !== undefined)
+        ? parseFloat(acreage || land_size_acres)
+        : parseFloat(record.land_size_acres);
+      const updatedStatus = status || record.status;
+      const rawDate = planting_date ? new Date(planting_date) : new Date(record.planting_date);
+      const updatedDate = isNaN(rawDate.getTime()) ? new Date().toISOString().split('T')[0] : rawDate.toISOString().split('T')[0];
+
+      const updateRes = await db.query(
+        `UPDATE planting_records
+         SET land_size_acres = $1,
+             planting_date = $2,
+             status = $3,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE id = $4
+         RETURNING *`,
+        [acres, updatedDate, updatedStatus, id]
+      );
+
+      return ApiResponse.success(res, updateRes.rows[0], 'Planting record updated successfully');
+    } catch (err) {
+      next(err);
+    }
+  }
+
   static async deletePlanting(req, res, next) {
     try {
       const { id } = req.params;
@@ -232,7 +283,7 @@ class PlantingController {
       const checkRes = await db.query('SELECT farmer_id FROM planting_records WHERE id = $1', [id]);
       if (checkRes.rows.length === 0) return ApiResponse.error(res, 'Record not found', 404);
       
-      if (req.user.role === 'FARMER' && checkRes.rows[0].farmer_id !== req.user.id) {
+      if (req.user.role === 'FARMER' && Number(checkRes.rows[0].farmer_id) !== Number(req.user.id)) {
         return ApiResponse.error(res, 'Unauthorized to delete this record', 403);
       }
 

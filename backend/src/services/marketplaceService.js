@@ -7,10 +7,13 @@ class MarketplaceService {
   static async syncListingToFirebase(listing) {
     if (!realtimeDb) return;
     try {
-      await realtimeDb.ref(`marketplace_listings/${listing.id}`).set({
-        ...listing,
-        updatedAt: Date.now()
-      });
+      await Promise.race([
+        realtimeDb.ref(`marketplace_listings/${listing.id}`).set({
+          ...listing,
+          updatedAt: Date.now()
+        }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Firebase RTDB timeout')), 2500))
+      ]);
     } catch (err) {
       console.warn('⚠️ Firebase RTDB sync failed:', err.message);
     }
@@ -22,7 +25,10 @@ class MarketplaceService {
   static async removeListingFromFirebase(listingId) {
     if (!realtimeDb) return;
     try {
-      await realtimeDb.ref(`marketplace_listings/${listingId}`).remove();
+      await Promise.race([
+        realtimeDb.ref(`marketplace_listings/${listingId}`).remove(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Firebase RTDB timeout')), 2500))
+      ]);
     } catch (err) {
       console.warn('⚠️ Firebase RTDB remove failed:', err.message);
     }
