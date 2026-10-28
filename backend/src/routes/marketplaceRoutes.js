@@ -15,6 +15,7 @@ router.get('/crops-benchmark', MarketplaceController.getCropsBenchmark);
 router.get('/search', MarketplaceController.searchNearby);
 router.get('/search-nearby', MarketplaceController.searchNearby); // Backward compatibility
 
+router.get('/orders/verify/:orderCode', MarketplaceController.verifyOrderReceipt);
 router.get('/orders', optionalAuth, MarketplaceController.getOrders);
 router.post('/orders', optionalAuth, MarketplaceController.placeOrder);
 router.put('/orders/:orderId/respond', optionalAuth, MarketplaceController.respondToOrder);
