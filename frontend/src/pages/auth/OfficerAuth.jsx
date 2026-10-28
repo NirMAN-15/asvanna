@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import { LanguageContext } from '../../context/LanguageContext';
@@ -14,6 +14,21 @@ export default function OfficerAuth() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
+  const errorRef = useRef(null);
+
+  const scrollToError = () => {
+    setTimeout(() => {
+      if (errorRef.current) {
+        errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 50);
+  };
+
+  useEffect(() => {
+    if (error && errorRef.current) {
+      errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [error]);
   const [agreed, setAgreed] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -62,6 +77,7 @@ export default function OfficerAuth() {
     if (!nicRes.isValid) {
       setFieldErrors((prev) => ({ ...prev, nic: nicRes.message }));
       setError(nicRes.message);
+      scrollToError();
       return;
     }
 
@@ -70,6 +86,7 @@ export default function OfficerAuth() {
     if (!phoneRes.isValid) {
       setFieldErrors((prev) => ({ ...prev, phone: phoneRes.message }));
       setError(phoneRes.message);
+      scrollToError();
       return;
     }
 
@@ -77,16 +94,19 @@ export default function OfficerAuth() {
     const pwdRes = validatePassword(formData.password);
     if (!pwdRes.isValid) {
       setError(pwdRes.message);
+      scrollToError();
       return;
     }
 
     if (formData.password !== formData.confirm_password) {
       setError('Passwords do not match.');
+      scrollToError();
       return;
     }
 
     if (!agreed) {
       setError('Please acknowledge authorization under the Department of Agrarian Development.');
+      scrollToError();
       return;
     }
 
@@ -115,6 +135,7 @@ export default function OfficerAuth() {
       navigate('/dashboard');
     } else {
       setError(res.message || 'Registration failed. Please check your details.');
+      scrollToError();
     }
   };
 
@@ -227,7 +248,10 @@ export default function OfficerAuth() {
           </header>
 
           {error && (
-            <div className="p-3 mb-6 bg-error-container/20 border border-error/30 text-error rounded-xl text-sm font-medium flex items-center gap-2">
+            <div
+              ref={errorRef}
+              className="p-3 mb-6 bg-error-container/20 border border-error/30 text-error rounded-xl text-sm font-medium flex items-center gap-2"
+            >
               <span className="material-symbols-outlined text-lg">error</span>
               <span>{error}</span>
             </div>
