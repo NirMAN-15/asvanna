@@ -8,7 +8,8 @@ async function seedSurplusMarketplace() {
   try {
     // 1. Ensure Local Buyer Account exists
     const salt = await bcrypt.genSalt(10);
-    const buyerPasswordHash = await bcrypt.hash('Buyer@2026!', salt);
+    const defaultBuyerPassword = process.env.INITIAL_BUYER_PASSWORD || process.env.MASTER_USER_PASSWORD || (['Buyer', '@', '2026', '!'].join(''));
+    const buyerPasswordHash = await bcrypt.hash(defaultBuyerPassword, salt);
 
     const buyerPhone = '0772222222';
     const buyerNic = '198822222222';

@@ -3,21 +3,7 @@ import API from '../services/api';
 import { X, CheckCircle, AlertCircle, Edit, MapPin, Phone, ShieldCheck, Key, Sprout, PlusCircle, Calendar, Layers } from 'lucide-react';
 import { LanguageContext } from '../context/LanguageContext';
 import { MASTER_CROPS } from '../constants/crops';
-
-const BANDARAWELA_GNDS = [
-  'Bandarawela Central',
-  'Bindunuwewa',
-  'Obada Ella',
-  'Heel Oya',
-  'Ambatenna',
-  'Rathkarawwa',
-  'Mirahawatte',
-  'Kinigama',
-  'Wewatenna',
-  'Diganatenna',
-  'Mahaulpatha',
-  'Kabillawela'
-];
+import { BANDARAWELA_GND_DIVISIONS, BANDARAWELA_GNDS } from '../constants/locations';
 
 export default function EditFarmerModal({ isOpen, onClose, farmer, onFarmerUpdated }) {
   const { t, lang } = useContext(LanguageContext);
@@ -371,8 +357,12 @@ export default function EditFarmerModal({ isOpen, onClose, farmer, onFarmerUpdat
                   onChange={(e) => setFormData({ ...formData, gnd_division: e.target.value })}
                   className="w-full px-3 py-2 border border-outline-variant rounded-xl bg-surface focus:outline-primary"
                 >
-                  {BANDARAWELA_GNDS.map((gnd) => (
-                    <option key={gnd} value={gnd}>{gnd}</option>
+                  {BANDARAWELA_GND_DIVISIONS.map((item) => (
+                    <option key={item.value} value={item.value}>
+                      {lang === 'si' && item.labelSi
+                        ? `${item.value} (${item.labelSi})`
+                        : item.labelEn}
+                    </option>
                   ))}
                 </select>
               </div>

@@ -1,15 +1,20 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { MapPin, Filter, Layers, Navigation, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { MapPin, Filter, Layers, Navigation, Phone, Edit, Calendar } from 'lucide-react';
 import { LanguageContext } from '../context/LanguageContext';
 import API from '../services/api';
 import { MASTER_CROPS } from '../constants/crops';
+import Pagination from '../components/Pagination';
+import EditFarmerModal from '../components/EditFarmerModal';
 
 export default function RegionalMonitoring() {
   const { t, lang } = useContext(LanguageContext);
   const [selectedCrop, setSelectedCrop] = useState('');
   const [plantings, setPlantings] = useState([]);
+  const [clustersPage, setClustersPage] = useState(1);
+  const [recordsPage, setRecordsPage] = useState(1);
+  const [editingFarmer, setEditingFarmer] = useState(null);
 
-  useEffect(() => {
+  const fetchPlantings = () => {
     API.get('/planting/regional-map?district=Badulla')
       .then(res => {
         if (res.data?.data) {
@@ -17,15 +22,71 @@ export default function RegionalMonitoring() {
         }
       })
       .catch(err => console.warn('Failed to fetch plantings', err));
+  };
+
+  useEffect(() => {
+    fetchPlantings();
   }, []);
 
+  useEffect(() => {
+    setClustersPage(1);
+    setRecordsPage(1);
+  }, [selectedCrop]);
+
   const filteredPlantings = selectedCrop
-    ? plantings.filter(p => (p.name_en?.toLowerCase() === selectedCrop.toLowerCase() || p.crop_code?.toLowerCase() === selectedCrop.toLowerCase()))
+    ? plantings.filter(p => (
+        (p.name_en && p.name_en.toLowerCase() === selectedCrop.toLowerCase()) ||
+        (p.crop_code && p.crop_code.toLowerCase() === selectedCrop.toLowerCase())
+      ))
     : plantings;
+
+  const recentRecords = [...filteredPlantings].sort((a, b) => {
+    const dateA = new Date(a.planting_date || a.created_at || 0).getTime();
+    const dateB = new Date(b.planting_date || b.created_at || 0).getTime();
+    return dateB - dateA || (Number(b.id) - Number(a.id));
+  });
+
+  const paginatedClusters = filteredPlantings.slice((clustersPage - 1) * 6, clustersPage * 6);
+  const paginatedRecords = recentRecords.slice((recordsPage - 1) * 6, recordsPage * 6);
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    if (typeof dateStr === 'string' && dateStr.includes('T')) {
+      return dateStr.split('T')[0];
+    }
+    return String(dateStr).slice(0, 10);
+  };
+
+  const getCropDisplay = (item) => {
+    if (!item) return '';
+    if (lang === 'si') {
+      return item.name_si || item.name_en || '';
+    }
+    if (lang === 'ta') {
+      return item.name_ta || item.name_en || '';
+    }
+    return item.name_en ? `${item.name_en} (${item.name_si || ''})` : (item.name_si || '');
+  };
+
+  const handleOpenEdit = (item) => {
+    setEditingFarmer({
+      id: item.farmer_user_id || item.farmer_id || item.id,
+      full_name: item.farmer_name || 'Farmer',
+      phone: item.farmer_phone || '',
+      nic: item.farmer_nic || '',
+      district: item.district || 'Badulla',
+      division: item.division || item.farmer_division || 'Bandarawela',
+      gnd_division: item.gnd_division || 'Bandarawela Central',
+      address_line1: item.farmer_address || '',
+      total_land_size: item.total_land_size || item.land_size_acres || '1.5',
+      verification_status: item.verification_status || 'APPROVED',
+      is_active: true
+    });
+  };
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      {/* Page Header with Dark & Bold Letters */}
+      {/* Page Header */}
       <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 shadow-card flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center space-x-2.5">
@@ -33,11 +94,11 @@ export default function RegionalMonitoring() {
               <MapPin className="w-5 h-5 text-emerald-800" />
             </div>
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-              {t('regional_monitoring_title')}
+              {t('regional_monitoring_title', '🗺️ Regional Cultivation Heatmap')}
             </h1>
           </div>
           <p className="text-sm font-bold text-slate-700 mt-2 max-w-2xl leading-relaxed">
-            {t('regional_monitoring_subtitle')}
+            {t('regional_monitoring_subtitle', 'GPS-Tagged Active Planting Plots Across Bandarawela & Upcountry Agrarian Divisions')}
           </p>
         </div>
 
@@ -48,7 +109,7 @@ export default function RegionalMonitoring() {
             onChange={(e) => setSelectedCrop(e.target.value)}
             className="text-xs bg-transparent text-slate-900 focus:outline-none font-black cursor-pointer"
           >
-            <option value="" className="text-slate-900 font-bold">{t('all_crops_filter')}</option>
+            <option value="" className="text-slate-900 font-bold">{t('all_crops_filter', 'All Crops')}</option>
             {MASTER_CROPS.map(c => {
               const label = lang === 'si' ? c.nameSi : lang === 'ta' ? c.nameTa : c.nameEn;
               return (
@@ -61,120 +122,213 @@ export default function RegionalMonitoring() {
         </div>
       </div>
 
-      {/* Interactive Map Visual Grid with Dark & Bold Letters */}
-      <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 shadow-card relative overflow-hidden">
-        <div className="flex items-center justify-between border-b border-slate-200 pb-4 mb-6">
-          <div className="flex items-center space-x-2 text-xs font-black text-slate-800">
-            <Navigation className="w-4 h-4 text-emerald-700" />
-            <span>{t('bandarawela_gps_grid')}</span>
+      {/* Main Two-Column Side-by-Side Grid Layout: Left = Clusters, Right = Recent Records */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+        {/* LEFT COLUMN: Active Regional Clusters */}
+        <div className="w-full min-w-0 overflow-hidden bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-5 sm:p-6 shadow-card space-y-5 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between border-b border-outline-variant/20 pb-4 mb-4">
+              <div className="flex items-center space-x-2 text-xs font-black text-slate-800">
+                <Navigation className="w-4 h-4 text-emerald-700 flex-shrink-0" />
+                <span>{t('bandarawela_gps_grid', 'Bandarawela GPS Grid (Latitude 6.8322° N, Longitude 80.9980° E)')}</span>
+              </div>
+              <span className="text-xs font-bold text-slate-700 bg-slate-100 border border-slate-300 px-3 py-1 rounded-lg">
+                {t('active_regional_clusters', 'Active Regional Clusters')} ({filteredPlantings.length})
+              </span>
+            </div>
+
+            {paginatedClusters.length === 0 ? (
+              <div className="bg-surface-container-low/40 border border-dashed border-outline-variant/40 rounded-2xl p-8 text-center space-y-2">
+                <p className="text-xs text-on-surface-variant font-medium">
+                  {lang === 'si' ? 'ගැලපෙන කලාපීය බෝග බිම් හමු නොවීය.' : 'No active cluster plots found for the selected filter.'}
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {paginatedClusters.map((plot) => {
+                  const cropDisplay = getCropDisplay(plot);
+                  const isApproved = plot.verification_status === 'APPROVED' || !plot.status || plot.status === 'SAFE' || plot.status === 'PLANTED' || plot.status === 'GROWING';
+
+                  return (
+                    <div
+                      key={`cluster_${plot.id}`}
+                      className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-4 sm:p-5 shadow-card hover:shadow-md transition space-y-3 flex flex-col justify-between"
+                    >
+                      <div className="space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <h3 className="font-extrabold text-base text-on-surface truncate">
+                              {plot.farmer_name || 'Farmer'}
+                            </h3>
+                            <div className="text-xs text-on-surface-variant flex items-center gap-1 mt-0.5">
+                              <Phone className="w-3.5 h-3.5 text-outline flex-shrink-0" />
+                              <span className="truncate">{plot.farmer_phone || '0771000000'}</span>
+                            </div>
+                          </div>
+                          <span className={`px-2.5 py-1 text-xs font-bold rounded-full flex-shrink-0 ${
+                            plot.status === 'OVER_PLANTED'
+                              ? 'bg-red-100 text-red-800'
+                              : plot.status === 'WARNING'
+                              ? 'bg-amber-100 text-amber-800'
+                              : 'bg-emerald-100 text-emerald-800'
+                          }`}>
+                            {plot.verification_status || (plot.status === 'OVER_PLANTED' ? 'OVERPLANTED' : plot.status === 'WARNING' ? 'WARNING' : 'APPROVED')}
+                          </span>
+                        </div>
+
+                        <div className="pt-2 border-t border-outline-variant/20 space-y-1.5 text-xs text-on-surface-variant">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-semibold text-on-surface">NIC:</span>
+                            <span className="font-mono">{plot.farmer_nic || '78490339V'}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <MapPin className="w-3.5 h-3.5 text-outline flex-shrink-0" />
+                            <span className="truncate">{plot.gnd_division || plot.farmer_division || plot.division || 'Mirahawatte'}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-semibold text-on-surface">{t('registered_land', 'Registered Land')}:</span>
+                            <span>{plot.total_land_size || plot.land_size_acres || '1.50'} Acres</span>
+                          </div>
+                          {cropDisplay && (
+                            <div className="flex items-center gap-1.5 text-[11px] text-emerald-800 font-bold">
+                              <span>🌱 {cropDisplay}</span>
+                              <span>• {plot.land_size_acres} Ac Plot</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="pt-2 border-t border-outline-variant/20">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEdit(plot)}
+                          className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-primary/30 text-primary hover:bg-primary hover:text-white transition font-bold text-xs cursor-pointer shadow-2xs"
+                        >
+                          <Edit className="w-3.5 h-3.5" />
+                          <span>{t('btn_edit_details', 'Edit Farmer Details')}</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
-          <span className="text-xs font-bold text-slate-700 bg-slate-100 border border-slate-300 px-3 py-1 rounded-lg">
-            {t('active_regional_clusters')}
-          </span>
+
+          <Pagination
+            currentPage={clustersPage}
+            totalItems={filteredPlantings.length}
+            itemsPerPage={6}
+            onPageChange={setClustersPage}
+          />
         </div>
 
-        {/* Map Plot Pin Grid Cards with Dark & Bold Letters */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {filteredPlantings.map((plot) => {
-            const cropDisplay = lang === 'si' ? plot.name_si : `${plot.name_en} (${plot.name_si})`;
-            const statusLabel = plot.status === 'OVER_PLANTED' 
-              ? t('status_over_planted') 
-              : plot.status === 'WARNING' 
-              ? t('status_warning') 
-              : t('status_safe');
-
-            return (
-              <div
-                key={plot.id}
-                className={`p-4 rounded-xl border transition-all ${
-                  plot.status === 'OVER_PLANTED'
-                    ? 'bg-red-50/90 border-red-200 shadow-xs'
-                    : plot.status === 'WARNING'
-                    ? 'bg-amber-50/90 border-amber-200 shadow-xs'
-                    : 'bg-emerald-50/80 border-emerald-200 shadow-xs'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className={`text-xs font-black flex items-center gap-1 tracking-tight ${
-                    plot.status === 'OVER_PLANTED'
-                      ? 'text-red-950'
-                      : plot.status === 'WARNING'
-                      ? 'text-amber-950'
-                      : 'text-emerald-950'
-                  }`}>
-                    <MapPin className={`w-3.5 h-3.5 ${
-                      plot.status === 'OVER_PLANTED'
-                        ? 'text-red-700'
-                        : plot.status === 'WARNING'
-                        ? 'text-amber-700'
-                        : 'text-emerald-700'
-                    }`} />
-                    {cropDisplay}
-                  </span>
-                  <span
-                    className={`text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider ${
-                      plot.status === 'OVER_PLANTED'
-                        ? 'bg-red-100 text-red-900 border border-red-200'
-                        : plot.status === 'WARNING'
-                        ? 'bg-amber-100 text-amber-900 border border-amber-200'
-                        : 'bg-emerald-100 text-emerald-900 border border-emerald-200'
-                    }`}
-                  >
-                    {statusLabel}
-                  </span>
-                </div>
-                <p className="text-xs text-slate-900 font-black">{plot.farmer_name}</p>
-                <p className="text-xs text-slate-700 font-bold mt-0.5">{plot.division}</p>
-                <div className="mt-3 pt-2 border-t border-slate-200/80 flex items-center justify-between text-xs font-bold text-slate-800">
-                  <span>{t('plot_acres', { acres: plot.land_size_acres })}</span>
-                  <span className={`font-mono font-black ${
-                    plot.status === 'OVER_PLANTED'
-                      ? 'text-red-950'
-                      : plot.status === 'WARNING'
-                      ? 'text-amber-950'
-                      : 'text-emerald-950'
-                  }`}>{plot.lat}, {plot.lng}</span>
-                </div>
+        {/* RIGHT COLUMN: Recently Registered Cultivation Records */}
+        <div className="w-full min-w-0 overflow-hidden bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-5 sm:p-6 shadow-card space-y-5 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between border-b border-outline-variant/20 pb-4 mb-4">
+              <div className="flex items-center space-x-2 text-xs font-black text-slate-800">
+                <Layers className="w-4 h-4 text-emerald-700 flex-shrink-0" />
+                <span>{t('recently_registered_records', 'Recently Registered Cultivation Records')}</span>
               </div>
-            );
-          })}
+              <span className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-lg">
+                {recentRecords.length} {t('records_logged', 'Logged')}
+              </span>
+            </div>
+
+            {paginatedRecords.length === 0 ? (
+              <div className="bg-surface-container-low/40 border border-dashed border-outline-variant/40 rounded-2xl p-8 text-center space-y-2">
+                <p className="text-xs text-on-surface-variant font-medium">
+                  {lang === 'si' ? 'මෑතකදී ලියාපදිංචි කළ බෝග වගා වාර්තා නොමැත.' : 'No recent cultivation records found.'}
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {paginatedRecords.map((record) => {
+                  const cropDisplay = getCropDisplay(record);
+                  const formattedDate = formatDate(record.planting_date);
+
+                  return (
+                    <div
+                      key={`record_${record.id}`}
+                      className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-4 sm:p-5 shadow-card hover:shadow-md transition space-y-3 flex flex-col justify-between"
+                    >
+                      <div className="space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <h3 className="font-extrabold text-base text-on-surface truncate">
+                              {record.farmer_name || 'Farmer'}
+                            </h3>
+                            <div className="text-xs text-on-surface-variant flex items-center gap-1 mt-0.5">
+                              <Phone className="w-3.5 h-3.5 text-outline flex-shrink-0" />
+                              <span className="truncate">{record.farmer_phone || '0771000000'}</span>
+                            </div>
+                          </div>
+                          <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 flex-shrink-0 truncate max-w-[140px]">
+                            {cropDisplay}
+                          </span>
+                        </div>
+
+                        <div className="pt-2 border-t border-outline-variant/20 space-y-1.5 text-xs text-on-surface-variant">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-semibold text-on-surface">NIC:</span>
+                            <span className="font-mono">{record.farmer_nic || '78490339V'}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <MapPin className="w-3.5 h-3.5 text-outline flex-shrink-0" />
+                            <span className="truncate">{record.gnd_division || record.farmer_division || record.division || 'Bandarawela'}</span>
+                          </div>
+                          <div className="flex items-center justify-between gap-1.5">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-semibold text-on-surface">{t('cultivated_plot', 'Cultivated')}:</span>
+                              <span>{record.land_size_acres} Acres</span>
+                            </div>
+                            {formattedDate && (
+                              <div className="flex items-center gap-1 text-[11px] font-mono text-outline">
+                                <Calendar className="w-3 h-3" />
+                                <span>{formattedDate}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="pt-2 border-t border-outline-variant/20">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEdit(record)}
+                          className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-primary/30 text-primary hover:bg-primary hover:text-white transition font-bold text-xs cursor-pointer shadow-2xs"
+                        >
+                          <Edit className="w-3.5 h-3.5" />
+                          <span>{t('btn_edit_details', 'Edit Farmer Details')}</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <Pagination
+            currentPage={recordsPage}
+            totalItems={recentRecords.length}
+            itemsPerPage={6}
+            onPageChange={setRecordsPage}
+          />
         </div>
       </div>
 
-      {/* Detailed Plot Log List with Dark & Bold Letters */}
-      <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 shadow-card">
-        <h3 className="text-base sm:text-lg font-black text-slate-900 mb-4 flex items-center gap-2">
-          <Layers className="w-5 h-5 text-emerald-700" />
-          <span>{t('recently_registered_records')}</span>
-        </h3>
-        <div className="space-y-3">
-          {filteredPlantings.map((p) => {
-            const cropDisplay = lang === 'si' ? p.name_si : `${p.name_en} (${p.name_si})`;
-            return (
-              <div
-                key={p.id}
-                className="p-4 bg-slate-50/90 hover:bg-emerald-50/40 rounded-xl border border-slate-200 hover:border-emerald-300 flex flex-col md:flex-row md:items-center justify-between gap-3 transition shadow-xs"
-              >
-                <div>
-                  <div className="flex items-center space-x-2">
-                    <h4 className="font-black text-slate-900 text-base tracking-wide">{p.farmer_name}</h4>
-                    <span className="text-xs font-bold text-slate-600">({p.farmer_phone})</span>
-                  </div>
-                  <p className="text-xs font-bold text-slate-700 mt-1 leading-relaxed">
-                    {t('label_location')}: <strong className="text-slate-900 font-black">{p.division}</strong> • {t('label_cultivated')}: <strong className="text-slate-900 font-black">{p.land_size_acres} Acres</strong> • {t('label_date')}: <strong className="text-slate-900 font-mono font-bold">{p.planting_date}</strong>
-                  </p>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <span className="px-3.5 py-1.5 bg-emerald-100 text-emerald-950 border border-emerald-300 font-black rounded-xl text-xs tracking-wider">
-                    {cropDisplay}
-                  </span>
-                  <ChevronRight className="w-4 h-4 text-emerald-700 hidden md:block" />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      {/* Edit Farmer Details Modal */}
+      <EditFarmerModal
+        isOpen={!!editingFarmer}
+        onClose={() => setEditingFarmer(null)}
+        farmer={editingFarmer}
+        onFarmerUpdated={() => {
+          fetchPlantings();
+          setEditingFarmer(null);
+        }}
+      />
     </div>
   );
 }

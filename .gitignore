@@ -105,3 +105,12 @@ scripts/
 *.pyc
 __pycache__/
 
+
+# Manual Testing Spreadsheets & QA Documentation
+*Divisional_Officer_Dashboard_Manual_Testing*
+Divisional_Officer_Dashboard_Manual_Testing.xlsx
+Divisional_Officer_Dashboard_Manual_Testing.csv
+docs/Divisional_Officer_Dashboard_Manual_Testing.xlsx
+docs/Divisional_Officer_Dashboard_Manual_Testing.csv
+docs/Divisional_Officer_Dashboard_Manual_Testing.md
+scripts/generate_test_cases_excel.py

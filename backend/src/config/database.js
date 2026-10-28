@@ -465,19 +465,28 @@ module.exports = {
         }]
       };
     }
-    if (lower.includes('from planting_records p join crops c') || lower.includes('from planting_records p\n         join crops c')) {
-      const rows = (fileDb.planting_records || []).filter(p => p.status === 'PLANTED' || p.status === 'GROWING').map(p => {
+    if (lower.includes('from planting_records p join crops c') || lower.includes('from planting_records pr join crops c') || lower.includes('from planting_records p\n         join crops c')) {
+      const rows = (fileDb.planting_records || []).filter(p => p.status === 'PLANTED' || p.status === 'GROWING' || !p.status).map(p => {
         const crop = fileDb.crops.find(c => c.id === p.crop_id) || {};
         const user = fileDb.users.find(u => u.id === p.farmer_id) || {};
         return {
           ...p,
           crop_name: crop.name_en,
+          name_en: crop.name_en,
+          name_si: crop.name_si,
+          name_ta: crop.name_ta,
           crop_code: crop.crop_code,
-          farmer_name: user.full_name,
-          farmer_phone: user.phone
+          farmer_user_id: user.id || p.farmer_id,
+          farmer_name: user.full_name || p.farmer_name || 'Farmer',
+          farmer_phone: user.phone || p.farmer_phone || '0771000000',
+          farmer_nic: user.nic || p.farmer_nic || '78490339V',
+          verification_status: user.verification_status || 'APPROVED',
+          total_land_size: user.total_land_size || p.land_size_acres || 1.5,
+          gnd_division: user.gnd_division || p.gnd_division || 'Mirahawatte',
+          farmer_division: user.division || p.division || 'Bandarawela'
         };
       });
-      return { rows: rows.sort((a, b) => new Date(a.expected_harvest_date) - new Date(b.expected_harvest_date)) };
+      return { rows: rows.sort((a, b) => new Date(b.planting_date || b.created_at || 0) - new Date(a.planting_date || a.created_at || 0)) };
     }
     if (lower.includes('select * from planting_records')) {
       return { rows: fileDb.planting_records };
@@ -867,8 +876,12 @@ module.exports = {
 
     // UPDATE crops
     if (lower.includes('update crops')) {
-      const cropId = Number(params[params.length - 1]);
-      const crop = fileDb.crops.find(c => Number(c.id) === cropId);
+      const rawCropId = params[params.length - 1];
+      const cropId = Number(rawCropId);
+      const crop = fileDb.crops.find(c =>
+        (!isNaN(cropId) && Number(c.id) === cropId) ||
+        (rawCropId && String(c.crop_code).toUpperCase() === String(rawCropId).toUpperCase())
+      );
       if (crop) {
         if (params[0] !== null && params[0] !== undefined) crop.name_en = params[0];
         if (params[1] !== null && params[1] !== undefined) crop.name_si = params[1];

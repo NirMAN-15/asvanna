@@ -4,6 +4,7 @@ import { LanguageContext } from '../context/LanguageContext';
 import API from '../services/api';
 import ChatDrawer from '../components/ChatDrawer';
 import ProcurementReceiptModal from '../components/ProcurementReceiptModal';
+import { BANDARAWELA_GND_DIVISIONS } from '../constants/locations';
 
 export default function ProcurementHistory() {
   const { user } = useContext(AuthContext);
@@ -100,7 +101,11 @@ export default function ProcurementHistory() {
     const matchesDivision =
       selectedDivisionFilter === 'All' ||
       record.gnd_division === selectedDivisionFilter ||
-      record.division === selectedDivisionFilter;
+      record.division === selectedDivisionFilter ||
+      (record.gnd_division &&
+        selectedDivisionFilter &&
+        (record.gnd_division.toLowerCase().includes(selectedDivisionFilter.toLowerCase()) ||
+         selectedDivisionFilter.toLowerCase().includes(record.gnd_division.toLowerCase())));
 
     return matchesSearch && matchesCrop && matchesStatus && matchesDivision;
   });
@@ -160,7 +165,10 @@ export default function ProcurementHistory() {
   const uniqueBuyersCount = new Set(orders.map(o => o.buyer_name)).size;
 
   const popularCrops = ['All', 'Carrot', 'Leeks', 'Cabbage', 'Beetroot', 'Potato', 'Green Beans'];
-  const divisionList = ['All', 'Bandarawela Central', 'Bindunuwewa', 'Kinigama North', 'Haputale North', 'Ella'];
+  const divisionList = [
+    { value: 'All', labelEn: 'All GN Areas', labelSi: 'සියලුම ග්‍රාම නිලධාරී වසම්' },
+    ...BANDARAWELA_GND_DIVISIONS
+  ];
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -545,8 +553,12 @@ export default function ProcurementHistory() {
                     className="px-3 py-2 bg-surface-container-low border border-outline-variant rounded-xl text-xs font-bold text-on-surface outline-none focus:border-primary cursor-pointer"
                   >
                     {divisionList.map((div) => (
-                      <option key={div} value={div}>
-                        {div === 'All' ? 'All GN Areas' : div}
+                      <option key={div.value} value={div.value}>
+                        {div.value === 'All'
+                          ? lang === 'si' ? 'සියලුම ග්‍රාම නිලධාරී වසම් (All GN Areas)' : 'All GN Areas'
+                          : lang === 'si' && div.labelSi
+                            ? `${div.value} (${div.labelSi})`
+                            : div.labelEn}
                       </option>
                     ))}
                   </select>
