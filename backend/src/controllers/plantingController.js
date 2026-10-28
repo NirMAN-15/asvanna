@@ -106,7 +106,10 @@ class PlantingController {
     try {
       const { district = 'Badulla', division, crop_id } = req.query;
       let query = `
-        SELECT pr.*, c.name_en, c.name_si, c.name_ta, c.crop_code, u.full_name as farmer_name, u.phone as farmer_phone, u.gnd_division, u.division as farmer_division
+        SELECT pr.*, c.name_en, c.name_si, c.name_ta, c.crop_code,
+               u.id as farmer_user_id, u.full_name as farmer_name, u.phone as farmer_phone,
+               u.nic as farmer_nic, u.gnd_division, u.division as farmer_division,
+               u.address as farmer_address, u.verification_status, u.total_land_size
         FROM planting_records pr
         JOIN crops c ON pr.crop_id = c.id
         JOIN users u ON pr.farmer_id = u.id
