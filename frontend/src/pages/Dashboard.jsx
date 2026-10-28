@@ -30,6 +30,10 @@ export default function Dashboard() {
   const [buyerMetrics, setBuyerMetrics] = useState(null);
   const [buyerHistorySummary, setBuyerHistorySummary] = useState(null);
   const [surplusCrops, setSurplusCrops] = useState([]);
+  const [surplusCropRates, setSurplusCropRates] = useState([]);
+  const [selectedSurplusCropId, setSelectedSurplusCropId] = useState('ALL');
+  const [selectedBuyerReceipt, setSelectedBuyerReceipt] = useState(null);
+  const [isHarvestBatchReceipt, setIsHarvestBatchReceipt] = useState(false);
   const [buyerLoading, setBuyerLoading] = useState(false);
   const [procureModalItem, setProcureModalItem] = useState(null);
   const [procureQty, setProcureQty] = useState(50);
@@ -431,6 +435,8 @@ export default function Dashboard() {
         });
         setBuyerHistorySummary(data.buyerHistorySummary || null);
         setSurplusCrops(data.surplusCrops || []);
+        setSurplusCropRates(data.surplusCropRates || []);
+        setSurplusCropRates(data.surplusCropRates || []);
       }
     } catch (err) {
       console.error('Buyer summary fetch error:', err);
@@ -1072,10 +1078,13 @@ export default function Dashboard() {
 
   // ----------------------------------------------------
   // 2. BUYER ROLE VIEW — Data-driven Dashboard
-  // ----------------------------------------------------
+  // -----------------------------------------------------
   if (role === 'BUYER') {
     const m = buyerMetrics || {};
     const hist = buyerHistorySummary || {};
+    const selectedCropRate = selectedSurplusCropId !== 'ALL'
+      ? (surplusCropRates.find(c => String(c.id) === String(selectedSurplusCropId)) || null)
+      : null;
 
     return (
       <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-6 space-y-8 animate-fadeIn font-body-md text-on-surface">
@@ -1098,33 +1107,114 @@ export default function Dashboard() {
 
         {/* ── 1. Real DB Metric Cards ── */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <div className="bg-surface-container-lowest p-6 rounded-2xl border-t-4 border-primary shadow-card border border-outline-variant/30">
-            <span className="text-xs text-on-surface-variant uppercase font-bold tracking-wider">{t('surplus_5km_title')}</span>
-            <p className="font-headline text-3xl font-extrabold text-primary mt-2">
-              {buyerLoading ? '—' : `${(m.surplus5kmKg || 0).toLocaleString()} kg`}
-            </p>
-            <p className="text-xs text-secondary mt-1">{t('surplus_5km_avail')} • {m.radiusKm ?? 5}km radius</p>
+          {/* Card 1: 5km Surplus */}
+          <div className="bg-surface-container-lowest p-6 rounded-2xl border-t-4 border-primary shadow-card border border-outline-variant/30 flex flex-col justify-between">
+            <div>
+              <span className="text-xs text-on-surface-variant uppercase font-bold tracking-wider">{t('surplus_5km_title')}</span>
+              <p className="font-headline text-3xl font-extrabold text-primary mt-2">
+                {buyerLoading ? '—' : `${(m.surplus5kmKg || 0).toLocaleString()} kg`}
+              </p>
+            </div>
+            <p className="text-xs text-secondary mt-2">{t('surplus_5km_avail')} • {m.radiusKm ?? 5}km radius</p>
           </div>
-          <div className="bg-surface-container-lowest p-6 rounded-2xl border-t-4 border-secondary shadow-card border border-outline-variant/30">
-            <span className="text-xs text-on-surface-variant uppercase font-bold tracking-wider">{t('active_verified_farms')}</span>
-            <p className="font-headline text-3xl font-extrabold text-secondary mt-2">
-              {buyerLoading ? '—' : t('farms_count_val', { count: m.activeVerifiedFarmsCount ?? 0 })}
-            </p>
-            <p className="text-xs text-on-surface-variant mt-1">{t('farms_locations')}</p>
+
+          {/* Card 2: Active Verified Farms */}
+          <div className="bg-surface-container-lowest p-6 rounded-2xl border-t-4 border-secondary shadow-card border border-outline-variant/30 flex flex-col justify-between">
+            <div>
+              <span className="text-xs text-on-surface-variant uppercase font-bold tracking-wider">{t('active_verified_farms')}</span>
+              <p className="font-headline text-3xl font-extrabold text-secondary mt-2">
+                {buyerLoading ? '—' : t('farms_count_val', { count: m.activeVerifiedFarmsCount ?? 0 })}
+              </p>
+            </div>
+            <p className="text-xs text-on-surface-variant mt-2">{t('farms_locations')}</p>
           </div>
-          <div className="bg-surface-container-lowest p-6 rounded-2xl border-t-4 border-primary-container shadow-card border border-outline-variant/30">
-            <span className="text-xs text-on-surface-variant uppercase font-bold tracking-wider">{t('avg_wholesale_price')}</span>
-            <p className="font-headline text-3xl font-extrabold text-primary mt-2">
-              {buyerLoading ? '—' : `LKR ${m.avgWholesalePrice ?? 0}/kg`}
-            </p>
-            <p className="text-xs text-secondary mt-1">{t('below_terminal_market')}</p>
+
+          {/* Card 3 (TASK 2): Avg. Wholesale Price with Surplus Crops Dropdown */}
+          <div className="bg-surface-container-lowest p-5 sm:p-6 rounded-2xl border-t-4 border-primary-container shadow-card border border-outline-variant/30 flex flex-col justify-between space-y-3">
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-on-surface-variant uppercase font-bold tracking-wider">
+                  {t('avg_wholesale_price')} & Surplus Selector
+                </span>
+                <span className="material-symbols-outlined text-primary-container text-lg">trending_down</span>
+              </div>
+
+              {/* TASK 2: Surplus Crops Dropdown */}
+              <div className="mt-2.5">
+                <label className="text-[11px] font-bold text-on-surface-variant block mb-1">
+                  Select Surplus Crop to Buy:
+                </label>
+                <select
+                  value={selectedSurplusCropId}
+                  onChange={(e) => setSelectedSurplusCropId(e.target.value)}
+                  className="w-full text-xs font-bold p-2.5 rounded-xl bg-surface-container border border-outline-variant/50 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer shadow-xs"
+                >
+                  <option value="ALL">🌾 All Available Surplus Crops (Avg Rate)</option>
+                  {surplusCropRates.map(crop => (
+                    <option key={crop.id} value={crop.id}>
+                      {crop.name_en} — Rs. {crop.price}/kg ({crop.availableKg.toLocaleString()} kg surplus)
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Dynamic Price Display */}
+              {selectedCropRate ? (
+                <div className="mt-3 pt-2 border-t border-outline-variant/20">
+                  <div className="flex items-baseline justify-between">
+                    <p className="font-headline text-2xl sm:text-3xl font-extrabold text-primary">
+                      LKR {selectedCropRate.price} <span className="text-xs font-semibold text-on-surface-variant">/ kg</span>
+                    </p>
+                    <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">
+                      {selectedCropRate.availableKg.toLocaleString()} kg ready
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-secondary mt-1 font-semibold">
+                    Keppetipola: Rs. {selectedCropRate.benchmark}/kg • Save Rs. {Math.max(0, selectedCropRate.benchmark - selectedCropRate.price)}/kg
+                  </p>
+                  <p className="text-[10px] text-outline mt-0.5 truncate">
+                    Nearest: {selectedCropRate.farmer_name} ({selectedCropRate.farmer_location}) • {selectedCropRate.distanceKm} km
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setProcureModalItem(selectedCropRate.nearest_listing || {
+                        id: selectedCropRate.nearest_listing_id || selectedCropRate.id,
+                        crop_id: selectedCropRate.id,
+                        crop_name: selectedCropRate.name_en,
+                        crop_name_en: selectedCropRate.name_en,
+                        crop_name_si: selectedCropRate.name_si,
+                        price_per_kg: selectedCropRate.price,
+                        quantity_kg: selectedCropRate.availableKg,
+                        pickup_address: selectedCropRate.pickup_address,
+                        farmer_name: selectedCropRate.farmer_name,
+                        farmer_phone: selectedCropRate.farmer_phone,
+                        image_url: selectedCropRate.image_url
+                      });
+                      setProcureQty(Math.min(50, selectedCropRate.availableKg || 50));
+                    }}
+                    className="mt-2.5 w-full bg-primary hover:bg-primary/90 text-white text-xs font-bold py-2 rounded-xl transition shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-sm">shopping_cart</span>
+                    <span>Order {selectedCropRate.name_en} Surplus</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="mt-2">
+                  <p className="font-headline text-3xl font-extrabold text-primary">
+                    {buyerLoading ? '—' : `LKR ${m.avgWholesalePrice ?? 0}/kg`}
+                  </p>
+                  <p className="text-xs text-secondary mt-1">{t('below_terminal_market')}</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
         {/* ── 2. Two-column: Transactions Summary + Open Surplus Marketplace Banner ── */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-          {/* Left — Past Transactions Summary */}
+          {/* Left — TASK 3: Past Transactions Summary based on Surplus Market Transactions */}
           <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 shadow-card flex flex-col">
             <div className="p-5 border-b border-outline-variant/20 flex justify-between items-center">
               <h2 className="font-headline text-headline-sm font-bold text-primary flex items-center gap-2">
@@ -1136,36 +1226,65 @@ export default function Dashboard() {
                 <span className="material-symbols-outlined text-sm">chevron_right</span>
               </Link>
             </div>
-            {/* Stats row */}
-            <div className="grid grid-cols-3 divide-x divide-outline-variant/20 border-b border-outline-variant/20">
-              <div className="p-4 text-center">
-                <p className="text-2xl font-extrabold text-primary font-headline">{hist.totalOrders ?? 0}</p>
+            
+            {/* Stats row with 4 Surplus Transaction Indicators */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-outline-variant/20 border-b border-outline-variant/20">
+              <div className="p-3 text-center">
+                <p className="text-xl font-extrabold text-primary font-headline">{hist.totalOrders ?? 0}</p>
                 <p className="text-[10px] uppercase tracking-wider text-on-surface-variant font-bold mt-0.5">{t('total_orders')}</p>
               </div>
-              <div className="p-4 text-center">
-                <p className="text-2xl font-extrabold text-secondary font-headline">{(hist.totalProcuredKg ?? 0).toLocaleString()} kg</p>
+              <div className="p-3 text-center">
+                <p className="text-xl font-extrabold text-secondary font-headline">{(hist.totalProcuredKg ?? 0).toLocaleString()} kg</p>
                 <p className="text-[10px] uppercase tracking-wider text-on-surface-variant font-bold mt-0.5">{t('total_procured_kg')}</p>
               </div>
-              <div className="p-4 text-center">
-                <p className="text-2xl font-extrabold text-primary font-headline">Rs. {((hist.totalSpentLKR ?? 0) / 1000).toFixed(0)}k</p>
+              <div className="p-3 text-center">
+                <p className="text-xl font-extrabold text-primary font-headline">Rs. {((hist.totalSpentLKR ?? 0) / 1000).toFixed(0)}k</p>
                 <p className="text-[10px] uppercase tracking-wider text-on-surface-variant font-bold mt-0.5">{t('total_spent')}</p>
               </div>
+              <div className="p-3 text-center">
+                <p className="text-xl font-extrabold text-emerald-700 font-headline">Rs. {((hist.totalSavingsLKR ?? 0) / 1000).toFixed(0)}k</p>
+                <p className="text-[10px] uppercase tracking-wider text-emerald-800 font-bold mt-0.5">Saved</p>
+              </div>
             </div>
-            {/* Recent orders */}
-            <div className="flex-1 overflow-y-auto p-3 space-y-2 max-h-60 custom-scrollbar">
+
+            {/* Recent surplus orders list */}
+            <div className="flex-1 overflow-y-auto p-3 space-y-2 max-h-72 custom-scrollbar">
               <p className="text-xs text-on-surface-variant font-bold uppercase tracking-wider px-1 mb-1">{t('recent_transactions')}</p>
               {(hist.recentOrders && hist.recentOrders.length > 0) ? hist.recentOrders.map(order => (
-                <div key={order.id} className="flex items-center gap-3 p-2.5 bg-surface-container-low rounded-xl border border-outline-variant/20">
-                  <div className="w-8 h-8 bg-primary-container/60 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <span className="material-symbols-outlined text-primary text-base">eco</span>
+                <div key={order.id} className="flex items-center gap-3 p-3 bg-surface-container-low rounded-xl border border-outline-variant/30 hover:bg-surface-container transition">
+                  <div className="w-9 h-9 bg-primary-container/60 rounded-xl flex items-center justify-center flex-shrink-0 text-primary font-bold text-sm">
+                    🌾
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-bold text-on-surface truncate">{order.crop_name}</p>
-                    <p className="text-[10px] text-on-surface-variant">{order.farmer_name} • {order.quantity_kg} kg</p>
+                    <p className="text-[10px] text-on-surface-variant">
+                      {order.farmer_name} • {order.farmer_location || 'Bandarawela'} • {order.quantity_kg} kg
+                    </p>
                   </div>
-                  <div className="text-right flex-shrink-0">
+                  <div className="text-right flex-shrink-0 space-y-1">
                     <p className="text-xs font-bold text-primary">Rs. {(order.total_price || 0).toLocaleString()}</p>
-                    <span className="text-[9px] px-1.5 py-0.5 bg-primary/10 text-primary rounded font-bold uppercase">{order.status}</span>
+                    <div className="flex items-center justify-end gap-1.5">
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${
+                        order.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-800' :
+                        order.status === 'ACCEPTED' ? 'bg-teal-100 text-teal-800' :
+                        'bg-amber-100 text-amber-800'
+                      }`}>
+                        {order.status}
+                      </span>
+                      {/* TASK 5: View Receipt Button */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedBuyerReceipt(order);
+                          setIsHarvestBatchReceipt(false);
+                        }}
+                        className="text-[10px] text-primary hover:underline font-bold flex items-center gap-0.5 cursor-pointer bg-white px-1.5 py-0.5 rounded border border-outline-variant/50"
+                        title="View Receipt with Unique QR"
+                      >
+                        <span className="material-symbols-outlined text-xs">qr_code</span>
+                        <span>Receipt</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               )) : (
@@ -1215,7 +1334,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* ── 3. Fresh Surplus Crops — 3 Nearest Categories ── */}
+        {/* ── 3. TASK 4: Fresh Surplus Crops — Nearest Areas from Farmer Listings ── */}
         <section>
           <div className="flex items-center justify-between mb-2">
             <h2 className="font-headline text-headline-sm font-bold text-primary flex items-center gap-2">
@@ -1227,14 +1346,16 @@ export default function Dashboard() {
               <span className="material-symbols-outlined text-sm">chevron_right</span>
             </Link>
           </div>
-          <p className="text-xs text-on-surface-variant mb-5">{t('fresh_surplus_desc')}</p>
+          <p className="text-xs text-on-surface-variant mb-5">
+            Real-time surplus harvest listings added by local farmers, sorted strictly by nearest location to your depot.
+          </p>
 
-          {/* Nearest 3 surplus crop categories grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          {/* Nearest surplus crops grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {buyerLoading ? (
               [null, null, null].map((_, idx) => (
                 <div key={idx} className="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 animate-pulse overflow-hidden">
-                  <div className="h-48 bg-surface-variant/50" />
+                  <div className="h-44 bg-surface-variant/50" />
                   <div className="p-4 space-y-2">
                     <div className="h-4 bg-surface-variant/60 rounded w-3/4" />
                     <div className="h-3 bg-surface-variant/40 rounded w-1/2" />
@@ -1249,18 +1370,19 @@ export default function Dashboard() {
                 <p className="text-xs text-on-surface-variant mt-1">Explore all regional produce in the marketplace.</p>
               </div>
             ) : (
-              surplusCrops.slice(0, 3).map((crop) => {
+              surplusCrops.slice(0, 6).map((crop) => {
                 const cropName = lang === 'si'
                   ? (crop.crop_name_si || crop.crop_name_en || crop.crop_name)
                   : lang === 'ta'
                     ? (crop.crop_name_ta || crop.crop_name_en || crop.crop_name)
                     : (crop.crop_name_en || crop.crop_name || 'Produce');
-                const isBelowBench = crop.price_per_kg < (crop.standard_price_per_kg * 0.9);
-                const imgSrc = crop.image_url || 'https://images.unsplash.com/photo-1587049633312-d628ae50a8ae?w=600&auto=format&fit=crop&q=80';
+                const isBelowBench = crop.price_per_kg < (crop.standard_price_per_kg * 0.95);
+                const imgSrc = crop.image_url || crop.crop_default_image || 'https://images.unsplash.com/photo-1587049633312-d628ae50a8ae?w=600&auto=format&fit=crop&q=80';
+                
                 return (
                   <div key={crop.id} className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 shadow-card overflow-hidden flex flex-col group hover:shadow-xl transition-all duration-300">
-                    {/* Crop Image — taller for better visual */}
-                    <div className="h-48 overflow-hidden bg-primary-container/20 relative flex-shrink-0">
+                    {/* Crop Image */}
+                    <div className="h-44 overflow-hidden bg-primary-container/20 relative flex-shrink-0">
                       <img
                         src={imgSrc}
                         alt={cropName}
@@ -1272,58 +1394,91 @@ export default function Dashboard() {
                           }
                         }}
                       />
-                    {/* Distance badge */}
-                    {crop.distanceKm != null && (
-                      <span className="absolute top-2.5 right-2.5 bg-black/60 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5">
-                        <span className="material-symbols-outlined text-[11px]">near_me</span>
-                        {crop.distanceKm} km
-                      </span>
-                    )}
-                    {/* Below benchmark badge */}
-                    {isBelowBench && (
-                      <span className="absolute top-2.5 left-2.5 bg-primary text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
-                        {t('below_benchmark_badge')}
-                      </span>
-                    )}
-                    {/* Gradient overlay at bottom */}
-                    <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/40 to-transparent" />
-                    {/* Crop name overlay on image */}
-                    <h3 className="absolute bottom-2.5 left-3 right-3 font-bold text-white text-sm drop-shadow-md truncate">{cropName}</h3>
-                  </div>
-
-                  {/* Card body */}
-                  <div className="p-4 flex flex-col flex-1">
-                    <p className="text-[10px] text-on-surface-variant truncate mb-3 flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[12px] text-outline">location_on</span>
-                      {crop.pickup_address || crop.farmer_name}
-                    </p>
-
-                    {/* Price + weight */}
-                    <div className="flex items-end justify-between mb-3">
-                      <div>
-                        <p className="text-[10px] text-on-surface-variant font-medium uppercase tracking-wider">Price/kg</p>
-                        <p className="font-extrabold text-primary text-xl leading-none">Rs. {crop.price_per_kg}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-[10px] text-on-surface-variant font-medium uppercase tracking-wider">{t('remaining_weight')}</p>
-                        <p className="font-bold text-secondary text-lg leading-none">{(crop.quantity_kg || 0).toLocaleString()} kg</p>
-                      </div>
+                      {/* Distance badge: nearest area first */}
+                      {crop.distanceKm != null && (
+                        <span className="absolute top-2.5 right-2.5 bg-black/70 text-white text-[11px] font-extrabold px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow">
+                          <span className="material-symbols-outlined text-[13px] text-emerald-400">near_me</span>
+                          {crop.distanceKm} km away
+                        </span>
+                      )}
+                      {/* Below benchmark badge */}
+                      {isBelowBench && (
+                        <span className="absolute top-2.5 left-2.5 bg-emerald-700 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow">
+                          Save Rs. {Math.round(crop.standard_price_per_kg - crop.price_per_kg)}/kg
+                        </span>
+                      )}
+                      <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/60 to-transparent" />
+                      <h3 className="absolute bottom-2.5 left-3 right-3 font-bold text-white text-base drop-shadow-md truncate">
+                        {cropName}
+                      </h3>
                     </div>
 
-                    <button
-                      onClick={() => { setProcureModalItem(crop); setProcureQty(Math.min(50, crop.quantity_kg || 50)); }}
-                      className="mt-auto w-full bg-primary text-white text-xs font-bold py-2.5 rounded-xl hover:bg-primary/90 active:scale-95 transition-all flex items-center justify-center gap-1.5 shadow-sm"
-                    >
-                      <span className="material-symbols-outlined text-sm">add_shopping_cart</span>
-                      {t('quick_procure')}
-                    </button>
+                    {/* Card body */}
+                    <div className="p-4 flex flex-col flex-1 space-y-3">
+                      {/* Farmer and Location info */}
+                      <div className="text-[11px] text-on-surface-variant space-y-0.5">
+                        <p className="font-bold text-on-surface flex items-center gap-1">
+                          <span className="material-symbols-outlined text-xs text-primary">person</span>
+                          <span>{crop.farmer_name || 'Grower'}</span>
+                        </p>
+                        <p className="text-outline flex items-center gap-1 truncate">
+                          <span className="material-symbols-outlined text-xs">location_on</span>
+                          <span>{crop.farmer_gnd || crop.farmer_location || crop.pickup_address || 'Bandarawela'}</span>
+                        </p>
+                      </div>
+
+                      {/* Price + weight */}
+                      <div className="flex items-end justify-between p-2.5 bg-surface-container rounded-xl">
+                        <div>
+                          <p className="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">Wholesale Rate</p>
+                          <p className="font-extrabold text-primary text-lg leading-tight">Rs. {crop.price_per_kg}/kg</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">{t('remaining_weight')}</p>
+                          <p className="font-extrabold text-secondary text-lg leading-tight">{(Number(crop.quantity_kg) || 0).toLocaleString()} kg</p>
+                        </div>
+                      </div>
+
+                      {/* Action buttons: Procure + View Receipt with QR */}
+                      <div className="mt-auto pt-1 flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedBuyerReceipt({
+                              ...crop,
+                              order_code: `ASV-BATCH-${crop.id}`,
+                              validation_token: `VAL-BW-2026-BATCH-${crop.id}`,
+                              qr_code_hash: `QR-BATCH-${crop.id}`,
+                              status: 'AVAILABLE'
+                            });
+                            setIsHarvestBatchReceipt(true);
+                          }}
+                          className="flex-1 py-2 px-2 rounded-xl border border-outline-variant/60 hover:bg-surface-container text-on-surface-variant text-[11px] font-bold transition flex items-center justify-center gap-1 cursor-pointer"
+                          title="View Verified Harvest Batch Receipt & QR"
+                        >
+                          <span className="material-symbols-outlined text-sm">qr_code</span>
+                          <span>Receipt & QR</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setProcureModalItem(crop);
+                            setProcureQty(Math.min(50, Number(crop.quantity_kg) || 50));
+                          }}
+                          className="flex-1 bg-primary hover:bg-primary/90 text-white text-[11px] font-bold py-2 px-2 rounded-xl transition shadow-xs flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <span className="material-symbols-outlined text-sm">shopping_cart</span>
+                          <span>{t('quick_procure')}</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              );
-            }))}
+                );
+              })
+            )}
           </div>
         </section>
-
 
         {/* ── Quick Procure Modal ── */}
         {procureModalItem && (
@@ -1338,62 +1493,90 @@ export default function Dashboard() {
               <div className="flex items-center gap-3 bg-surface-container p-3 rounded-xl mb-5">
                 <img
                   src={procureModalItem.image_url || 'https://images.unsplash.com/photo-1587049633312-d628ae50a8ae?w=600&auto=format&fit=crop&q=80'}
-                  alt=""
-                  className="w-14 h-14 rounded-lg object-cover"
-                  onError={e => { e.target.src = 'https://images.unsplash.com/photo-1587049633312-d628ae50a8ae?w=600&auto=format&fit=crop&q=80'; }}
+                  alt={procureModalItem.crop_name}
+                  className="w-12 h-12 rounded-lg object-cover"
                 />
                 <div>
-                  <p className="font-bold text-on-surface">{procureModalItem.crop_name_en || procureModalItem.crop_name}</p>
-                  <p className="text-xs text-on-surface-variant">{procureModalItem.pickup_address || procureModalItem.farmer_name}</p>
-                  <p className="text-primary font-extrabold">Rs. {procureModalItem.price_per_kg}/kg</p>
+                  <h4 className="font-bold text-sm text-primary">{procureModalItem.crop_name || procureModalItem.crop_name_en}</h4>
+                  <p className="text-xs text-on-surface-variant">Rs. {procureModalItem.price_per_kg}/kg • {procureModalItem.quantity_kg} kg available</p>
+                  <p className="text-[11px] text-outline">{procureModalItem.pickup_address || procureModalItem.farmer_name}</p>
                 </div>
               </div>
               <form onSubmit={handleQuickProcureSubmit} className="space-y-4">
                 <div>
-                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider block mb-1">{t('quick_procure_qty_label')}</label>
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider block mb-1">
+                    {t('requested_quantity_kg')}
+                  </label>
                   <input
                     type="number"
-                    min="1"
-                    max={procureModalItem.quantity_kg || 9999}
+                    min="10"
+                    max={procureModalItem.quantity_kg}
                     value={procureQty}
-                    onChange={e => setProcureQty(e.target.value)}
+                    onChange={(e) => setProcureQty(e.target.value)}
+                    className="w-full bg-surface-container border border-outline-variant/40 rounded-xl p-3 text-sm font-bold text-primary focus:outline-none focus:ring-2 focus:ring-primary"
                     required
-                    className="w-full border border-outline-variant/80 rounded-lg p-2.5 text-sm bg-surface focus:border-primary outline-none"
                   />
-                  <p className="text-[10px] text-on-surface-variant mt-1">
-                    Total: <strong className="text-primary">Rs. {(procureQty * procureModalItem.price_per_kg).toLocaleString()}</strong>
-                    {' '}• Max available: {(procureModalItem.quantity_kg || 0).toLocaleString()} kg
-                  </p>
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider block mb-1">{t('quick_procure_notes_label')}</label>
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider block mb-1">
+                    {t('special_notes')}
+                  </label>
                   <textarea
                     rows={2}
                     value={procureNotes}
-                    onChange={e => setProcureNotes(e.target.value)}
-                    placeholder="e.g. Farmgate pickup, morning batch..."
-                    className="w-full border border-outline-variant/80 rounded-lg p-2.5 text-sm bg-surface focus:border-primary outline-none resize-none"
+                    onChange={(e) => setProcureNotes(e.target.value)}
+                    placeholder="e.g. Morning dispatch request, Dimo Batta pickup"
+                    className="w-full bg-surface-container border border-outline-variant/40 rounded-xl p-3 text-xs text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
-                <button
-                  type="submit"
-                  disabled={procureSubmitting}
-                  className="w-full bg-primary text-white font-bold py-3.5 rounded-xl text-sm hover:bg-primary/90 transition press-effect shadow-sm disabled:opacity-70 flex items-center justify-center gap-2"
-                >
-                  <span className="material-symbols-outlined text-base">check_circle</span>
-                  {procureSubmitting ? t('procuring') : t('quick_procure_submit')}
-                </button>
+                <div className="bg-primary-container/30 p-3 rounded-xl flex justify-between items-center text-xs">
+                  <span className="font-bold text-on-surface-variant">{t('estimated_total_cost')}</span>
+                  <span className="font-extrabold text-base text-primary">
+                    Rs. {((parseFloat(procureQty) || 0) * parseFloat(procureModalItem.price_per_kg)).toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setProcureModalItem(null)}
+                    className="flex-1 py-2.5 rounded-xl border border-outline-variant/40 text-xs font-bold text-on-surface-variant hover:bg-surface-container transition"
+                  >
+                    {t('btn_cancel')}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={procureSubmitting}
+                    className="flex-1 py-2.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary/90 transition shadow-md flex items-center justify-center gap-1.5"
+                  >
+                    {procureSubmitting ? (
+                      <span className="material-symbols-outlined text-sm animate-spin">sync</span>
+                    ) : (
+                      <>
+                        <span className="material-symbols-outlined text-sm">send</span>
+                        <span>{t('submit_order_request')}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </form>
             </div>
           </div>
         )}
 
+        {/* ── TASK 5: Official Validated Receipt Modal with Unique QR Code ── */}
+        <ProcurementReceiptModal
+          isOpen={!!selectedBuyerReceipt}
+          onClose={() => setSelectedBuyerReceipt(null)}
+          receipt={selectedBuyerReceipt}
+          isHarvestBatch={isHarvestBatchReceipt}
+          user={user}
+        />
+
       </div>
     );
   }
 
-  // ----------------------------------------------------
-  // 3. DIVISIONAL OFFICER DASHBOARD (Stitch Screen 9b2895e1960648aab780b17f59ab158d)
+// 3. DIVISIONAL OFFICER DASHBOARD (Stitch Screen 9b2895e1960648aab780b17f59ab158d)
   // ----------------------------------------------------
   return (
     <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-6 space-y-6 font-body-md text-on-surface">

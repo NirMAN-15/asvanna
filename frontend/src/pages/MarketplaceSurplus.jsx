@@ -3,6 +3,7 @@ import { AuthContext } from '../context/AuthContext';
 import { LanguageContext } from '../context/LanguageContext';
 import API from '../services/api';
 import ChatDrawer from '../components/ChatDrawer';
+import ProcurementReceiptModal from '../components/ProcurementReceiptModal';
 import { MASTER_CROPS } from '../constants/crops';
 
 export default function MarketplaceSurplus() {
@@ -86,6 +87,8 @@ export default function MarketplaceSurplus() {
   const [browseListings, setBrowseListings] = useState([]);
   const [procureModalListing, setProcureModalListing] = useState(null);
   const [orderQuantity, setOrderQuantity] = useState(100);
+  const [receiptModalData, setReceiptModalData] = useState(null);
+  const [isHarvestBatchReceipt, setIsHarvestBatchReceipt] = useState(false);
   const [orderNotes, setOrderNotes] = useState('');
   const [myBuyerOrders, setMyBuyerOrders] = useState([]);
 
@@ -922,16 +925,50 @@ export default function MarketplaceSurplus() {
                           </p>
                         </div>
 
-                        <button
-                          onClick={() => {
-                            setProcureModalListing(item);
-                            setOrderQuantity(Math.min(100, item.availableKg));
-                          }}
-                          className="w-full bg-primary hover:bg-primary-container text-white py-2.5 rounded-xl font-bold text-xs shadow-md transition flex items-center justify-center gap-1.5"
-                        >
-                          <span className="material-symbols-outlined text-base">shopping_cart_checkout</span>
-                          <span>Initiate Procurement Order</span>
-                        </button>
+                        <div className="flex gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setReceiptModalData({
+                                ...item,
+                                id: item.id,
+                                order_code: `ASV-BATCH-${item.id}`,
+                                crop_name: getCropTitle(item),
+                                crop_name_en: item.cropKey || item.crop_name_en,
+                                crop_code: item.crop_code,
+                                quantity_kg: item.availableKg || item.quantity_kg,
+                                price_per_kg: price,
+                                benchmark_price: benchmark,
+                                farmer_name: item.farmName || item.farmer || item.farmer_name,
+                                farmer_phone: item.phone || item.farmer_phone,
+                                farmer_location: item.location || item.pickup_address,
+                                pickup_address: item.location || item.pickup_address,
+                                status: 'AVAILABLE',
+                                validation_token: `VAL-BW-2026-BATCH-${item.id}`,
+                                qr_code_hash: `QR-BATCH-${item.id}`,
+                                created_at: new Date().toISOString()
+                              });
+                              setIsHarvestBatchReceipt(true);
+                            }}
+                            className="flex-1 border border-outline-variant/60 hover:bg-surface-container py-2.5 rounded-xl font-bold text-xs text-on-surface-variant transition flex items-center justify-center gap-1 cursor-pointer"
+                            title="View Farmgate Harvest Batch Receipt & QR"
+                          >
+                            <span className="material-symbols-outlined text-sm">qr_code</span>
+                            <span>Receipt & QR</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setProcureModalListing(item);
+                              setOrderQuantity(Math.min(100, item.availableKg));
+                            }}
+                            className="flex-1 bg-primary hover:bg-primary-container text-white py-2.5 rounded-xl font-bold text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
+                          >
+                            <span className="material-symbols-outlined text-sm">shopping_cart_checkout</span>
+                            <span>Procure</span>
+                          </button>
+                        </div>
                       </div>
                     );
                   })}
@@ -1007,15 +1044,31 @@ export default function MarketplaceSurplus() {
                             <p className="text-[11px] mt-0.5">Farmgate Pickup Address: {order.pickup_address}</p>
                           </div>
                           <button
-                            className="bg-primary text-white px-4 py-2 rounded-xl font-bold text-xs shadow-sm hover:bg-primary-container transition flex items-center gap-1.5 self-start sm:self-center"
+                            type="button"
+                            onClick={() => {
+                              setReceiptModalData(order);
+                              setIsHarvestBatchReceipt(false);
+                            }}
+                            className="bg-primary text-white px-4 py-2 rounded-xl font-bold text-xs shadow-sm hover:bg-primary/90 transition flex items-center gap-1.5 self-start sm:self-center cursor-pointer"
                           >
                             <span className="material-symbols-outlined text-sm">qr_code</span>
-                            <span>Digital Pickup Voucher</span>
+                            <span>View Receipt & QR Voucher</span>
                           </button>
                         </div>
                       )}
 
-                      <div className="flex justify-end pt-1">
+                      <div className="flex justify-end items-center gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setReceiptModalData(order);
+                            setIsHarvestBatchReceipt(false);
+                          }}
+                          className="bg-secondary/10 text-secondary hover:bg-secondary/20 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <span className="material-symbols-outlined text-sm">receipt_long</span>
+                          <span>View Receipt & QR</span>
+                        </button>
                         <button
                           type="button"
                           onClick={() => setActiveChatOrder(order)}
@@ -1612,6 +1665,15 @@ export default function MarketplaceSurplus() {
             : activeChatOrder?.buyer_name || 'Buyer'
         }
         otherPartyRole={activeRoleMode === 'BUYER' ? 'FARMER' : 'BUYER'}
+      />
+
+      {/* Official Validated Receipt Modal with Unique QR Code (TASK 5) */}
+      <ProcurementReceiptModal
+        isOpen={!!receiptModalData}
+        onClose={() => setReceiptModalData(null)}
+        receipt={receiptModalData}
+        isHarvestBatch={isHarvestBatchReceipt}
+        user={user}
       />
     </div>
   );

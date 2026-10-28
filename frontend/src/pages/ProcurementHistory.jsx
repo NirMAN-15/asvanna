@@ -3,13 +3,15 @@ import { AuthContext } from '../context/AuthContext';
 import { LanguageContext } from '../context/LanguageContext';
 import API from '../services/api';
 import ChatDrawer from '../components/ChatDrawer';
+import ProcurementReceiptModal from '../components/ProcurementReceiptModal';
 
 export default function ProcurementHistory() {
   const { user } = useContext(AuthContext);
   const { lang, t } = useContext(LanguageContext);
 
-  // Active top-level history view tab: 'FARM_DATA' vs 'BUYER_SALES'
-  const [activeHistoryTab, setActiveHistoryTab] = useState('FARM_DATA');
+  const isBuyer = user?.role === 'BUYER';
+  // For local buyer: All Farmers & Harvest History tab is deleted, only Buyer's Orders & Sales History is shown
+  const [activeHistoryTab, setActiveHistoryTab] = useState('BUYER_SALES');
 
   // 1. Sales & Orders State
   const [orders, setOrders] = useState([]);
@@ -233,13 +235,26 @@ export default function ProcurementHistory() {
               <span>{t('registry_ledger_badge', 'Bandarawela Agrarian Registry Ledger')}</span>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-headline font-black text-slate-900 tracking-tight flex items-center gap-2.5">
-              <span>{t('procurement_history_title', 'Comprehensive Agricultural History Ledger')}</span>
-            </h1>
-
-            <p className="text-xs sm:text-sm font-medium text-slate-600 leading-relaxed">
-              {t('history_ledger_desc', 'Official records of all farmer cultivation plots, planting cycles, harvest completions with land clearance, and direct produce sales transacted with registered buyers.')}
-            </p>
+            {isBuyer ? (
+              <>
+                <h1 className="text-2xl sm:text-3xl font-headline font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+                  <span className="material-symbols-outlined text-emerald-700 text-3xl">receipt_long</span>
+                  <span>{t('buyer_orders_sales_history', "Buyer's Orders & Sales History")}</span>
+                </h1>
+                <p className="text-xs sm:text-sm font-medium text-slate-600 leading-relaxed">
+                  Official historical ledger of your direct surplus produce purchases, agreed farmgate rates, delivery fulfillment statuses, and verified QR pickup receipts.
+                </p>
+              </>
+            ) : (
+              <>
+                <h1 className="text-2xl sm:text-3xl font-headline font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+                  <span>{t('procurement_history_title', 'Comprehensive Agricultural History Ledger')}</span>
+                </h1>
+                <p className="text-xs sm:text-sm font-medium text-slate-600 leading-relaxed">
+                  {t('history_ledger_desc', 'Official records of all farmer cultivation plots, planting cycles, harvest completions with land clearance, and direct produce sales transacted with registered buyers.')}
+                </p>
+              </>
+            )}
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
@@ -263,43 +278,56 @@ export default function ProcurementHistory() {
         </div>
 
         {/* Structured Mode Tab Switcher */}
-        <div className="flex flex-wrap items-center gap-3 pt-6 mt-6 border-t border-outline-variant/20">
-          <button
-            onClick={() => {
-              setActiveHistoryTab('FARM_DATA');
-              setSelectedStatusFilter('All');
-            }}
-            className={`px-5 py-3 rounded-2xl text-xs sm:text-sm font-black transition-all flex items-center gap-2.5 cursor-pointer shadow-xs ${
-              activeHistoryTab === 'FARM_DATA'
-                ? 'bg-primary text-white ring-2 ring-primary/30 shadow-md'
-                : 'bg-surface-container-low text-slate-700 hover:bg-surface-container border border-outline-variant/40'
-            }`}
-          >
-            <span className="material-symbols-outlined text-lg">agriculture</span>
-            <span>{t('tab_farm_data', 'All Farmers Farm & Cultivation History')}</span>
-            <span className="px-2 py-0.5 rounded-full text-[11px] bg-white/20 text-white font-mono">
-              {farmRecords.length}
-            </span>
-          </button>
+        {/* For Local Buyer: All Farmers & Harvest History tab is deleted; only Buyer Orders & Sales History is rendered */}
+        {!isBuyer ? (
+          <div className="flex flex-wrap items-center gap-3 pt-6 mt-6 border-t border-outline-variant/20">
+            <button
+              onClick={() => {
+                setActiveHistoryTab('FARM_DATA');
+                setSelectedStatusFilter('All');
+              }}
+              className={`px-5 py-3 rounded-2xl text-xs sm:text-sm font-black transition-all flex items-center gap-2.5 cursor-pointer shadow-xs ${
+                activeHistoryTab === 'FARM_DATA'
+                  ? 'bg-primary text-white ring-2 ring-primary/30 shadow-md'
+                  : 'bg-surface-container-low text-slate-700 hover:bg-surface-container border border-outline-variant/40'
+              }`}
+            >
+              <span className="material-symbols-outlined text-lg">agriculture</span>
+              <span>{t('tab_farm_data', 'All Farmers Farm & Cultivation History')}</span>
+              <span className="px-2 py-0.5 rounded-full text-[11px] bg-white/20 text-white font-mono">
+                {farmRecords.length}
+              </span>
+            </button>
 
-          <button
-            onClick={() => {
-              setActiveHistoryTab('BUYER_SALES');
-              setSelectedStatusFilter('All');
-            }}
-            className={`px-5 py-3 rounded-2xl text-xs sm:text-sm font-black transition-all flex items-center gap-2.5 cursor-pointer shadow-xs ${
-              activeHistoryTab === 'BUYER_SALES'
-                ? 'bg-emerald-700 text-white ring-2 ring-emerald-600/30 shadow-md'
-                : 'bg-surface-container-low text-slate-700 hover:bg-surface-container border border-outline-variant/40'
-            }`}
-          >
-            <span className="material-symbols-outlined text-lg">storefront</span>
-            <span>{t('tab_buyer_sales', 'Marketplace Sales & Buyer Transactions')}</span>
-            <span className="px-2 py-0.5 rounded-full text-[11px] bg-white/20 text-white font-mono">
-              {orders.length}
-            </span>
-          </button>
-        </div>
+            <button
+              onClick={() => {
+                setActiveHistoryTab('BUYER_SALES');
+                setSelectedStatusFilter('All');
+              }}
+              className={`px-5 py-3 rounded-2xl text-xs sm:text-sm font-black transition-all flex items-center gap-2.5 cursor-pointer shadow-xs ${
+                activeHistoryTab === 'BUYER_SALES'
+                  ? 'bg-emerald-700 text-white ring-2 ring-emerald-600/30 shadow-md'
+                  : 'bg-surface-container-low text-slate-700 hover:bg-surface-container border border-outline-variant/40'
+              }`}
+            >
+              <span className="material-symbols-outlined text-lg">storefront</span>
+              <span>{t('tab_buyer_sales', 'Marketplace Sales & Buyer Transactions')}</span>
+              <span className="px-2 py-0.5 rounded-full text-[11px] bg-white/20 text-white font-mono">
+                {orders.length}
+              </span>
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 pt-6 mt-6 border-t border-outline-variant/20">
+            <div className="px-5 py-3 rounded-2xl text-xs sm:text-sm font-black bg-emerald-700 text-white shadow-md flex items-center gap-2.5">
+              <span className="material-symbols-outlined text-lg">receipt_long</span>
+              <span>Buyers Orders & Sales History</span>
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] bg-white/20 text-white font-mono font-bold">
+                {orders.length} Orders
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ========================================================================= */}
@@ -1044,163 +1072,14 @@ export default function ProcurementHistory() {
       )}
 
       {/* ========================================================================= */}
-      {/* 🧾 DETAILED RECEIPT MODAL (FOR BUYER SALES)                               */}
+      {/* 🧾 OFFICIAL VALIDATED RECEIPT MODAL WITH UNIQUE QR CODE                  */}
       {/* ========================================================================= */}
-      {selectedReceipt && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
-          <div className="bg-surface-container-lowest rounded-3xl max-w-md w-full border border-outline-variant shadow-2xl overflow-hidden animate-scaleUp">
-            {/* Modal Header */}
-            <div className="bg-primary text-white p-6 relative">
-              <button
-                onClick={() => setSelectedReceipt(null)}
-                className="absolute top-4 right-4 text-white/80 hover:text-white rounded-full p-1 cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-2xl">close</span>
-              </button>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="material-symbols-outlined text-secondary-container">receipt_long</span>
-                <span className="text-xs font-bold uppercase tracking-widest text-secondary-container">
-                  ASVANNA SL • Agri Procurement
-                </span>
-              </div>
-              <h2 className="font-headline text-2xl font-bold">
-                {t('receipt_title') || 'Crop Procurement Receipt'}
-              </h2>
-              <p className="text-xs text-white/80 font-mono mt-0.5">
-                {selectedReceipt.order_code || `ORD-${selectedReceipt.id}`}
-              </p>
-            </div>
-
-            {/* Receipt Content */}
-            <div className="p-6 space-y-4 font-body-md text-sm">
-              <div className="flex items-center justify-between p-3 bg-secondary-container/40 rounded-xl border border-secondary/20">
-                <span className="text-xs font-bold text-on-secondary-fixed">Procurement Status:</span>
-                {getOrderStatusBadge(selectedReceipt.status)}
-              </div>
-
-              {/* Farmer & Buyer Details */}
-              <div className="grid grid-cols-2 gap-4 pb-3 border-b border-outline-variant/30 text-xs">
-                <div>
-                  <span className="text-outline uppercase font-bold text-[10px] block">
-                    {t('th_farmer_seller') || 'Farmer (Seller)'}
-                  </span>
-                  <p className="font-bold text-on-surface text-sm mt-0.5">
-                    {selectedReceipt.farmer_name || 'Kapila Bandara'}
-                  </p>
-                  <p className="text-on-surface-variant font-mono">{selectedReceipt.farmer_phone}</p>
-                  <p className="text-[11px] text-outline">{selectedReceipt.farmer_location || 'Bandarawela'}</p>
-                </div>
-                <div>
-                  <span className="text-outline uppercase font-bold text-[10px] block">
-                    Procured By (Buyer)
-                  </span>
-                  <p className="font-bold text-on-surface text-sm mt-0.5">
-                    {selectedReceipt.buyer_name || user?.full_name || 'Bandarawela Grand Hotel'}
-                  </p>
-                  <p className="text-on-surface-variant font-mono">{selectedReceipt.buyer_phone || '0572222222'}</p>
-                  <p className="text-[11px] text-outline">{selectedReceipt.buyer_type || 'Commercial Buyer'}</p>
-                </div>
-              </div>
-
-              {/* Crop & Price Calculations */}
-              <div className="space-y-2.5 py-1">
-                <div className="flex justify-between items-center">
-                  <span className="text-on-surface-variant font-medium">Crop Produce:</span>
-                  <span className="font-bold text-primary font-headline text-base">
-                    {selectedReceipt.crop_name}
-                  </span>
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <span className="text-on-surface-variant font-medium">
-                    {t('date_and_time') || 'Procurement Date & Time'}:
-                  </span>
-                  <span className="font-semibold text-on-surface text-xs">
-                    {formatDate(selectedReceipt.date_received || selectedReceipt.created_at)}
-                  </span>
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <span className="text-on-surface-variant font-medium">
-                    {t('th_quantity_kg') || 'Quantity (Weight)'}:
-                  </span>
-                  <span className="font-bold text-on-surface text-base">
-                    {(Number(selectedReceipt.quantity_kg || selectedReceipt.requested_quantity_kg) || 0).toLocaleString()} kg
-                  </span>
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <span className="text-on-surface-variant font-medium">
-                    {t('price_per_kg_label') || 'Agreed Rate'}:
-                  </span>
-                  <span className="font-semibold text-on-surface">
-                    LKR {Number(selectedReceipt.price_per_kg || selectedReceipt.agreed_price_per_kg || selectedReceipt.offered_price_per_kg) || 0} / kg
-                  </span>
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <span className="text-on-surface-variant font-medium">
-                    {t('payment_mode') || 'Payment Method'}:
-                  </span>
-                  <span className="font-semibold text-on-surface text-xs">
-                    {selectedReceipt.payment_method || 'Direct Farmgate Settlement'}
-                  </span>
-                </div>
-
-                {selectedReceipt.delivery_address && (
-                  <div className="flex justify-between items-start text-xs pt-1">
-                    <span className="text-on-surface-variant font-medium">
-                      {t('pickup_location') || 'Delivery Depot'}:
-                    </span>
-                    <span className="font-medium text-right text-on-surface max-w-[200px]">
-                      {selectedReceipt.delivery_address}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {/* Total Price Callout */}
-              <div className="p-4 bg-surface-container rounded-2xl border border-outline-variant/50 flex justify-between items-center">
-                <div>
-                  <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wider block">
-                    {t('total_amount_paid') || 'Total Amount Settled'}
-                  </span>
-                  <span className="text-[11px] text-secondary font-semibold">Zero Middleman Surcharge</span>
-                </div>
-                <div className="text-right">
-                  <span className="font-headline text-2xl font-extrabold text-primary">
-                    LKR{' '}
-                    {(
-                      Number(selectedReceipt.total_price) ||
-                      (Number(selectedReceipt.quantity_kg || selectedReceipt.requested_quantity_kg) || 0) *
-                        (Number(selectedReceipt.price_per_kg || selectedReceipt.agreed_price_per_kg || selectedReceipt.offered_price_per_kg) || 0)
-                    ).toLocaleString()}
-                  </span>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setSelectedReceipt(null)}
-                  className="flex-1 py-3 rounded-xl border border-outline-variant font-label-md text-xs font-bold text-on-surface-variant hover:bg-surface-container transition cursor-pointer"
-                >
-                  {t('close') || 'Close'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => window.print()}
-                  className="flex-1 py-3 rounded-xl bg-primary text-white font-label-md text-xs font-bold hover:bg-primary-container transition shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
-                >
-                  <span className="material-symbols-outlined text-base">print</span>
-                  <span>{t('print_receipt') || 'Print Receipt'}</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ProcurementReceiptModal
+        isOpen={!!selectedReceipt}
+        onClose={() => setSelectedReceipt(null)}
+        receipt={selectedReceipt}
+        user={user}
+      />
 
       {/* 💬 Order Chat Drawer (Farmer <-> Buyer) */}
       <ChatDrawer
