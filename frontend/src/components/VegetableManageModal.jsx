@@ -72,7 +72,7 @@ export default function VegetableManageModal({ isOpen, onClose, vegetable, onSav
           growth_duration_days: String(vegetable.growth_duration_days || 90),
           standard_price_per_kg: String(vegetable.standard_price_per_kg || 200),
           avg_yield_per_acre_kg: String(vegetable.avg_yield_per_acre_kg || 4500),
-          standard_demand_kg: String(vegetable.standard_demand_kg || 150000),
+          standard_demand_kg: String(vegetable.standard_demand_kg || (vegetable.quota_ha ? vegetable.quota_ha * 1000 : 150000)),
           image_url: vegetable.image_url || vegetable.imageUrl || '',
           description_en: vegetable.description_en || '',
           description_si: vegetable.description_si || ''
@@ -107,6 +107,8 @@ export default function VegetableManageModal({ isOpen, onClose, vegetable, onSav
     setLoading(true);
 
     try {
+      const demandVal = parseFloat(formData.standard_demand_kg) || 150000;
+      const calculatedQuotaHa = Math.max(1, Math.round(demandVal / 1000));
       const payload = {
         name_en: formData.name_en.trim(),
         name_si: formData.name_si.trim() || formData.name_en.trim(),
@@ -116,7 +118,8 @@ export default function VegetableManageModal({ isOpen, onClose, vegetable, onSav
         growth_duration_days: parseInt(formData.growth_duration_days, 10) || 90,
         standard_price_per_kg: parseFloat(formData.standard_price_per_kg) || 200,
         avg_yield_per_acre_kg: parseFloat(formData.avg_yield_per_acre_kg) || 4500,
-        standard_demand_kg: parseFloat(formData.standard_demand_kg) || 150000,
+        standard_demand_kg: demandVal,
+        quota_ha: calculatedQuotaHa,
         image_url: formData.image_url.trim() || null,
         description_en: formData.description_en.trim() || null,
         description_si: formData.description_si.trim() || null
@@ -136,6 +139,7 @@ export default function VegetableManageModal({ isOpen, onClose, vegetable, onSav
         ...(vegetable || {}),
         ...payload,
         ...(res?.data?.data || {}),
+        quota_ha: calculatedQuotaHa,
         id: res?.data?.data?.id || generatedId
       };
       setTimeout(() => {
