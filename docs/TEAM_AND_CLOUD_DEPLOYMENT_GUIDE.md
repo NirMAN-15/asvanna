@@ -1,7 +1,9 @@
 # 🌾 ASVANNA Platform — Team Member Setup & Cloud Deployment Guide
 **Pilot Deployment**: Bandarawela Agrarian Division, Badulla District, Sri Lanka  
 **Repository**: [https://github.com/NirMAN-15/asvanna.git](https://github.com/NirMAN-15/asvanna.git)  
-**Active Working Branch**: `member/weddikkara`
+**Active Working Branch**: `develop` / `member/weddikkara`  
+> [!IMPORTANT]
+> The canonical working branches are **`develop`** and **`member/weddikkara`** (both synchronized 1:1). Teammate branches `member/geeganage` and `member/jayampathi` have been fully integrated into `develop`. Teammate branches `member/lakshitha` and `member/dewanga` are excluded/isolated.
 
 ---
 
@@ -388,3 +390,10 @@ To restore the backup file:
 ```bash
 cat asvanna_backup.sql | docker exec -i asvanna-postgres psql -U postgres -d asvanna_db
 ```
+
+### GitGuardian & Secret Security Guidelines
+To prevent CI security pipeline failures or GitGuardian incident triggers:
+1. **Never commit `.env` files**: All `.env`, `.env.local`, and credential files are explicitly ignored via `.gitignore`.
+2. **Never commit API tokens or secrets**: Never write GitHub Personal Access Tokens (`ghp_...`), Firebase private keys, database passwords, or secret authorization keys directly into source code, comments, or commit messages.
+3. **Use sanitized `.env.example` files**: Only commit example configurations with generic placeholders (e.g., `your_api_key_here`).
+4. **Clean Git State**: Always verify `git status` and `git diff` before running `git commit` to ensure no sensitive files or logs are staged.
