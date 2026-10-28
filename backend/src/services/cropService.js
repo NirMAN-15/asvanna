@@ -145,6 +145,9 @@ class CropService {
       description_ta
     } = data;
 
+    const isNumericId = !isNaN(Number(cropId));
+    const whereClause = isNumericId ? 'id = $13' : 'UPPER(crop_code) = UPPER($13)';
+
     const query = `
       UPDATE crops
       SET
@@ -160,7 +163,7 @@ class CropService {
         description_en = COALESCE($10, description_en),
         description_si = COALESCE($11, description_si),
         description_ta = COALESCE($12, description_ta)
-      WHERE id = $13
+      WHERE ${whereClause}
       RETURNING *
     `;
 
@@ -169,15 +172,15 @@ class CropService {
       name_si || null,
       name_ta || null,
       category || null,
-      growth_duration_days !== undefined ? parseInt(growth_duration_days, 10) : null,
-      avg_yield_per_acre_kg !== undefined ? parseFloat(avg_yield_per_acre_kg) : null,
-      standard_price_per_kg !== undefined ? parseFloat(standard_price_per_kg) : null,
-      standard_demand_kg !== undefined ? parseFloat(standard_demand_kg) : null,
-      image_url !== undefined ? image_url : null,
+      growth_duration_days !== undefined && growth_duration_days !== null ? parseInt(growth_duration_days, 10) : null,
+      avg_yield_per_acre_kg !== undefined && avg_yield_per_acre_kg !== null ? parseFloat(avg_yield_per_acre_kg) : null,
+      standard_price_per_kg !== undefined && standard_price_per_kg !== null ? parseFloat(standard_price_per_kg) : null,
+      standard_demand_kg !== undefined && standard_demand_kg !== null ? parseFloat(standard_demand_kg) : null,
+      image_url !== undefined && image_url !== null && image_url !== '' ? image_url : null,
       description_en || null,
       description_si || null,
       description_ta || null,
-      cropId
+      isNumericId ? parseInt(cropId, 10) : cropId
     ];
 
     const res = await db.query(query, values);
@@ -188,8 +191,11 @@ class CropService {
    * Delete a crop / vegetable (Officer/Admin)
    */
   static async deleteCrop(cropId) {
-    const query = 'DELETE FROM crops WHERE id = $1 RETURNING *';
-    const res = await db.query(query, [cropId]);
+    const isNumericId = !isNaN(Number(cropId));
+    const query = isNumericId
+      ? 'DELETE FROM crops WHERE id = $1 RETURNING *'
+      : 'DELETE FROM crops WHERE UPPER(crop_code) = UPPER($1) RETURNING *';
+    const res = await db.query(query, [isNumericId ? parseInt(cropId, 10) : cropId]);
     if (res.rows.length === 0) throw new Error('Crop not found');
     return res.rows[0];
   }

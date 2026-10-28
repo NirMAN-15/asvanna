@@ -867,8 +867,12 @@ module.exports = {
 
     // UPDATE crops
     if (lower.includes('update crops')) {
-      const cropId = Number(params[params.length - 1]);
-      const crop = fileDb.crops.find(c => Number(c.id) === cropId);
+      const rawCropId = params[params.length - 1];
+      const cropId = Number(rawCropId);
+      const crop = fileDb.crops.find(c =>
+        (!isNaN(cropId) && Number(c.id) === cropId) ||
+        (rawCropId && String(c.crop_code).toUpperCase() === String(rawCropId).toUpperCase())
+      );
       if (crop) {
         if (params[0] !== null && params[0] !== undefined) crop.name_en = params[0];
         if (params[1] !== null && params[1] !== undefined) crop.name_si = params[1];
