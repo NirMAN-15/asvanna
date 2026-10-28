@@ -49,6 +49,8 @@ postgres_data/
 # Firebase & Keys
 firebase-service-account.json
 serviceAccountKey.json
+*firebase-adminsdk*.json
+*-adminsdk-*.json
 *.keystore
 *.jks
 

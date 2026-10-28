@@ -6,3 +6,5 @@ yarn-error.log*
 .DS_Store
 firebase-service-account.json
 serviceAccountKey.json
+*firebase-adminsdk*.json
+*-adminsdk-*.json

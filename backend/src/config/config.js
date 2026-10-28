@@ -34,10 +34,10 @@ module.exports = {
     maxRadiusKm: parseFloat(process.env.MAX_GEOFENCE_RADIUS_KM) || 20.0
   },
   firebase: {
-    projectId: process.env.FIREBASE_PROJECT_ID,
+    projectId: process.env.FIREBASE_PROJECT_ID || 'asvanna-agritech',
     clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
     privateKey: process.env.FIREBASE_PRIVATE_KEY ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n') : null,
-    databaseURL: process.env.FIREBASE_DATABASE_URL
+    databaseURL: process.env.FIREBASE_DATABASE_URL || (process.env.FIREBASE_PROJECT_ID ? `https://${process.env.FIREBASE_PROJECT_ID}-default-rtdb.firebaseio.com` : 'https://asvanna-agritech-default-rtdb.firebaseio.com')
   },
   weather: {
     openMeteoForecastUrl: process.env.OPEN_METEO_FORECAST_URL || 'https://api.open-meteo.com/v1/forecast',
