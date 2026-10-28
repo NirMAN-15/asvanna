@@ -1,10 +1,11 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import { LanguageContext } from '../../context/LanguageContext';
 import { validateNIC, validatePhone, validatePassword } from '../../utils/validation';
 import PasswordStrengthInput from '../../components/PasswordStrengthInput';
 import farmerHeroBg from '../../assets/register-farmer-bg.jpg';
+import { BANDARAWELA_GND_DIVISIONS } from '../../constants/locations';
 
 export default function FarmerAuth() {
   const navigate = useNavigate();
@@ -14,6 +15,21 @@ export default function FarmerAuth() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
+  const errorRef = useRef(null);
+
+  const scrollToError = () => {
+    setTimeout(() => {
+      if (errorRef.current) {
+        errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 50);
+  };
+
+  useEffect(() => {
+    if (error && errorRef.current) {
+      errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [error]);
 
   const [formData, setFormData] = useState({
     first_name: '',
@@ -23,7 +39,7 @@ export default function FarmerAuth() {
     phone: '',
     district: 'Badulla',
     division: 'Bandarawela',
-    gnd_division: 'Wewathenna',
+    gnd_division: 'Ambadandegama',
     land_unit: 'PERCHES',
     land_size_acres: '40', // used as land value
     address_line1: '',
@@ -61,6 +77,7 @@ export default function FarmerAuth() {
     if (!nicRes.isValid) {
       setFieldErrors((prev) => ({ ...prev, nic: nicRes.message }));
       setError(nicRes.message);
+      scrollToError();
       return;
     }
 
@@ -69,6 +86,7 @@ export default function FarmerAuth() {
     if (!phoneRes.isValid) {
       setFieldErrors((prev) => ({ ...prev, phone: phoneRes.message }));
       setError(phoneRes.message);
+      scrollToError();
       return;
     }
 
@@ -76,11 +94,13 @@ export default function FarmerAuth() {
     const pwdRes = validatePassword(formData.password);
     if (!pwdRes.isValid) {
       setError(pwdRes.message);
+      scrollToError();
       return;
     }
 
     if (formData.password !== formData.confirm_password) {
       setError('Passwords do not match.');
+      scrollToError();
       return;
     }
 
@@ -117,6 +137,7 @@ export default function FarmerAuth() {
       navigate('/dashboard');
     } else {
       setError(res.message || 'Farmer registration failed. Please verify your details.');
+      scrollToError();
     }
   };
 
@@ -229,7 +250,10 @@ export default function FarmerAuth() {
           </header>
 
           {error && (
-            <div className="p-3 mb-6 bg-error-container/20 border border-error/30 text-error rounded-xl text-sm font-medium flex items-center gap-2">
+            <div
+              ref={errorRef}
+              className="p-3 mb-6 bg-error-container/20 border border-error/30 text-error rounded-xl text-sm font-medium flex items-center gap-2 shadow-sm"
+            >
               <span className="material-symbols-outlined text-lg">error</span>
               <span>{error}</span>
             </div>
@@ -393,15 +417,21 @@ export default function FarmerAuth() {
                 <label className="font-label-md text-label-md text-on-surface-variant font-semibold" htmlFor="gnd_division">
                   GND Division (ග්‍රාම නිලධාරී)
                 </label>
-                <input
+                <select
                   id="gnd_division"
                   name="gnd_division"
-                  type="text"
                   value={formData.gnd_division}
                   onChange={handleChange}
-                  placeholder="e.g. Wewathenna"
                   className="w-full h-11 px-4 font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition outline-none"
-                />
+                >
+                  {BANDARAWELA_GND_DIVISIONS.map((item) => (
+                    <option key={item.value} value={item.value}>
+                      {lang === 'si' && item.labelSi
+                        ? `${item.value} (${item.labelSi})`
+                        : item.labelEn}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="flex flex-col gap-1">
