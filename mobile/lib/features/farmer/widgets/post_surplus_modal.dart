@@ -106,17 +106,40 @@ class _PostSurplusModalState extends State<PostSurplusModal> {
               const SizedBox(height: 16),
 
               DropdownButtonFormField<Crop>(
-                value: _selectedCrop,
+                initialValue: _selectedCrop,
                 isExpanded: true,
                 dropdownColor: context.cardBg,
                 decoration: const InputDecoration(labelText: 'Select Crop', prefixIcon: Icon(Icons.eco)),
                 items: appState.availableCrops.map((c) {
                   return DropdownMenuItem(
                     value: c,
-                    child: Text(
-                      '${c.iconEmoji} ${c.name} (${c.sinhalaName})',
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: context.titleText),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            color: context.softGreenBg,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: c.imageUrl.isNotEmpty
+                              ? Image.network(
+                                  c.imageUrl,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => Center(child: Text(c.iconEmoji, style: const TextStyle(fontSize: 16))),
+                                )
+                              : Center(child: Text(c.iconEmoji, style: const TextStyle(fontSize: 16))),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            '${c.name} (${c.sinhalaName})',
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(color: context.titleText, fontWeight: FontWeight.w600, fontSize: 13.5),
+                          ),
+                        ),
+                      ],
                     ),
                   );
                 }).toList(),
@@ -159,7 +182,7 @@ class _PostSurplusModalState extends State<PostSurplusModal> {
                 title: Text('Urgent Perishable Clearance', style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: context.titleText)),
                 subtitle: Text('Priority broadcast to local hotels & wedding caterers', style: TextStyle(color: context.subText)),
                 value: _isUrgent,
-                activeColor: AppColors.riskCritical,
+                activeThumbColor: AppColors.riskCritical,
                 onChanged: (val) => setState(() => _isUrgent = val),
               ),
               const SizedBox(height: 12),

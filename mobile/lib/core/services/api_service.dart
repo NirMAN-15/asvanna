@@ -6,6 +6,7 @@ import '../models/risk_analysis_model.dart';
 import '../models/surplus_listing_model.dart';
 import '../models/notice_model.dart';
 import '../models/weather_model.dart';
+import '../models/buyer_preferences_model.dart';
 import 'mock_data_service.dart';
 import 'offline_storage_service.dart';
 
@@ -26,6 +27,16 @@ class ApiService {
     baseUrl = url;
   }
 
+  static String? authToken;
+
+  static Map<String, String> _headers({bool withAuth = true}) {
+    final h = {'Content-Type': 'application/json'};
+    if (withAuth && authToken != null && authToken!.isNotEmpty) {
+      h['Authorization'] = 'Bearer $authToken';
+    }
+    return h;
+  }
+
   // Health check to verify backend connectivity (with smart candidate fallback)
   static Future<bool> checkBackendHealth() async {
     final candidateHosts = [
@@ -33,6 +44,7 @@ class ApiService {
       'http://localhost:5000',
       'http://127.0.0.1:5000',
       'http://10.0.2.2:5000',
+      'http://10.11.0.113:5000',
     ];
 
     for (final host in candidateHosts) {
@@ -576,5 +588,199 @@ class ApiService {
       await OfflineStorageService.clearOfflineQueue();
     }
     return syncedCount;
+  }
+
+  // 13. Login User (POST /api/v1/auth/login)
+  static Future<Map<String, dynamic>> loginUser({
+    required String identifier,
+    required String password,
+    String? role,
+  }) async {
+    try {
+      final payload = {
+        'identifier': identifier,
+        'password': password,
+        if (role != null) 'role': role,
+      };
+
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/auth/login'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(payload),
+          )
+          .timeout(const Duration(seconds: 5));
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200 && data['success'] == true) {
+        final token = data['data']?['token'];
+        if (token != null) {
+          authToken = token.toString();
+          await OfflineStorageService.saveAuthToken(authToken!);
+        }
+        return {'success': true, 'data': data['data'], 'message': data['message'] ?? 'Login successful'};
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Login failed. Please check your credentials.'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network connection error: $e'};
+    }
+  }
+
+  // 14. Change Password (PUT /api/v1/auth/change-password)
+  static Future<Map<String, dynamic>> changePassword({
+    required String currentPassword,
+    required String newPassword,
+    String? userId,
+  }) async {
+    try {
+      final payload = {
+        'currentPassword': currentPassword,
+        'newPassword': newPassword,
+        if (userId != null) 'userId': userId,
+      };
+
+      final response = await http
+          .put(
+            Uri.parse('$baseUrl/auth/change-password'),
+            headers: _headers(),
+            body: jsonEncode(payload),
+          )
+          .timeout(const Duration(seconds: 5));
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200 && data['success'] == true) {
+        return {'success': true, 'message': data['message'] ?? 'Password updated successfully'};
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to update password. Please check your current password.',
+        };
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Backend changePassword error: $e');
+      }
+      // Demo fallback if backend is offline
+      if (useMockFallback) {
+        return {'success': true, 'message': 'Password updated successfully (Local session active)'};
+      }
+      return {'success': false, 'message': 'Could not connect to server: $e'};
+    }
+  }
+
+  // 15. Update Language Preference (PUT /api/v1/auth/profile)
+  static Future<bool> updateLanguagePreference(String langCode) async {
+    try {
+      final response = await http
+          .put(
+            Uri.parse('$baseUrl/auth/profile'),
+            headers: _headers(),
+            body: jsonEncode({'language_preference': langCode}),
+          )
+          .timeout(const Duration(seconds: 4));
+
+      return response.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // 16. Fetch Procurement Preferences (GET /api/v1/auth/procurement-preferences)
+  static Future<ProcurementPreferences?> getProcurementPreferences({String? userId}) async {
+    try {
+      final uri = Uri.parse('$baseUrl/auth/procurement-preferences${userId != null ? '?userId=$userId' : ''}');
+      final response = await http.get(uri, headers: _headers()).timeout(const Duration(seconds: 4));
+
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        final data = body['data'] as Map<String, dynamic>?;
+        if (data != null) {
+          return ProcurementPreferences.fromJson(data);
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Fetch procurement preferences failed: $e');
+      }
+    }
+    return null;
+  }
+
+  // 17. Update Procurement Preferences (PUT /api/v1/auth/procurement-preferences)
+  static Future<bool> updateProcurementPreferences(
+    ProcurementPreferences preferences, {
+    String? userId,
+  }) async {
+    try {
+      final payload = {
+        'preferences': preferences.toJson(),
+        if (userId != null) 'userId': userId,
+      };
+
+      final response = await http
+          .put(
+            Uri.parse('$baseUrl/auth/procurement-preferences'),
+            headers: _headers(),
+            body: jsonEncode(payload),
+          )
+          .timeout(const Duration(seconds: 5));
+
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Update procurement preferences failed: $e');
+      }
+      return false;
+    }
+  }
+
+  // 18. Fetch Notification Settings (GET /api/v1/auth/notification-settings)
+  static Future<NotificationSettingsModel?> getNotificationSettings({String? userId}) async {
+    try {
+      final uri = Uri.parse('$baseUrl/auth/notification-settings${userId != null ? '?userId=$userId' : ''}');
+      final response = await http.get(uri, headers: _headers()).timeout(const Duration(seconds: 4));
+
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        final data = body['data'] as Map<String, dynamic>?;
+        if (data != null) {
+          return NotificationSettingsModel.fromJson(data);
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Fetch notification settings failed: $e');
+      }
+    }
+    return null;
+  }
+
+  // 19. Update Notification Settings (PUT /api/v1/auth/notification-settings)
+  static Future<bool> updateNotificationSettings(
+    NotificationSettingsModel settings, {
+    String? userId,
+  }) async {
+    try {
+      final payload = {
+        'settings': settings.toJson(),
+        if (userId != null) 'userId': userId,
+      };
+
+      final response = await http
+          .put(
+            Uri.parse('$baseUrl/auth/notification-settings'),
+            headers: _headers(),
+            body: jsonEncode(payload),
+          )
+          .timeout(const Duration(seconds: 5));
+
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Update notification settings failed: $e');
+      }
+      return false;
+    }
   }
 }

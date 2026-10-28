@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/providers/app_state_provider.dart';
 import '../../../core/models/surplus_listing_model.dart';
 import 'direct_chat_screen.dart';
 
@@ -25,6 +27,25 @@ class _SurplusDetailScreenState extends State<SurplusDetailScreen> {
   }
 
   void _showOrderConfirmationDialog(BuildContext context, double totalCost, double totalSavings) {
+    final appState = Provider.of<AppStateProvider>(context, listen: false);
+    final buyer = appState.buyerProfile;
+
+    appState.placeBuyerOrder(
+      listingId: widget.listing.id,
+      buyerName: buyer?.ownerName ?? 'Kamal Perera',
+      buyerPhone: buyer?.phone ?? '+94 71 234 5678',
+      buyerBusiness: buyer?.businessName ?? 'Fresh Mart',
+      cropName: widget.listing.cropName,
+      cropEmoji: widget.listing.cropEmoji,
+      quantityKg: _selectedQuantity,
+      pricePerKg: widget.listing.askingPricePerKgLkr,
+      notes: 'Digital pickup via mobile app',
+      farmerName: widget.listing.farmerName,
+      farmerPhone: widget.listing.farmerPhone,
+      farmLocation: widget.listing.farmLocation,
+      variety: widget.listing.variety,
+    );
+
     final orderId = 'ASV-5KM-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
     final dateFormat = DateFormat('MMM dd, yyyy');
 
@@ -122,6 +143,7 @@ class _SurplusDetailScreenState extends State<SurplusDetailScreen> {
                             cropName: widget.listing.cropName,
                             requestedQuantityKg: _selectedQuantity,
                             totalCostLkr: totalCost,
+                            showAppBarBack: true,
                           ),
                         ),
                       );
@@ -451,6 +473,7 @@ class _SurplusDetailScreenState extends State<SurplusDetailScreen> {
                             cropName: item.cropName,
                             requestedQuantityKg: _selectedQuantity,
                             totalCostLkr: totalCost,
+                            showAppBarBack: true,
                           ),
                         ),
                       );

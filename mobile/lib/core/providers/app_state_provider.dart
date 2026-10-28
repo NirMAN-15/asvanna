@@ -6,6 +6,8 @@ import '../models/buyer_model.dart';
 import '../models/surplus_listing_model.dart';
 import '../models/notice_model.dart';
 import '../models/weather_model.dart';
+import '../models/buyer_order_model.dart';
+import '../models/buyer_preferences_model.dart';
 import '../services/mock_data_service.dart';
 import '../services/offline_storage_service.dart';
 import '../services/api_service.dart';
@@ -26,11 +28,15 @@ class AppStateProvider with ChangeNotifier {
   Map<String, CropRiskAnalysis> _riskAnalyses = {};
   List<SurplusListing> _surplusListings = [];
   List<AgrarianNotice> _notices = [];
+  List<BuyerOrder> _buyerOrders = [];
   List<AppNotification> _userNotifications = [];
+  ProcurementPreferences _procurementPreferences = ProcurementPreferences.defaultPreferences();
+  NotificationSettingsModel _notificationSettings = NotificationSettingsModel.defaultSettings();
   bool _isLoadingNotices = false;
   WeatherData? _currentWeather;
   bool _isLoadingWeather = false;
   String _selectedWeatherDivision = 'Bandarawela';
+
 
   // Selected crop for risk analysis preview
   Crop? _selectedCropForRisk;
@@ -51,6 +57,51 @@ class AppStateProvider with ChangeNotifier {
     _farmerProfile = MockDataService.getInitialFarmerProfile();
     _surplusListings = MockDataService.getNearbySurplusListings();
     _notices = MockDataService.getAgrarianNotices();
+    // Mock incoming buyer orders
+    _buyerOrders = [
+      BuyerOrder(
+        id: 'ORD-001',
+        listingId: 'surplus_001',
+        buyerName: 'Niroshan Perera',
+        buyerPhone: '+94 77 889 9001',
+        buyerBusiness: 'Ella Heritage Catering & Events',
+        cropName: 'Carrot',
+        cropEmoji: '🥕',
+        quantityKg: 150,
+        pricePerKg: 280,
+        orderedAt: DateTime.now().subtract(const Duration(minutes: 28)),
+        status: OrderStatus.pending,
+        notes: 'Need delivery before 8 AM tomorrow for wedding event.',
+      ),
+      BuyerOrder(
+        id: 'ORD-002',
+        listingId: 'surplus_002',
+        buyerName: 'Kasun Silva',
+        buyerPhone: '+94 71 234 5678',
+        buyerBusiness: 'Bandarawela City Hotel',
+        cropName: 'Leeks',
+        cropEmoji: '🧅',
+        quantityKg: 80,
+        pricePerKg: 220,
+        orderedAt: DateTime.now().subtract(const Duration(hours: 3)),
+        status: OrderStatus.accepted,
+        notes: 'Regular weekly order. Will collect from farm.',
+      ),
+      BuyerOrder(
+        id: 'ORD-003',
+        listingId: 'surplus_003',
+        buyerName: 'Priya Rajapaksha',
+        buyerPhone: '+94 76 543 2109',
+        buyerBusiness: 'Uva Supermart',
+        cropName: 'Beetroot',
+        cropEmoji: '🫚',
+        quantityKg: 200,
+        pricePerKg: 210,
+        orderedAt: DateTime.now().subtract(const Duration(days: 1)),
+        status: OrderStatus.completed,
+        notes: '',
+      ),
+    ];
     _selectedWeatherDivision = _farmerProfile.agrarianDivision;
     _currentWeather = MockDataService.getFallbackWeatherData(_selectedWeatherDivision);
     
@@ -60,14 +111,15 @@ class AppStateProvider with ChangeNotifier {
     // Mock buyer profile
     _buyerProfile = BuyerProfile(
       id: 'buyer_001',
-      businessName: 'Ella Heritage Catering & Events',
-      ownerName: 'Niroshan Perera',
-      phone: '+94 77 889 9001',
-      category: 'Event Catering',
-      locationAddress: 'Bandarawela Main Street',
-      latitude: 6.8314,
-      longitude: 80.9859,
+      businessName: 'Fresh Mart',
+      ownerName: 'Kamal Perera',
+      phone: '+94 71 234 5678',
+      category: 'Retail Shop',
+      locationAddress: 'Anuradhapura Town',
+      latitude: 8.3114,
+      longitude: 80.4037,
       weeklyPurchaseCapacityKg: 1500,
+      joinedDate: DateTime(2026, 10, 1),
     );
 
     // Try loading persistent local storage if available
@@ -83,12 +135,21 @@ class AppStateProvider with ChangeNotifier {
         if (cachedLang == 'ta') _currentLanguage = AppLanguage.tamil;
         if (cachedLang == 'en') _currentLanguage = AppLanguage.english;
       }
-      final cachedDark = await OfflineStorageService.loadDarkMode();
-      if (cachedDark != null) {
-        _isDarkMode = cachedDark;
-      }
+      _isDarkMode = false;
       final queue = await OfflineStorageService.getOfflineQueue();
       _pendingOfflineSyncs = queue.length;
+      final cachedToken = await OfflineStorageService.loadAuthToken();
+      if (cachedToken != null) {
+        ApiService.authToken = cachedToken;
+      }
+      final cachedProc = await OfflineStorageService.loadProcurementPreferences();
+      if (cachedProc != null) {
+        _procurementPreferences = cachedProc;
+      }
+      final cachedNotif = await OfflineStorageService.loadNotificationSettings();
+      if (cachedNotif != null) {
+        _notificationSettings = cachedNotif;
+      }
       notifyListeners();
     } catch (_) {}
 
@@ -101,6 +162,7 @@ class AppStateProvider with ChangeNotifier {
       fetchWeatherData(division: _selectedWeatherDivision),
       fetchLiveNotices(division: _selectedWeatherDivision),
       fetchUserNotifications(),
+      fetchPreferencesFromBackend(),
     ]);
   }
 
@@ -114,6 +176,9 @@ class AppStateProvider with ChangeNotifier {
   List<SurplusListing> get surplusListings => _surplusListings;
   List<AgrarianNotice> get notices => _notices;
   List<AppNotification> get userNotifications => _userNotifications;
+  ProcurementPreferences get procurementPreferences => _procurementPreferences;
+  NotificationSettingsModel get notificationSettings => _notificationSettings;
+  int get unreadNotificationsCount => _userNotifications.where((n) => n.status.toUpperCase() != 'READ').length;
   int get unreadNoticesCount => _notices
       .where((n) => n.priority == NoticePriority.urgent || n.priority == NoticePriority.high)
       .length;
@@ -128,6 +193,7 @@ class AppStateProvider with ChangeNotifier {
   int get pendingOfflineSyncs => _pendingOfflineSyncs;
   WeatherData? get currentWeather => _currentWeather;
   String get selectedWeatherDivision => _selectedWeatherDivision;
+
 
   // Fetch live weather data for division
   Future<void> fetchWeatherData({String? division}) async {
@@ -275,6 +341,7 @@ class AppStateProvider with ChangeNotifier {
     _currentLanguage = lang;
     final code = lang == AppLanguage.sinhala ? 'si' : (lang == AppLanguage.tamil ? 'ta' : 'en');
     OfflineStorageService.saveLanguage(code);
+    ApiService.updateLanguagePreference(code);
     fetchLiveRiskData();
     fetchLiveNotices();
     notifyListeners();
@@ -323,6 +390,7 @@ class AppStateProvider with ChangeNotifier {
       id: 'plant_${DateTime.now().millisecondsSinceEpoch}',
       cropId: crop.id,
       cropName: crop.name,
+      cropSinhalaName: crop.sinhalaName,
       cropEmoji: crop.iconEmoji,
       allocatedAcres: allocatedAcres,
       plantingDate: plantingDate,
@@ -334,21 +402,51 @@ class AppStateProvider with ChangeNotifier {
 
     final updatedPlantings = List<PlantedCropEntry>.from(_farmerProfile.activePlantings)..insert(0, newEntry);
     
-    _farmerProfile = FarmerProfile(
-      id: _farmerProfile.id,
-      fullName: _farmerProfile.fullName,
-      phone: _farmerProfile.phone,
-      nic: _farmerProfile.nic,
-      agrarianDivision: _farmerProfile.agrarianDivision,
-      gndDivision: _farmerProfile.gndDivision,
-      totalLandAcres: _farmerProfile.totalLandAcres,
-      activePlantings: updatedPlantings,
-    );
+    _farmerProfile = _farmerProfile.copyWith(activePlantings: updatedPlantings);
 
     // Save to persistent storage & dispatch via ApiService
     OfflineStorageService.saveFarmerProfile(_farmerProfile);
     ApiService.submitPlanting(newEntry);
 
+    notifyListeners();
+    return true;
+  }
+
+  // Mark harvest complete & release land area back to available balance
+  bool completeHarvest({
+    required String plantingId,
+    required double actualYieldKg,
+    String? harvestNotes,
+  }) {
+    final index = _farmerProfile.activePlantings.indexWhere((p) => p.id == plantingId);
+    if (index == -1) return false;
+
+    final entry = _farmerProfile.activePlantings[index];
+    final updatedEntry = entry.copyWith(
+      status: 'harvested',
+      actualYieldKg: actualYieldKg,
+      harvestNotes: harvestNotes,
+    );
+
+    final updatedPlantings = List<PlantedCropEntry>.from(_farmerProfile.activePlantings);
+    updatedPlantings[index] = updatedEntry;
+
+    _farmerProfile = _farmerProfile.copyWith(activePlantings: updatedPlantings);
+
+    OfflineStorageService.saveFarmerProfile(_farmerProfile);
+    notifyListeners();
+    return true;
+  }
+
+  // Delete a planted crop record & adjust land balance
+  bool deletePlantingEntry(String plantingId) {
+    final updatedPlantings = _farmerProfile.activePlantings
+        .where((p) => p.id != plantingId)
+        .toList();
+
+    _farmerProfile = _farmerProfile.copyWith(activePlantings: updatedPlantings);
+
+    OfflineStorageService.saveFarmerProfile(_farmerProfile);
     notifyListeners();
     return true;
   }
@@ -383,6 +481,70 @@ class AppStateProvider with ChangeNotifier {
 
     _surplusListings.insert(0, newListing);
     notifyListeners();
+  }
+
+  List<BuyerOrder> get buyerOrders => _buyerOrders;
+
+  int get pendingOrdersCount => _buyerOrders.where((o) => o.status == OrderStatus.pending).length;
+
+  int get activeOrdersCount => _buyerOrders.where((o) => o.status == OrderStatus.pending || o.status == OrderStatus.accepted).length;
+
+  double get totalBuyerSpent => _buyerOrders
+      .where((o) => o.status == OrderStatus.completed || o.status == OrderStatus.accepted)
+      .fold(0.0, (sum, o) => sum + o.totalAmount);
+
+  int get uniqueFarmersCount => _surplusListings.map((l) => l.farmerId).toSet().length;
+
+  void placeBuyerOrder({
+    required String listingId,
+    required String buyerName,
+    required String buyerPhone,
+    required String buyerBusiness,
+    required String cropName,
+    required String cropEmoji,
+    required double quantityKg,
+    required double pricePerKg,
+    String notes = '',
+    String farmerName = 'Nirman Senanayake',
+    String farmerPhone = '+94 77 123 4567',
+    String farmLocation = 'Heeloya Valley, Bandarawela',
+    String variety = 'Local Variety',
+  }) {
+    final order = BuyerOrder(
+      id: 'ORD-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
+      listingId: listingId,
+      buyerName: buyerName,
+      buyerPhone: buyerPhone,
+      buyerBusiness: buyerBusiness,
+      cropName: cropName,
+      cropEmoji: cropEmoji,
+      quantityKg: quantityKg,
+      pricePerKg: pricePerKg,
+      orderedAt: DateTime.now(),
+      notes: notes,
+      farmerName: farmerName,
+      farmerPhone: farmerPhone,
+      farmLocation: farmLocation,
+      variety: variety,
+    );
+    _buyerOrders.insert(0, order);
+    notifyListeners();
+  }
+
+  void cancelBuyerOrder(String orderId) {
+    final index = _buyerOrders.indexWhere((o) => o.id == orderId);
+    if (index != -1) {
+      _buyerOrders[index].status = OrderStatus.rejected;
+      notifyListeners();
+    }
+  }
+
+  void updateOrderStatus(String orderId, OrderStatus status) {
+    final index = _buyerOrders.indexWhere((o) => o.id == orderId);
+    if (index != -1) {
+      _buyerOrders[index].status = status;
+      notifyListeners();
+    }
   }
 
   void updateFarmerProfile({
@@ -555,5 +717,71 @@ class AppStateProvider with ChangeNotifier {
       );
       notifyListeners();
     }
+  }
+
+  // Mark all in-app notifications as read
+  Future<void> markAllNotificationsAsRead() async {
+    for (final n in _userNotifications) {
+      if (n.status.toUpperCase() != 'READ') {
+        ApiService.markNotificationAsRead(n.id);
+      }
+    }
+    _userNotifications = _userNotifications.map((n) => AppNotification(
+      id: n.id,
+      title: n.title,
+      body: n.body,
+      type: n.type,
+      status: 'READ',
+      timestamp: n.timestamp,
+    )).toList();
+    notifyListeners();
+  }
+
+  // Fetch preferences from backend
+  Future<void> fetchPreferencesFromBackend() async {
+    try {
+      final remoteProc = await ApiService.getProcurementPreferences(userId: _buyerProfile?.id);
+      if (remoteProc != null) {
+        _procurementPreferences = remoteProc;
+        OfflineStorageService.saveProcurementPreferences(remoteProc);
+      }
+      final remoteNotif = await ApiService.getNotificationSettings(userId: _buyerProfile?.id);
+      if (remoteNotif != null) {
+        _notificationSettings = remoteNotif;
+        OfflineStorageService.saveNotificationSettings(remoteNotif);
+      }
+      notifyListeners();
+    } catch (_) {}
+  }
+
+  // Save procurement preferences (Local + Backend sync)
+  Future<bool> saveProcurementPreferences(ProcurementPreferences prefs) async {
+    _procurementPreferences = prefs;
+    await OfflineStorageService.saveProcurementPreferences(prefs);
+    notifyListeners();
+    final success = await ApiService.updateProcurementPreferences(prefs, userId: _buyerProfile?.id);
+    return success;
+  }
+
+  // Save notification settings (Local + Backend sync)
+  Future<bool> saveNotificationSettings(NotificationSettingsModel settings) async {
+    _notificationSettings = settings;
+    await OfflineStorageService.saveNotificationSettings(settings);
+    notifyListeners();
+    final success = await ApiService.updateNotificationSettings(settings, userId: _buyerProfile?.id);
+    return success;
+  }
+
+  // Change account password via backend
+  Future<Map<String, dynamic>> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final result = await ApiService.changePassword(
+      currentPassword: currentPassword,
+      newPassword: newPassword,
+      userId: _buyerProfile?.id,
+    );
+    return result;
   }
 }

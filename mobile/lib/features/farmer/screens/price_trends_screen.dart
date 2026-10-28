@@ -91,34 +91,7 @@ class _PriceTrendsScreenState extends State<PriceTrendsScreen> {
             ),
           ],
         ),
-        actions: [
-          // Theme Mode Toggle Action Button
-          Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: IconButton(
-              tooltip: isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode',
-              icon: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: Container(
-                  key: ValueKey<bool>(isDark),
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFFFBBF24).withValues(alpha: 0.15) : const Color(0xFF0F172A).withValues(alpha: 0.08),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-                    color: isDark ? const Color(0xFFFBBF24) : const Color(0xFF334155),
-                    size: 19,
-                  ),
-                ),
-              ),
-              onPressed: () {
-                appState.toggleDarkMode();
-              },
-            ),
-          ),
-        ],
+        actions: const [],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
