@@ -98,6 +98,15 @@ async function seedBandarawelaDataset() {
   );
   console.log('🧹 Cleaned previous test planting records.');
 
+  // 4b. Build crop code to database ID mapping
+  const cropCodeMap = {};
+  const allCropsRes = await db.query('SELECT id, crop_code FROM crops');
+  if (allCropsRes && allCropsRes.rows) {
+    allCropsRes.rows.forEach(c => {
+      cropCodeMap[c.crop_code] = c.id;
+    });
+  }
+
   // 5. Insert Active Plantings (60 records)
   let activeCount = 0;
   for (const p of dataset.active_plantings) {
@@ -109,6 +118,8 @@ async function seedBandarawelaDataset() {
       continue;
     }
 
+    const resolvedCropId = cropCodeMap[p.crop_code] || (p.crop_code === 'POTATO' ? cropCodeMap['BROCCOLI'] : null) || p.crop_id;
+
     await db.query(
       `INSERT INTO planting_records (
         farmer_id, crop_id, land_size_acres, land_size_perches, land_unit,
@@ -116,7 +127,7 @@ async function seedBandarawelaDataset() {
         longitude, district, division, status, entered_by_type, sync_status
       ) VALUES ($1, $2, $3, $4, 'PERCHES', $5, $6, $7, $8, $9, 'Badulla', 'Bandarawela', $10, 'FARMER', 'SYNCED')`,
       [
-        dbFarmerId, p.crop_id, p.land_size_acres, p.land_size_perches,
+        dbFarmerId, resolvedCropId, p.land_size_acres, p.land_size_perches,
         p.expected_yield_kg, p.planting_date, p.expected_harvest_date,
         p.latitude, p.longitude, p.status
       ]
@@ -133,6 +144,8 @@ async function seedBandarawelaDataset() {
 
     if (!dbFarmerId) continue;
 
+    const resolvedCropId = cropCodeMap[p.crop_code] || (p.crop_code === 'POTATO' ? cropCodeMap['BROCCOLI'] : null) || p.crop_id;
+
     await db.query(
       `INSERT INTO planting_records (
         farmer_id, crop_id, land_size_acres, land_size_perches, land_unit,
@@ -141,7 +154,7 @@ async function seedBandarawelaDataset() {
         entered_by_type, sync_status
       ) VALUES ($1, $2, $3, $4, 'PERCHES', $5, $6, $7, $8, $9, $10, $11, 'Badulla', 'Bandarawela', 'HARVESTED', 'FARMER', 'SYNCED')`,
       [
-        dbFarmerId, p.crop_id, p.land_size_acres, p.land_size_perches,
+        dbFarmerId, resolvedCropId, p.land_size_acres, p.land_size_perches,
         p.expected_yield_kg, p.actual_yield_kg, p.planting_date,
         p.expected_harvest_date, p.harvested_date, p.latitude, p.longitude
       ]

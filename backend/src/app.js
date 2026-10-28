@@ -17,6 +17,7 @@ const notificationRoutes = require('./routes/notificationRoutes');
 
 const errorHandler = require('./middlewares/errorHandler');
 const ApiResponse = require('./utils/apiResponse');
+const { getFirebaseStatus } = require('./config/firebase');
 
 const app = express();
 
@@ -34,8 +35,14 @@ app.get(['/health', '/api/health', '/api/v1/health', '/v1/health'], (req, res) =
     service: 'ASVANNA Agricultural Intelligence Platform API',
     region: 'Bandarawela, Badulla District',
     elevation: '1,216m',
-    version: '2.0.0'
+    version: '2.0.0',
+    firebase: getFirebaseStatus()
   }, 'Service healthy');
+});
+
+app.get(['/health/firebase', '/api/health/firebase', '/api/v1/health/firebase', '/v1/health/firebase'], (req, res) => {
+  const fbStatus = getFirebaseStatus();
+  return ApiResponse.success(res, fbStatus, fbStatus.initialized ? 'Firebase initialized and connected' : 'Firebase running in mock fallback mode');
 });
 
 // API Routes (Mounted on both /api/v1 and /v1 for seamless Nginx reverse-proxy compatibility)
