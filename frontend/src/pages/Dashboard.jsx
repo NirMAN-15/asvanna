@@ -331,25 +331,22 @@ const apiCrops = res.data.data;
       };
     });
 
-    setRegionalVegetables(prev => {
-      const seenCodes = new Set(mappedApi.map(m => (m.crop_code || '').toUpperCase().trim()));
-      const seenNames = new Set(mappedApi.map(m => (m.name_en || '').toLowerCase().replace(/[^a-z]/g, '')));
-      const additional = prev.filter(p => {
-        const code = (p.crop_code || '').toUpperCase().trim();
-        const name = (p.name_en || '').toLowerCase().replace(/[^a-z]/g, '');
-        const isUserCustom = p.is_custom === true || (typeof p.id === 'string' && p.id.startsWith('crop_'));
-        return isUserCustom && (!code || !seenCodes.has(code)) && (!name || !seenNames.has(name));
-      });
-      const combined = [...mappedApi, ...additional];
-      try {
-        localStorage.setItem('asvanna_regional_vegetables', JSON.stringify(combined));
-      } catch (e) {}
+        let updatedCleanList = [];
+        setRegionalVegetables(prev => {
+          const seenCodes = new Set(mappedApi.map(m => (m.crop_code || '').toUpperCase().trim()));
+          const seenNames = new Set(mappedApi.map(m => (m.name_en || '').toLowerCase().replace(/[^a-z]/g, '')));
+          const additional = prev.filter(p => {
+            const code = (p.crop_code || '').toUpperCase().trim();
+            const name = (p.name_en || '').toLowerCase().replace(/[^a-z]/g, '');
+            const isUserCustom = p.is_custom === true || (typeof p.id === 'string' && p.id.startsWith('crop_'));
+            return isUserCustom && (!code || !seenCodes.has(code)) && (!name || !seenNames.has(name));
           });
           const combined = [...mappedApi, ...additional];
           try {
             localStorage.setItem('asvanna_regional_vegetables', JSON.stringify(combined));
           } catch (e) {}
-return combined;
+          updatedCleanList = combined;
+          return combined;
         });
 
         if (updatedCleanList.length > 0) {
