@@ -47,7 +47,7 @@ services:
       RISK_SAFE_THRESHOLD: 40.0
       RISK_WARNING_THRESHOLD: 65.0
       ENABLE_SCHEDULED_JOBS: "true"
-    command: sh -c "node src/database/migrate.js && node src/server.js"
+    command: sh -c "node src/database/migrate.js && node src/database/seed_admin.js && node src/database/seed.js && node src/server.js"
     ports:
       # Exposed to host for debugging; nginx reaches backend via Docker internal network
       - "127.0.0.1:5000:5000"

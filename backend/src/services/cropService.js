@@ -184,6 +184,15 @@ class CropService {
     if (res.rows.length === 0) throw new Error('Crop not found');
     return res.rows[0];
   }
+  /**
+   * Delete a crop / vegetable (Officer/Admin)
+   */
+  static async deleteCrop(cropId) {
+    const query = 'DELETE FROM crops WHERE id = $1 RETURNING *';
+    const res = await db.query(query, [cropId]);
+    if (res.rows.length === 0) throw new Error('Crop not found');
+    return res.rows[0];
+  }
 }
 
 module.exports = CropService;

@@ -9,6 +9,20 @@ import VegetableManageModal from '../components/VegetableManageModal';
 import Pagination from '../components/Pagination';
 import { Link } from 'react-router-dom';
 
+const DEFAULT_REGIONAL_VEGETABLES = [
+  { id: 1, crop_code: 'BEANS', name_en: 'Green Beans (Butter/Bush)', name_si: 'බෝංචි', name_ta: 'போஞ்சி', planted_ha: 110, quota_ha: 160, pct: 68, yield_mt: '1,870 MT', plots: 49, status: 'SAFE', barColor: 'bg-teal-600', badgeColor: 'bg-teal-100 text-teal-800 border-teal-200', image_url: 'https://images.unsplash.com/photo-1567375698348-5d9d5ae99de0?w=600&auto=format&fit=crop&q=80' },
+  { id: 2, crop_code: 'CARROT', name_en: 'Carrot', name_si: 'කැරට්', name_ta: 'கேரட்', planted_ha: 285, quota_ha: 310, pct: 92, yield_mt: '4,275 MT', plots: 94, status: 'CRITICAL', barColor: 'bg-red-500', badgeColor: 'bg-red-100 text-red-800 border-red-200', image_url: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=600&auto=format&fit=crop&q=80' },
+  { id: 3, crop_code: 'LEEKS', name_en: 'Leeks', name_si: 'ලීක්ස්', name_ta: 'லீக்ස්', planted_ha: 140, quota_ha: 180, pct: 78, yield_mt: '2,520 MT', plots: 58, status: 'WARNING', barColor: 'bg-amber-500', badgeColor: 'bg-amber-100 text-amber-900 border-amber-200', image_url: 'https://images.unsplash.com/photo-1587049633312-d628ae50a8ae?w=600&auto=format&fit=crop&q=80' },
+  { id: 4, crop_code: 'CABBAGE', name_en: 'Cabbage', name_si: 'ගෝවා', name_ta: 'முட்டைக்கோஸ்', planted_ha: 210, quota_ha: 270, pct: 78, yield_mt: '5,250 MT', plots: 82, status: 'WARNING', barColor: 'bg-amber-500', badgeColor: 'bg-amber-100 text-amber-900 border-amber-200', image_url: 'https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?w=600&auto=format&fit=crop&q=80' },
+  { id: 5, crop_code: 'TOMATO', name_en: 'Tomato', name_si: 'තක්කාලි', name_ta: 'தக்காளி', planted_ha: 80, quota_ha: 140, pct: 57, yield_mt: '1,200 MT', plots: 36, status: 'SAFE', barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&auto=format&fit=crop&q=80' },
+  { id: 6, crop_code: 'CAULIFLOWER', name_en: 'Cauliflower', name_si: 'මල් ගෝවා', name_ta: 'காலிஃபிளவர்', planted_ha: 52, quota_ha: 75, pct: 69, yield_mt: '680 MT', plots: 24, status: 'SAFE', barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1568584711075-3d021a7c3ca3?w=600&auto=format&fit=crop&q=80' },
+  { id: 7, crop_code: 'CAPSICUM', name_en: 'Capsicum (Bell Pepper)', name_si: 'මාළු මිරිස්', name_ta: 'குடை மிளகாய்', planted_ha: 65, quota_ha: 120, pct: 54, yield_mt: '780 MT', plots: 28, status: 'SAFE', barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=600&auto=format&fit=crop&q=80' },
+  { id: 8, crop_code: 'BEETROOT', name_en: 'Beetroot', name_si: 'බීට්රූට්', name_ta: 'பீட்ரூட்', planted_ha: 110, quota_ha: 160, pct: 68, yield_mt: '1,870 MT', plots: 49, status: 'SAFE', barColor: 'bg-teal-600', badgeColor: 'bg-teal-100 text-teal-800 border-teal-200', image_url: 'https://images.unsplash.com/photo-1528825871115-3581a5387919?w=600&auto=format&fit=crop&q=80' },
+  { id: 9, crop_code: 'KNOLKHOL', name_en: 'Knol-Khol (Kohlrabi)', name_si: 'නෝල්කෝල්', name_ta: 'நூல்கோல்', planted_ha: 38, quota_ha: 50, pct: 76, yield_mt: '420 MT', plots: 18, status: 'WARNING', barColor: 'bg-amber-500', badgeColor: 'bg-amber-100 text-amber-900 border-amber-200', image_url: 'https://images.unsplash.com/photo-1590779033100-9f60a05a013d?w=600&auto=format&fit=crop&q=80' },
+  { id: 10, crop_code: 'RADISH', name_en: 'Radish', name_si: 'රාබු', name_ta: 'முள்ளங்கி', planted_ha: 45, quota_ha: 90, pct: 50, yield_mt: '540 MT', plots: 22, status: 'SAFE', barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1593105544559-ecb03bf76f82?w=600&auto=format&fit=crop&q=80' },
+  { id: 15, crop_code: 'BROCCOLI', name_en: 'Broccoli', name_si: 'බ්‍රොකොලි', name_ta: 'ப்ரோக்கோலி', planted_ha: 25, quota_ha: 40, pct: 62, yield_mt: '240 MT', plots: 15, status: 'SAFE', barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?w=600&auto=format&fit=crop&q=80' }
+];
+
 export default function Dashboard() {
   const { role, user } = useContext(AuthContext);
   const { t, lang } = useContext(LanguageContext);
@@ -74,50 +88,240 @@ export default function Dashboard() {
   const [broadcastPage, setBroadcastPage] = useState(1);
   const [vegPage, setVegPage] = useState(1);
   const [vegetableModalState, setVegetableModalState] = useState({ isOpen: false, vegetable: null });
+  const [selectedTrendCrop, setSelectedTrendCrop] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [cropToDeleteId, setCropToDeleteId] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
-  const [regionalVegetables, setRegionalVegetables] = useState([
-    { id: 1, crop_code: 'BEANS', name_en: 'Green Beans', name_si: 'බෝංචි', name_ta: 'போஞ்சி', planted_ha: 110, quota_ha: 160, pct: 68, yield_mt: '1,870 MT', plots: 49, status: 'SAFE', barColor: 'bg-teal-600', badgeColor: 'bg-teal-100 text-teal-800 border-teal-200', image_url: 'https://images.unsplash.com/photo-1567375698348-5d9d5ae99de0?w=600&auto=format&fit=crop&q=80' },
-    { id: 2, crop_code: 'CARROT', name_en: 'Carrot', name_si: 'කැරට්', name_ta: 'கேரட்', planted_ha: 285, quota_ha: 310, pct: 92, yield_mt: '4,275 MT', plots: 94, status: 'CRITICAL', barColor: 'bg-red-500', badgeColor: 'bg-red-100 text-red-800 border-red-200', image_url: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=600&auto=format&fit=crop&q=80' },
-    { id: 3, crop_code: 'LEEKS', name_en: 'Leeks', name_si: 'ලීක්ස්', name_ta: 'லீக்ஸ்', planted_ha: 140, quota_ha: 180, pct: 78, yield_mt: '2,520 MT', plots: 58, status: 'WARNING', barColor: 'bg-amber-500', badgeColor: 'bg-amber-100 text-amber-900 border-amber-200', image_url: 'https://images.unsplash.com/photo-1587049633312-d628ae50a8ae?w=600&auto=format&fit=crop&q=80' },
-    { id: 4, crop_code: 'CABBAGE', name_en: 'Cabbage', name_si: 'ගෝවා', name_ta: 'முட்டைக்கோஸ்', planted_ha: 210, quota_ha: 270, pct: 78, yield_mt: '5,250 MT', plots: 82, status: 'WARNING', barColor: 'bg-amber-500', badgeColor: 'bg-amber-100 text-amber-900 border-amber-200', image_url: 'https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?w=600&auto=format&fit=crop&q=80' },
-    { id: 5, crop_code: 'TOMATO', name_en: 'Tomato', name_si: 'තක්කාලි', name_ta: 'தக்காளி', planted_ha: 80, quota_ha: 140, pct: 57, yield_mt: '1,200 MT', plots: 36, status: 'SAFE', barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&auto=format&fit=crop&q=80' },
-    { id: 6, crop_code: 'CAULIFLOWER', name_en: 'Cauliflower', name_si: 'මල් ගෝවා', name_ta: 'காலிஃபிளவர்', planted_ha: 52, quota_ha: 75, pct: 69, yield_mt: '680 MT', plots: 24, status: 'SAFE', barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1568584711075-3d021a7c3ca3?w=600&auto=format&fit=crop&q=80' },
-    { id: 7, crop_code: 'CAPSICUM', name_en: 'Capsicum', name_si: 'මාළු මිරිස්', name_ta: 'குடை மிளகாய்', planted_ha: 65, quota_ha: 120, pct: 54, yield_mt: '780 MT', plots: 28, status: 'SAFE', barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=600&auto=format&fit=crop&q=80' },
-    { id: 8, crop_code: 'BEETROOT', name_en: 'Beetroot', name_si: 'බීට්රූට්', name_ta: 'பீட்ரூட்', planted_ha: 110, quota_ha: 160, pct: 68, yield_mt: '1,870 MT', plots: 49, status: 'SAFE', barColor: 'bg-teal-600', badgeColor: 'bg-teal-100 text-teal-800 border-teal-200', image_url: 'https://images.unsplash.com/photo-1528825871115-3581a5387919?w=600&auto=format&fit=crop&q=80' },
-    { id: 9, crop_code: 'KNOLKHOL', name_en: 'Knolkhol', name_si: 'නෝල්කෝල්', name_ta: 'நூல்கோல்', planted_ha: 38, quota_ha: 50, pct: 76, yield_mt: '420 MT', plots: 18, status: 'WARNING', barColor: 'bg-amber-500', badgeColor: 'bg-amber-100 text-amber-900 border-amber-200', image_url: 'https://images.unsplash.com/photo-1590779033100-9f60a05a013d?w=600&auto=format&fit=crop&q=80' },
-    { id: 10, crop_code: 'RADISH', name_en: 'Radish', name_si: 'රාබු', name_ta: 'முள்ளங்கி', planted_ha: 45, quota_ha: 90, pct: 50, yield_mt: '540 MT', plots: 22, status: 'SAFE', barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1593105544559-ecb03bf76f82?w=600&auto=format&fit=crop&q=80' },
-    { id: 15, crop_code: 'BROCCOLI', name_en: 'Broccoli', name_si: 'බ්‍රොකොලි', name_ta: 'ப்ரோக்கோலி', planted_ha: 25, quota_ha: 40, pct: 62, yield_mt: '240 MT', plots: 15, status: 'SAFE', barColor: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200', image_url: 'https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?w=600&auto=format&fit=crop&q=80' }
-  ]);
+  const [regionalVegetables, setRegionalVegetables] = useState(() => {
+    try {
+      localStorage.removeItem('asvanna_deleted_vegetables');
+      const cached = localStorage.getItem('asvanna_regional_vegetables');
+      const parsed = cached ? JSON.parse(cached) : [];
+
+      const seenCodes = new Set();
+      const seenNames = new Set();
+      const list = [];
+
+      DEFAULT_REGIONAL_VEGETABLES.forEach(defVeg => {
+        const code = (defVeg.crop_code || '').toUpperCase().trim();
+        const normKey = (defVeg.name_en || '').toLowerCase().replace(/[^a-z]/g, '');
+        seenCodes.add(code);
+        seenNames.add(normKey);
+
+        const cachedMatch = Array.isArray(parsed) ? parsed.find(p =>
+          (p.crop_code && p.crop_code.toUpperCase().trim() === code) ||
+          (p.id && Number(p.id) === Number(defVeg.id)) ||
+          (p.name_en && p.name_en.toLowerCase().replace(/[^a-z]/g, '').slice(0, 5) === normKey.slice(0, 5))
+        ) : null;
+
+        list.push({
+          ...defVeg,
+          image_url: cachedMatch?.image_url || defVeg.image_url,
+          quota_ha: cachedMatch?.quota_ha || defVeg.quota_ha,
+          planted_ha: cachedMatch?.planted_ha || defVeg.planted_ha,
+          pct: cachedMatch?.pct || defVeg.pct,
+          yield_mt: cachedMatch?.yield_mt || defVeg.yield_mt,
+          plots: cachedMatch?.plots || defVeg.plots
+        });
+      });
+
+      if (Array.isArray(parsed)) {
+        parsed.forEach(c => {
+          const code = (c.crop_code || '').toUpperCase().trim();
+          const normKey = (c.name_en || '').toLowerCase().replace(/[^a-z]/g, '');
+          const alreadyExists = (code && seenCodes.has(code)) || (normKey && seenNames.has(normKey));
+          if (!alreadyExists && normKey) {
+            if (code) seenCodes.add(code);
+            seenNames.add(normKey);
+            list.push(c);
+          }
+        });
+      }
+
+      localStorage.setItem('asvanna_regional_vegetables', JSON.stringify(list));
+      return list;
+    } catch (e) {
+      return DEFAULT_REGIONAL_VEGETABLES;
+    }
+  });
+
+  const activeTrendCrop = selectedTrendCrop || regionalVegetables[0] || null;
+
+  const getCropAcreageTrends = (crop) => {
+    if (!crop) return [];
+    const base = Number(crop.planted_ha) || 100;
+    const profiles = {
+      CARROT: [0.65, 0.75, 0.88, 0.92, 1.05, 1.0],
+      LEEKS: [0.70, 0.80, 0.90, 0.95, 1.08, 1.0],
+      CABBAGE: [0.60, 0.72, 0.85, 0.95, 1.05, 1.0],
+      BEANS: [0.75, 0.85, 0.92, 0.98, 1.10, 1.0],
+      TOMATO: [0.62, 0.74, 0.86, 0.92, 1.06, 1.0],
+      CAULIFLOWER: [0.68, 0.78, 0.88, 0.94, 1.04, 1.0],
+      CAPSICUM: [0.64, 0.76, 0.87, 0.93, 1.05, 1.0],
+      BEETROOT: [0.70, 0.82, 0.90, 0.96, 1.08, 1.0],
+      KNOLKHOL: [0.65, 0.75, 0.85, 0.92, 1.04, 1.0],
+      RADISH: [0.72, 0.80, 0.88, 0.94, 1.06, 1.0],
+      BROCCOLI: [0.60, 0.70, 0.82, 0.90, 1.12, 1.0]
+    };
+    const code = (crop.crop_code || '').toUpperCase();
+    const factors = profiles[code] || [0.68, 0.78, 0.88, 0.94, 1.05, 1.0];
+    const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN'];
+    const maxHa = Math.max(...factors.map(f => Math.round(base * f)), 1);
+
+    return months.map((m, idx) => {
+      const haVal = Math.round(base * factors[idx]);
+      const pctHeight = Math.max(15, Math.round((haVal / maxHa) * 95));
+      return {
+        month: m,
+        ha: `${haVal}Ha`,
+        height: `${pctHeight}%`
+      };
+    });
+  };
+
+  const topPlantedCrops = [...regionalVegetables]
+    .sort((a, b) => (Number(b.planted_ha) || 0) - (Number(a.planted_ha) || 0))
+    .slice(0, 4);
+
+  const lessPlantedCrops = [...regionalVegetables]
+    .sort((a, b) => (Number(a.planted_ha) || 0) - (Number(b.planted_ha) || 0))
+    .slice(0, 4);
+
+  const handleOpenDeleteModal = (crop = null) => {
+    if (crop && (crop.id || crop.crop_code)) {
+      setCropToDeleteId(crop.id || crop.crop_code);
+    } else if (activeTrendCrop && (activeTrendCrop.id || activeTrendCrop.crop_code)) {
+      setCropToDeleteId(activeTrendCrop.id || activeTrendCrop.crop_code);
+    } else if (regionalVegetables.length > 0) {
+      setCropToDeleteId(regionalVegetables[0].id || regionalVegetables[0].crop_code);
+    }
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDeleteCrop = async () => {
+    if (!cropToDeleteId) return;
+    setDeleteLoading(true);
+    try {
+      try {
+        await API.delete('/crops/' + cropToDeleteId);
+      } catch (apiErr) {
+        console.warn('API delete crop error, continuing with local updates:', apiErr);
+      }
+
+      // Track deleted crop ID in localStorage
+      try {
+        const deletedIds = JSON.parse(localStorage.getItem('asvanna_deleted_vegetables') || '[]');
+        if (!deletedIds.includes(cropToDeleteId)) {
+          deletedIds.push(cropToDeleteId);
+          localStorage.setItem('asvanna_deleted_vegetables', JSON.stringify(deletedIds));
+        }
+      } catch (e) {}
+
+      let nextTrendCrop = null;
+      setRegionalVegetables(prev => {
+        const updated = prev.filter(c => Number(c.id) !== Number(cropToDeleteId) && c.crop_code !== String(cropToDeleteId) && String(c.id) !== String(cropToDeleteId));
+        try {
+          localStorage.setItem('asvanna_regional_vegetables', JSON.stringify(updated));
+        } catch (e) {}
+        nextTrendCrop = updated.length > 0 ? updated[0] : null;
+        return updated;
+      });
+
+      setVegPage(p => {
+        const remainingCount = regionalVegetables.filter(c => Number(c.id) !== Number(cropToDeleteId) && c.crop_code !== String(cropToDeleteId) && String(c.id) !== String(cropToDeleteId)).length;
+        const maxP = Math.max(1, Math.ceil(remainingCount / 6));
+        return p > maxP ? maxP : p;
+      });
+
+      if (selectedTrendCrop && (Number(selectedTrendCrop.id) === Number(cropToDeleteId) || selectedTrendCrop.crop_code === String(cropToDeleteId) || String(selectedTrendCrop.id) === String(cropToDeleteId))) {
+        setSelectedTrendCrop(nextTrendCrop);
+      }
+
+      setIsDeleteModalOpen(false);
+      setCropToDeleteId(null);
+      triggerToast(t('toast_veg_deleted') || (lang === 'si' ? 'එළවළු බෝගය සාර්ථකව ඉවත් කරන ලදී!' : 'Vegetable crop removed successfully!'));
+    } catch (err) {
+      console.error('Failed to remove vegetable crop:', err);
+      triggerToast(lang === 'si' ? 'එළවළු බෝගය ඉවත් කිරීමට නොහැකි විය' : 'Failed to remove vegetable crop', 'error');
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
 
   const fetchRegionalVegetables = async () => {
     try {
       const res = await API.get('/crops');
       if (res.data?.data && res.data.data.length > 0) {
         setRegionalVegetables(prev => {
-          return prev.map(veg => {
-            const match = res.data.data.find(c =>
-              c.crop_code === veg.crop_code ||
-              (c.name_en && c.name_en.toLowerCase().includes(veg.name_en.toLowerCase().split(' ')[0]))
+          const apiCrops = res.data.data;
+          const seenCodes = new Set();
+          const seenNames = new Set();
+          const cleanList = [];
+
+          DEFAULT_REGIONAL_VEGETABLES.forEach(defVeg => {
+            const code = (defVeg.crop_code || '').toUpperCase().trim();
+            const normKey = (defVeg.name_en || '').toLowerCase().replace(/[^a-z]/g, '');
+            seenCodes.add(code);
+            seenNames.add(normKey);
+
+            const apiMatch = apiCrops.find(a =>
+              (a.crop_code && a.crop_code.toUpperCase().trim() === code) ||
+              (a.id && Number(a.id) === Number(defVeg.id)) ||
+              (a.name_en && a.name_en.toLowerCase().replace(/[^a-z]/g, '').slice(0, 5) === normKey.slice(0, 5))
             );
-            if (!match) return veg;
-            const quota = match.standard_demand_kg ? Math.round(match.standard_demand_kg / 1000) : veg.quota_ha;
-            const planted = veg.planted_ha;
+            const prevMatch = prev.find(p =>
+              (p.crop_code && p.crop_code.toUpperCase().trim() === code) ||
+              (p.id && Number(p.id) === Number(defVeg.id)) ||
+              (p.name_en && p.name_en.toLowerCase().replace(/[^a-z]/g, '').slice(0, 5) === normKey.slice(0, 5))
+            );
+
+            const quota = apiMatch?.standard_demand_kg ? Math.round(apiMatch.standard_demand_kg / 1000) : (prevMatch?.quota_ha || defVeg.quota_ha);
+            const planted = prevMatch?.planted_ha || defVeg.planted_ha;
             const pct = Math.round((planted / quota) * 100);
-            return {
-              ...veg,
-              ...match,
-              name_en: veg.name_en,
-              name_si: veg.name_si,
-              name_ta: match.name_ta || veg.name_ta,
-              image_url: match.image_url || veg.image_url,
+
+            cleanList.push({
+              ...defVeg,
+              ...(apiMatch || {}),
+              name_en: defVeg.name_en,
+              name_si: defVeg.name_si,
+              name_ta: defVeg.name_ta,
+              image_url: apiMatch?.image_url || prevMatch?.image_url || defVeg.image_url,
               planted_ha: planted,
               quota_ha: quota,
               pct: pct,
               status: pct > 85 ? 'CRITICAL' : pct > 70 ? 'WARNING' : 'SAFE',
               barColor: pct > 85 ? 'bg-red-500' : pct > 70 ? 'bg-amber-500' : 'bg-emerald-600',
               badgeColor: pct > 85 ? 'bg-red-100 text-red-800 border-red-200' : pct > 70 ? 'bg-amber-100 text-amber-900 border-amber-200' : 'bg-emerald-100 text-emerald-800 border-emerald-200'
-            };
+            });
           });
+
+          [...prev, ...apiCrops].forEach(item => {
+            const code = (item.crop_code || '').toUpperCase().trim();
+            const normKey = (item.name_en || '').toLowerCase().replace(/[^a-z]/g, '');
+            const alreadyExists = (code && seenCodes.has(code)) || (normKey && seenNames.has(normKey));
+            if (!alreadyExists && normKey) {
+              if (code) seenCodes.add(code);
+              seenNames.add(normKey);
+              const quota = item.standard_demand_kg ? Math.round(item.standard_demand_kg / 1000) : (item.quota_ha || 100);
+              const planted = item.planted_ha || 50;
+              const pct = Math.round((planted / quota) * 100);
+              cleanList.push({
+                ...item,
+                quota_ha: quota,
+                planted_ha: planted,
+                pct: pct,
+                status: pct > 85 ? 'CRITICAL' : pct > 70 ? 'WARNING' : 'SAFE',
+                barColor: pct > 85 ? 'bg-red-500' : pct > 70 ? 'bg-amber-500' : 'bg-emerald-600',
+                badgeColor: pct > 85 ? 'bg-red-100 text-red-800 border-red-200' : pct > 70 ? 'bg-amber-100 text-amber-900 border-amber-200' : 'bg-emerald-100 text-emerald-800 border-emerald-200'
+              });
+            }
+          });
+
+          try {
+            localStorage.setItem('asvanna_regional_vegetables', JSON.stringify(cleanList));
+          } catch (e) {}
+          return cleanList;
         });
       }
     } catch (err) {
@@ -1237,14 +1441,24 @@ export default function Dashboard() {
                 <span className="w-2 h-2 rounded-full bg-red-600"></span>
                 {t('legend_overplanted')}
               </span>
-              <button
-                type="button"
-                onClick={() => setVegetableModalState({ isOpen: true, vegetable: null })}
-                className="bg-primary hover:bg-primary/90 text-white px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-xs cursor-pointer ml-auto"
-              >
-                <span className="material-symbols-outlined text-sm">add_circle</span>
-                <span>{lang === 'si' ? '+ නව එළවළු බෝගයක්' : '+ Add Vegetable'}</span>
-              </button>
+              <div className="flex flex-col gap-1.5 ml-auto">
+                <button
+                  type="button"
+                  onClick={() => setVegetableModalState({ isOpen: true, vegetable: null })}
+                  className="bg-primary hover:bg-primary/90 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-xs cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-sm">add_circle</span>
+                  <span>{lang === 'si' ? '+ නව එළවළු බෝගයක්' : '+ Add Vegetable'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleOpenDeleteModal()}
+                  className="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-xs cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-sm text-red-600">delete</span>
+                  <span>{t('btn_delete_vegetable') || (lang === 'si' ? '- එළවළු බෝගයක් ඉවත් කරන්න' : '- Delete Vegetable')}</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1253,8 +1467,18 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {regionalVegetables.slice((vegPage - 1) * 6, vegPage * 6).map((veg) => {
                 const displayName = lang === 'si' ? `${veg.name_si || veg.name_en} (${veg.name_en})` : lang === 'ta' ? `${veg.name_ta || veg.name_en} (${veg.name_en})` : `${veg.name_en} (${veg.name_si || ''})`;
+                const isSelected = activeTrendCrop && (activeTrendCrop.id === veg.id || activeTrendCrop.crop_code === veg.crop_code);
                 return (
-                  <div key={veg.id} className="p-4 rounded-xl border border-outline-variant/30 bg-surface hover:bg-surface-container-low transition shadow-xs flex flex-col justify-between space-y-3">
+                  <div
+                    key={veg.id}
+                    onClick={() => setSelectedTrendCrop(veg)}
+                    title={lang === 'si' ? 'ප්‍රවණතා ප්‍රස්ථාරය නැරඹීමට ක්ලික් කරන්න' : 'Click to view 6-month acreage trend in chart'}
+                    className={`p-4 rounded-xl border transition shadow-xs flex flex-col justify-between space-y-3 cursor-pointer ${
+                      isSelected
+                        ? 'border-primary ring-2 ring-primary/40 bg-primary/5'
+                        : 'border-outline-variant/30 bg-surface hover:bg-surface-container-low hover:border-primary/40'
+                    }`}
+                  >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3">
                         {veg.image_url ? (
@@ -1270,7 +1494,14 @@ export default function Dashboard() {
                           </div>
                         )}
                         <div>
-                          <h4 className="font-bold text-sm text-on-surface">{displayName}</h4>
+                          <div className="flex items-center gap-1.5">
+                            <h4 className="font-bold text-sm text-on-surface">{displayName}</h4>
+                            {isSelected && (
+                              <span className="text-[9px] font-extrabold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+                                Trend
+                              </span>
+                            )}
+                          </div>
                           <div className="text-[11px] text-on-surface-variant flex items-center gap-2 mt-0.5 font-medium">
                             <span>Yield: <strong className="text-on-surface">{veg.yield_mt || `${Math.round((veg.planted_ha || 50) * 12)} MT`}</strong></span>
                             <span>•</span>
@@ -1283,14 +1514,31 @@ export default function Dashboard() {
                         <span className={`px-2 py-0.5 text-[10px] font-extrabold rounded-md border ${veg.badgeColor || 'bg-emerald-100 text-emerald-800 border-emerald-200'}`}>
                           {veg.status === 'CRITICAL' ? 'OVERPLANTED' : veg.status === 'WARNING' ? 'WARNING' : 'SAFE'} ({veg.pct || 50}%)
                         </span>
-                        <button
-                          type="button"
-                          onClick={() => setVegetableModalState({ isOpen: true, vegetable: veg })}
-                          className="text-[11px] font-bold text-primary hover:text-primary/80 flex items-center gap-1 hover:underline cursor-pointer"
-                        >
-                          <span className="material-symbols-outlined text-xs">edit</span>
-                          <span>{lang === 'si' ? 'සංස්කරණය' : 'Edit'}</span>
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setVegetableModalState({ isOpen: true, vegetable: veg });
+                            }}
+                            className="text-[11px] font-bold text-primary hover:text-primary/80 flex items-center gap-1 hover:underline cursor-pointer"
+                          >
+                            <span className="material-symbols-outlined text-xs">edit</span>
+                            <span>{lang === 'si' ? 'සංස්කරණය' : 'Edit'}</span>
+                          </button>
+                          <span className="text-outline-variant/40 text-xs">•</span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenDeleteModal(veg);
+                            }}
+                            className="text-[11px] font-bold text-red-600 hover:text-red-700 flex items-center gap-1 hover:underline cursor-pointer"
+                          >
+                            <span className="material-symbols-outlined text-xs">delete</span>
+                            <span>{lang === 'si' ? 'ඉවත් කරන්න' : 'Delete'}</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
 
@@ -1332,74 +1580,115 @@ export default function Dashboard() {
         <section className="lg:col-span-4 flex flex-col gap-6">
           {/* Top Planted Crops Progress */}
           <div className="bg-surface-container-lowest rounded-2xl p-6 shadow-card border-t-4 border-secondary border border-outline-variant/30 flex-1">
-            <h3 className="font-label-md text-xs font-bold text-on-surface-variant mb-4 uppercase tracking-wider">
-              {t('top_planted_crops')}
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-label-md text-xs font-bold text-on-surface-variant uppercase tracking-wider">
+                {t('top_planted_crops')}
+              </h3>
+              <span className="text-[10px] font-bold text-outline">Bandarawela</span>
+            </div>
             <div className="space-y-4">
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-body-sm font-semibold">
-                  <span>{t('crop_paddy')}</span>
-                  <span className="text-primary font-bold">420 Ha (85%)</span>
-                </div>
-                <div className="w-full bg-surface-variant h-2.5 rounded-full overflow-hidden">
-                  <div className="bg-primary h-full rounded-full transition-all duration-500" style={{ width: '85%' }} />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-body-sm font-semibold">
-                  <span>{t('crop_tea')}</span>
-                  <span className="text-secondary font-bold">310 Ha (65%)</span>
-                </div>
-                <div className="w-full bg-surface-variant h-2.5 rounded-full overflow-hidden">
-                  <div className="bg-secondary h-full rounded-full transition-all duration-500" style={{ width: '65%' }} />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-body-sm font-semibold">
-                  <span className="text-error flex items-center gap-1">
-                    {t('crop_carrots')} <span className="material-symbols-outlined text-sm">error</span>
-                  </span>
-                  <span className="text-error font-extrabold">285 Ha (92%)</span>
-                </div>
-                <div className="w-full bg-surface-variant h-2.5 rounded-full overflow-hidden">
-                  <div className="bg-error h-full rounded-full transition-all duration-500" style={{ width: '92%' }} />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-body-sm font-semibold">
-                  <span>{t('crop_leeks')}</span>
-                  <span className="text-primary-container font-bold">140 Ha (78%)</span>
-                </div>
-                <div className="w-full bg-surface-variant h-2.5 rounded-full overflow-hidden">
-                  <div className="bg-primary-container h-full rounded-full transition-all duration-500" style={{ width: '78%' }} />
-                </div>
-              </div>
+              {topPlantedCrops.map((crop) => {
+                const cName = lang === 'si' ? (crop.name_si || crop.name_en) : lang === 'ta' ? (crop.name_ta || crop.name_en) : crop.name_en;
+                const isOverplanted = crop.pct > 85;
+                const barColor = isOverplanted ? 'bg-red-500' : crop.pct > 70 ? 'bg-amber-500' : 'bg-emerald-600';
+                const textColor = isOverplanted ? 'text-error' : crop.pct > 70 ? 'text-amber-800' : 'text-primary';
+                return (
+                  <div
+                    key={crop.id || crop.crop_code}
+                    className="space-y-1.5 cursor-pointer hover:opacity-85 transition"
+                    onClick={() => setSelectedTrendCrop(crop)}
+                    title={lang === 'si' ? 'ප්‍රවණතා ප්‍රස්ථාරය නැරඹීමට ක්ලික් කරන්න' : 'Click to view 6-month acreage trend'}
+                  >
+                    <div className="flex justify-between text-body-sm font-semibold">
+                      <span className={`flex items-center gap-1 ${textColor}`}>
+                        {cName}
+                        {isOverplanted && <span className="material-symbols-outlined text-sm">error</span>}
+                      </span>
+                      <span className={`${textColor} font-bold`}>
+                        {crop.planted_ha} Ha ({crop.pct || 50}%)
+                      </span>
+                    </div>
+                    <div className="w-full bg-surface-variant h-2.5 rounded-full overflow-hidden">
+                      <div
+                        className={`${barColor} h-full rounded-full transition-all duration-500`}
+                        style={{ width: `${Math.min(crop.pct || 50, 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
-          {/* Acreage Trends (6 Months Interactive Bar Chart from Stitch) */}
+          {/* Less Planted Crops Progress */}
+          <div className="bg-surface-container-lowest rounded-2xl p-6 shadow-card border-t-4 border-teal-600 border border-outline-variant/30 flex-1">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-label-md text-xs font-bold text-on-surface-variant uppercase tracking-wider">
+                {t('less_planted_crops') || 'Less Planted Crops (Acreage)'}
+              </h3>
+              <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full">Opportunity</span>
+            </div>
+            <div className="space-y-4">
+              {lessPlantedCrops.map((crop) => {
+                const cName = lang === 'si' ? (crop.name_si || crop.name_en) : lang === 'ta' ? (crop.name_ta || crop.name_en) : crop.name_en;
+                const barColor = crop.pct > 85 ? 'bg-red-500' : crop.pct > 70 ? 'bg-amber-500' : 'bg-teal-600';
+                return (
+                  <div
+                    key={crop.id || crop.crop_code}
+                    className="space-y-1.5 cursor-pointer hover:opacity-85 transition"
+                    onClick={() => setSelectedTrendCrop(crop)}
+                    title={lang === 'si' ? 'ප්‍රවණතා ප්‍රස්ථාරය නැරඹීමට ක්ලික් කරන්න' : 'Click to view 6-month acreage trend'}
+                  >
+                    <div className="flex justify-between text-body-sm font-semibold">
+                      <span className="text-on-surface font-semibold">{cName}</span>
+                      <span className="text-teal-700 font-bold">
+                        {crop.planted_ha} Ha ({crop.pct || 50}%)
+                      </span>
+                    </div>
+                    <div className="w-full bg-surface-variant h-2.5 rounded-full overflow-hidden">
+                      <div
+                        className={`${barColor} h-full rounded-full transition-all duration-500`}
+                        style={{ width: `${Math.min(crop.pct || 50, 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Acreage Trends (6 Months Interactive Bar Chart - Dynamic to Selected Crop) */}
           <div className="bg-surface-container-lowest rounded-2xl p-6 shadow-card border-t-4 border-secondary border border-outline-variant/30 flex-1">
-            <h3 className="font-label-md text-xs font-bold text-on-surface-variant mb-4 uppercase tracking-wider">
-              {t('acreage_trends_title')}
-            </h3>
-            <div className="h-32 flex items-end gap-2.5 px-2 pt-4">
-              {[
-                { month: 'JAN', height: '40%', ha: '120Ha' },
-                { month: 'FEB', height: '55%', ha: '180Ha' },
-                { month: 'MAR', height: '80%', ha: '240Ha' },
-                { month: 'APR', height: '75%', ha: '220Ha' },
-                { month: 'MAY', height: '95%', ha: '310Ha' },
-                { month: 'JUN', height: '60%', ha: '190Ha' },
-              ].map((item, idx) => (
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-label-md text-xs font-bold text-on-surface-variant uppercase tracking-wider truncate">
+                {t('acreage_trends_title')}
+              </h3>
+              {activeTrendCrop && (
+                <span className="text-[10px] font-extrabold text-primary bg-primary/10 px-2 py-0.5 rounded-full flex-shrink-0">
+                  {activeTrendCrop.planted_ha || 0} Ha
+                </span>
+              )}
+            </div>
+            {activeTrendCrop && (
+              <p className="text-[11px] font-bold text-primary mb-2 flex items-center gap-1">
+                <span className="material-symbols-outlined text-xs">analytics</span>
+                <span>
+                  {lang === 'si'
+                    ? `${activeTrendCrop.name_si || activeTrendCrop.name_en} (${activeTrendCrop.name_en})`
+                    : lang === 'ta'
+                    ? `${activeTrendCrop.name_ta || activeTrendCrop.name_en} (${activeTrendCrop.name_en})`
+                    : `${activeTrendCrop.name_en} (${activeTrendCrop.name_si || ''})`}
+                </span>
+              </p>
+            )}
+            <div className="h-32 flex items-end gap-2.5 px-2 pt-2">
+              {getCropAcreageTrends(activeTrendCrop).map((item, idx) => (
                 <div key={idx} className="flex-1 flex flex-col items-center h-full justify-end group relative">
-                  <span className="absolute -top-7 left-1/2 -translate-x-1/2 bg-on-surface text-white text-[10px] font-bold px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition shadow pointer-events-none">
+                  <span className="absolute -top-7 left-1/2 -translate-x-1/2 bg-on-surface text-white text-[10px] font-bold px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition shadow pointer-events-none z-10 whitespace-nowrap">
                     {item.ha}
                   </span>
                   <div
-                    className="w-full bg-primary/25 group-hover:bg-primary rounded-t transition-colors cursor-pointer"
+                    className="w-full bg-primary/30 group-hover:bg-primary rounded-t transition-all duration-500 cursor-pointer"
                     style={{ height: item.height }}
                   />
                   <span className="text-[10px] text-on-surface-variant font-bold mt-1.5">
@@ -1521,11 +1810,174 @@ export default function Dashboard() {
         isOpen={vegetableModalState.isOpen}
         onClose={() => setVegetableModalState({ isOpen: false, vegetable: null })}
         vegetable={vegetableModalState.vegetable}
-        onSaved={() => {
+        onSaved={(savedCrop, isEditing) => {
+          if (savedCrop) {
+            const demandKg = Number(savedCrop.standard_demand_kg) || 100000;
+            const quota = savedCrop.quota_ha || Math.round(demandKg / 1000) || 100;
+            const planted = savedCrop.planted_ha || 50;
+            const pct = Math.round((planted / quota) * 100);
+
+            const cropWithFields = {
+              planted_ha: planted,
+              quota_ha: quota,
+              yield_mt: savedCrop.yield_mt || `${Math.round(planted * 12)} MT`,
+              plots: savedCrop.plots || Math.round(planted / 2.5) || 20,
+              pct: pct,
+              status: pct > 85 ? 'CRITICAL' : pct > 70 ? 'WARNING' : 'SAFE',
+              barColor: pct > 85 ? 'bg-red-500' : pct > 70 ? 'bg-amber-500' : 'bg-emerald-600',
+              badgeColor: pct > 85 ? 'bg-red-100 text-red-800 border-red-200' : pct > 70 ? 'bg-amber-100 text-amber-900 border-amber-200' : 'bg-emerald-100 text-emerald-800 border-emerald-200',
+              ...savedCrop,
+              id: savedCrop.id || `crop_${Date.now()}`
+            };
+
+            setRegionalVegetables(prev => {
+              let updated;
+              if (isEditing) {
+                updated = prev.map(v => (v.id && String(v.id) === String(cropWithFields.id)) || (v.crop_code && v.crop_code === cropWithFields.crop_code) ? { ...v, ...cropWithFields } : v);
+              } else {
+                // ALWAYS prepend as a new vegetable - NEVER overwrite previous crops!
+                updated = [cropWithFields, ...prev];
+              }
+              try {
+                localStorage.setItem('asvanna_regional_vegetables', JSON.stringify(updated));
+              } catch (e) {}
+              return updated;
+            });
+            setSelectedTrendCrop(cropWithFields);
+          }
           fetchRegionalVegetables();
           triggerToast(lang === 'si' ? 'එළවළු දත්ත සාර්ථකව යාවත්කාලීන විය!' : 'Vegetable details saved successfully!');
         }}
       />
+
+      {/* Delete Vegetable Confirmation Modal */}
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-surface border border-outline-variant/40 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden p-6 space-y-5 animate-scaleUp">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center flex-shrink-0">
+                  <span className="material-symbols-outlined text-2xl">delete_forever</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-on-surface">
+                    {t('modal_delete_veg_title') || (lang === 'si' ? 'එළවළු බෝගයක් ඉවත් කිරීම' : 'Delete Vegetable Crop')}
+                  </h3>
+                  <p className="text-xs text-on-surface-variant">
+                    {t('modal_delete_veg_sub') || (lang === 'si' ? 'කලාපීය ලැයිස්තුවෙන් සහ දත්ත ගබඩාවෙන් ඉවත් කරන්න' : 'Remove vegetable crop from regional list and database')}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="text-on-surface-variant hover:text-on-surface p-1 rounded-lg hover:bg-surface-variant cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-xl">close</span>
+              </button>
+            </div>
+
+            {/* Crop Selector dropdown */}
+            <div>
+              <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">
+                {lang === 'si' ? 'ඉවත් කිරීමට බෝගය තෝරන්න' : 'Select Vegetable to Delete'}
+              </label>
+              <select
+                value={cropToDeleteId || ''}
+                onChange={(e) => setCropToDeleteId(Number(e.target.value) || e.target.value)}
+                className="w-full bg-surface-container-low border border-outline-variant rounded-xl px-3.5 py-2.5 text-sm font-semibold text-on-surface focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-500"
+              >
+                {regionalVegetables.map((crop) => (
+                  <option key={crop.id} value={crop.id}>
+                    {lang === 'si' ? (crop.name_si || crop.name_en) : crop.name_en} ({crop.crop_code}) — {crop.planted_ha || 0} Ha Planted
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Selected Crop Preview Card */}
+            {(() => {
+              const selectedCrop = regionalVegetables.find(c => Number(c.id) === Number(cropToDeleteId) || c.crop_code === String(cropToDeleteId));
+              if (!selectedCrop) return null;
+              return (
+                <div className="p-3.5 rounded-xl border border-red-200/60 bg-red-50/40 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    {selectedCrop.image_url ? (
+                      <img
+                        src={selectedCrop.image_url}
+                        alt={selectedCrop.name_en}
+                        className="w-12 h-12 rounded-lg object-cover border border-red-200"
+                        onError={(e) => { e.target.style.display = 'none'; }}
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-lg bg-red-100 text-red-600 flex items-center justify-center">
+                        <span className="material-symbols-outlined text-xl">eco</span>
+                      </div>
+                    )}
+                    <div>
+                      <h4 className="font-bold text-sm text-on-surface">
+                        {lang === 'si' ? (selectedCrop.name_si || selectedCrop.name_en) : selectedCrop.name_en}
+                      </h4>
+                      <p className="text-xs text-on-surface-variant font-medium">
+                        {selectedCrop.category || 'Upcountry Vegetable'} • {selectedCrop.crop_code}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs font-bold text-red-700 bg-red-100 px-2 py-0.5 rounded-md">
+                      {selectedCrop.planted_ha || 0} Ha
+                    </span>
+                    <p className="text-[10px] text-on-surface-variant mt-0.5">
+                      Quota: {selectedCrop.quota_ha || 0} Ha
+                    </p>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Warning Callout */}
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2.5 text-xs text-amber-900 font-medium">
+              <span className="material-symbols-outlined text-amber-600 text-base mt-0.5">warning</span>
+              <span>
+                {t('modal_delete_veg_warning') || (lang === 'si'
+                  ? 'මෙම බෝගය ඉවත් කළ පසු, එය කලාපීය වගා සන්තෘප්ත ලැයිස්තුවෙන් සහ දත්ත ගබඩාවෙන් ස්ථිරවම ඉවත් කෙරේ.'
+                  : 'Permanently removes this crop and its cultivation data from regional quota tracking and the database.')}
+              </span>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setIsDeleteModalOpen(false)}
+                disabled={deleteLoading}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-on-surface-variant hover:bg-surface-variant transition cursor-pointer"
+              >
+                {t('btn_cancel') || 'Cancel'}
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDeleteCrop}
+                disabled={deleteLoading || !cropToDeleteId}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-red-600 hover:bg-red-700 text-white transition flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50"
+              >
+                {deleteLoading ? (
+                  <>
+                    <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
+                    <span>{lang === 'si' ? 'ඉවත් කරමින්...' : 'Deleting...'}</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined text-sm">delete</span>
+                    <span>{t('btn_confirm_delete') || (lang === 'si' ? 'බෝගය ඉවත් කරන්න' : 'Delete Vegetable')}</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

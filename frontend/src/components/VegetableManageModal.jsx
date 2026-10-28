@@ -131,10 +131,17 @@ export default function VegetableManageModal({ isOpen, onClose, vegetable, onSav
         setSuccess(lang === 'si' ? 'නව එළවළු බෝගය සාර්ථකව ඇතුළත් කරන ලදී!' : 'New vegetable created successfully!');
       }
 
+      const generatedId = isEditing ? vegetable.id : `crop_${Date.now()}`;
+      const savedCrop = {
+        ...(vegetable || {}),
+        ...payload,
+        ...(res?.data?.data || {}),
+        id: res?.data?.data?.id || generatedId
+      };
       setTimeout(() => {
-        if (onSaved) onSaved(res.data?.data || payload);
+        if (onSaved) onSaved(savedCrop, isEditing);
         onClose();
-      }, 1000);
+      }, 500);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to save vegetable.');
     } finally {

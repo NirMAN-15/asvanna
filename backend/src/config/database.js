@@ -269,9 +269,8 @@ function loadDb() {
   try {
     const raw = fs.readFileSync(dbFilePath, 'utf-8');
     const parsed = JSON.parse(raw);
-    // Ensure crops are populated strictly with the 11 Keppetipola test crops with cloud direct image URLs
-    const validCodes = new Set(initialCrops.map(c => c.crop_code));
-    if (!parsed.crops || parsed.crops.length !== 11 || parsed.crops.some(c => !validCodes.has(c.crop_code) || !c.image_url || c.image_url.startsWith('/'))) {
+    // Ensure crops are populated strictly with the initial test crops if empty
+    if (!parsed.crops || parsed.crops.length === 0) {
       parsed.crops = initialCrops;
       if (!parsed.crop_seasons || parsed.crop_seasons.length === 0) parsed.crop_seasons = initialDbState.crop_seasons;
       if (!parsed.price_history || parsed.price_history.length === 0) parsed.price_history = initialDbState.price_history;
@@ -862,6 +861,70 @@ module.exports = {
         user.is_verified = params[1];
         saveDb(fileDb);
         return { rows: [user] };
+      }
+      return { rows: [] };
+    }
+
+    // UPDATE crops
+    if (lower.includes('update crops')) {
+      const cropId = Number(params[params.length - 1]);
+      const crop = fileDb.crops.find(c => Number(c.id) === cropId);
+      if (crop) {
+        if (params[0] !== null && params[0] !== undefined) crop.name_en = params[0];
+        if (params[1] !== null && params[1] !== undefined) crop.name_si = params[1];
+        if (params[2] !== null && params[2] !== undefined) crop.name_ta = params[2];
+        if (params[3] !== null && params[3] !== undefined) crop.category = params[3];
+        if (params[4] !== null && params[4] !== undefined) crop.growth_duration_days = Number(params[4]);
+        if (params[5] !== null && params[5] !== undefined) crop.avg_yield_per_acre_kg = Number(params[5]);
+        if (params[6] !== null && params[6] !== undefined) crop.standard_price_per_kg = Number(params[6]);
+        if (params[7] !== null && params[7] !== undefined) crop.standard_demand_kg = Number(params[7]);
+        if (params[8] !== null && params[8] !== undefined) crop.image_url = params[8];
+        if (params[9] !== null && params[9] !== undefined) crop.description_en = params[9];
+        if (params[10] !== null && params[10] !== undefined) crop.description_si = params[10];
+        if (params[11] !== null && params[11] !== undefined) crop.description_ta = params[11];
+        saveDb(fileDb);
+        return { rows: [crop] };
+      }
+      return { rows: [] };
+    }
+
+    // INSERT INTO crops
+    if (lower.includes('insert into crops')) {
+      const newCrop = {
+        id: (fileDb.crops && fileDb.crops.length > 0)
+          ? Math.max(...fileDb.crops.map(c => Number(c.id) || 0)) + 1
+          : 1,
+        crop_code: params[0] || ('CROP_' + Date.now()),
+        name_en: params[1],
+        name_si: params[2] || params[1],
+        name_ta: params[3] || params[1],
+        category: params[4] || 'Upcountry Vegetable',
+        growth_duration_days: Number(params[5]) || 90,
+        avg_yield_per_acre_kg: Number(params[6]) || 5000,
+        standard_price_per_kg: Number(params[7]) || 150.0,
+        standard_demand_kg: Number(params[8]) || 100000.0,
+        image_url: params[9] || null,
+        description_en: params[10] || null,
+        description_si: params[11] || null,
+        description_ta: params[12] || null
+      };
+      if (!fileDb.crops) fileDb.crops = [];
+      fileDb.crops.push(newCrop);
+      saveDb(fileDb);
+      return { rows: [newCrop] };
+    }
+
+    // DELETE crops
+    if (lower.includes('delete from crops')) {
+      const cropId = Number(params[0]);
+      const idx = (fileDb.crops || []).findIndex(c => Number(c.id) === cropId || (params[0] && String(c.crop_code).toUpperCase() === String(params[0]).toUpperCase()));
+      if (idx >= 0) {
+        const deletedCrop = fileDb.crops.splice(idx, 1)[0];
+        if (fileDb.crop_seasons) {
+          fileDb.crop_seasons = fileDb.crop_seasons.filter(s => Number(s.crop_id) !== cropId);
+        }
+        saveDb(fileDb);
+        return { rows: [deletedCrop] };
       }
       return { rows: [] };
     }
