@@ -11,8 +11,10 @@ export default function ProcurementHistory() {
   const { lang, t } = useContext(LanguageContext);
 
   const isBuyer = user?.role === 'BUYER';
-  // For local buyer: All Farmers & Harvest History tab is deleted, only Buyer's Orders & Sales History is shown
-  const [activeHistoryTab, setActiveHistoryTab] = useState('BUYER_SALES');
+  const isFarmer = user?.role === 'FARMER';
+  const [activeHistoryTab, setActiveHistoryTab] = useState(() => {
+    return isBuyer ? 'BUYER_SALES' : 'FARM_DATA';
+  });
 
   // 1. Sales & Orders State
   const [orders, setOrders] = useState([]);
@@ -247,10 +249,20 @@ export default function ProcurementHistory() {
               <>
                 <h1 className="text-2xl sm:text-3xl font-headline font-black text-slate-900 tracking-tight flex items-center gap-2.5">
                   <span className="material-symbols-outlined text-emerald-700 text-3xl">receipt_long</span>
-                  <span>{t('buyer_orders_sales_history', "Buyer's Orders & Sales History")}</span>
+                  <span>{t('buyer_orders_sales_history', "Buyer's Orders & Purchase History")}</span>
                 </h1>
                 <p className="text-xs sm:text-sm font-medium text-slate-600 leading-relaxed">
                   Official historical ledger of your direct surplus produce purchases, agreed farmgate rates, delivery fulfillment statuses, and verified QR pickup receipts.
+                </p>
+              </>
+            ) : isFarmer ? (
+              <>
+                <h1 className="text-2xl sm:text-3xl font-headline font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+                  <span className="material-symbols-outlined text-emerald-700 text-3xl">agriculture</span>
+                  <span>{t('farmer_history_title', 'My Farm Cultivation & Sales History')}</span>
+                </h1>
+                <p className="text-xs sm:text-sm font-medium text-slate-600 leading-relaxed">
+                  {t('farmer_history_desc', 'Personal ledger of your active and historical planting plots, yield records, and direct produce sales.')}
                 </p>
               </>
             ) : (
@@ -286,7 +298,6 @@ export default function ProcurementHistory() {
         </div>
 
         {/* Structured Mode Tab Switcher */}
-        {/* For Local Buyer: All Farmers & Harvest History tab is deleted; only Buyer Orders & Sales History is rendered */}
         {!isBuyer ? (
           <div className="flex flex-wrap items-center gap-3 pt-6 mt-6 border-t border-outline-variant/20">
             <button
@@ -301,7 +312,7 @@ export default function ProcurementHistory() {
               }`}
             >
               <span className="material-symbols-outlined text-lg">agriculture</span>
-              <span>{t('tab_farm_data', 'All Farmers Farm & Cultivation History')}</span>
+              <span>{isFarmer ? t('tab_my_farm_history', 'My Farm Cultivation History') : t('tab_farm_data', 'All Farmers Farm & Cultivation History')}</span>
               <span className="px-2 py-0.5 rounded-full text-[11px] bg-white/20 text-white font-mono">
                 {farmRecords.length}
               </span>
@@ -319,7 +330,7 @@ export default function ProcurementHistory() {
               }`}
             >
               <span className="material-symbols-outlined text-lg">storefront</span>
-              <span>{t('tab_buyer_sales', 'Marketplace Sales & Buyer Transactions')}</span>
+              <span>{isFarmer ? t('tab_my_orders_received', 'Orders Received for My Crops') : t('tab_buyer_sales', 'Marketplace Sales & Buyer Transactions')}</span>
               <span className="px-2 py-0.5 rounded-full text-[11px] bg-white/20 text-white font-mono">
                 {orders.length}
               </span>
@@ -329,7 +340,7 @@ export default function ProcurementHistory() {
           <div className="flex items-center gap-3 pt-6 mt-6 border-t border-outline-variant/20">
             <div className="px-5 py-3 rounded-2xl text-xs sm:text-sm font-black bg-emerald-700 text-white shadow-md flex items-center gap-2.5">
               <span className="material-symbols-outlined text-lg">receipt_long</span>
-              <span>Buyers Orders & Sales History</span>
+              <span>My Procurement Orders & Purchase History</span>
               <span className="px-2.5 py-0.5 rounded-full text-[11px] bg-white/20 text-white font-mono font-bold">
                 {orders.length} Orders
               </span>

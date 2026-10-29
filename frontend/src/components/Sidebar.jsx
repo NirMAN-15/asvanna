@@ -36,7 +36,6 @@ export default function Sidebar() {
         { path: '/prices', label: t('nav_wholesale_rates', 'Wholesale Rates'), icon: 'trending_up' },
         { path: '/weather', label: t('nav_agro_weather', 'Agro Weather'), icon: 'cloud' },
         { path: '/farmers', label: t('nav_farmer_directory'), icon: 'group' },
-        { path: '/marketplace', label: t('nav_surplus_marketplace'), icon: 'storefront' },
         { path: '/broadcasts', label: t('nav_advisory_broadcasts'), icon: 'campaign' },
         { path: '/settings', label: t('settings'), icon: 'settings' },
       ];

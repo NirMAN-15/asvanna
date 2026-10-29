@@ -187,6 +187,77 @@ async function seedBandarawelaDataset() {
   console.log('\n📊 Real-Time PostgreSQL Risk Engine Evaluation Summary:');
   console.table(riskEvaluations);
 
+  // 7b. Seed baseline Divisional Advisory Broadcasts (Officer Directives & Alerts)
+  console.log('\n📢 Seeding baseline Divisional Advisory Broadcasts...');
+  const officerRes = await db.query("SELECT id FROM users WHERE role IN ('OFFICER', 'ADMIN') ORDER BY id ASC LIMIT 1");
+  const officerId = (officerRes.rows && officerRes.rows.length > 0) ? officerRes.rows[0].id : 1;
+
+  const baselineDirectives = [
+    {
+      title_en: 'Leek Saturation Halt: Bandarawela & Welimada',
+      title_si: 'ලීක්ස් අධි-වගාව පාලනය: බණ්ඩාරවෙල කලාපීය නියෝගය',
+      title_ta: 'லீக்ஸ் அதிக உற்பத்தி கட்டுப்பாடு: பண்டாரவளை உத்தரவு',
+      message_en: 'Current regional Leek cultivation has reached 100% saturation. Agricultural officers advise pausing further planting for 4 weeks to avoid price collapse at Keppetipola Dedicated Economic Centre.',
+      message_si: 'බණ්ඩාරවෙල සහ වැලිමඩ කලාපයේ ලීක්ස් වගාව 100% සීමාව ඉක්මවා ඇත. කැප්පෙටිපොල ආර්ථික මධ්‍යස්ථානයේ මිල කඩාවැටීම වැළැක්වීමට ඉදිරි සති 4 සඳහා නව ලීක්ස් වගා කිරීම වහාම අත්හිටුවන්න.',
+      message_ta: 'பண்டாரவளை மற்றும் வெலிமடை பகுதியில் லீக்ஸ் பயிர்ச்செய்கை 100% பூர்த்தியடைந்துள்ளது. கெப்பட்டிபொல பொருளாதார மையத்தில் விலை வீழ்ச்சியைத் தடுக்க அடுத்த 4 வாரங்களுக்கு புதிய நடுகை தவிர்க்கவும்.',
+      target_district: 'Badulla',
+      target_division: 'Bandarawela',
+      target_crop_id: cropCodeMap['LEEKS'] || 3,
+      severity: 'HIGH',
+      sent_count: 50
+    },
+    {
+      title_en: 'Heavy Rainfall Precaution: Fungal Blight Advisory',
+      title_si: 'අධික වර්ෂාව සහ දිලීර රෝග වැළැක්වීමේ නිවේදනය',
+      title_ta: 'கனமழை மற்றும் பூஞ்சை நோய் தடுப்பு ஆலோசனை',
+      message_en: 'Moderate to heavy rainfall forecasted over Bandarawela catchment areas. Ensure proper drainage channels for Cabbage and Carrot plots; apply recommended organic fungicides proactively.',
+      message_si: 'බණ්ඩාරවෙල ජල පෝෂක ප්‍රදේශවලට මධ්‍යස්ථ සිට අධික වර්ෂාපතනයක් අපේක්ෂා කෙරේ. ගෝවා සහ කැරට් පාත්තිවල ජල බැසයාම තහවුරු කර දිලීර නාශක භාවිතයට උපදෙස් පිළිපදින්න.',
+      message_ta: 'பண்டாரவளை பகுதிகளில் மிதமான முதல் கனமழை எதிர்பார்க்கப்படுகிறது. முட்டைக்கோஸ் மற்றும் கேரட் பயிர்களில் வடிகால் அமைப்பை உறுதிசெய்து பூஞ்சை தடுப்பு முறைகளைப் பின்பற்றவும்.',
+      target_district: 'Badulla',
+      target_division: 'Bandarawela',
+      target_crop_id: cropCodeMap['CABBAGE'] || 4,
+      severity: 'MEDIUM',
+      sent_count: 50
+    },
+    {
+      title_en: 'High Market Demand: Green Beans & Capsicum Expansion',
+      title_si: 'ඉහළ වෙළඳපල ඉල්ලුම: බෝංචි සහ මාළු මිරිස් වගා ප්‍රසාරණය',
+      title_ta: 'அதிக சந்தை தேவை: போஞ்சி மற்றும் குடை மிளகாய் உற்பத்தி அதிகரிப்பு',
+      message_en: 'Demand gap identified at Colombo Manning Market for Upcountry Green Beans and Capsicum. Farmers with unallocated perches are encouraged to register and cultivate.',
+      message_si: 'කොළඹ මැනිං වෙළඳපලේ උඩරට බෝංචි සහ මාළු මිරිස් සඳහා ඉහළ හිඟයක් පවතී. අතිරික්ත ඉඩම් ඇති ගොවීන්ට මෙම බෝග වගා කිරීමට ප්‍රමුඛත්වය ලබාදීමට උපදෙස් දෙනු ලැබේ.',
+      message_ta: 'கொழும்பு மேனிங் சந்தையில் போஞ்சி மற்றும் குடை மிளகாய்க்கான அதிக தேவை நிலவுகிறது. விவசாயிகள் இவற்றை பயிரிட ஊக்குவிக்கப்படுகிறார்கள்.',
+      target_district: 'Badulla',
+      target_division: 'Bandarawela',
+      target_crop_id: cropCodeMap['BEANS'] || 1,
+      severity: 'LOW',
+      sent_count: 50
+    }
+  ];
+
+  for (const dir of baselineDirectives) {
+    const existing = await db.query(
+      'SELECT id FROM broadcast_warnings WHERE title_en = $1',
+      [dir.title_en]
+    );
+    if (!existing.rows || existing.rows.length === 0) {
+      await db.query(
+        `INSERT INTO broadcast_warnings (
+          officer_id, title_en, title_si, title_ta,
+          message_en, message_si, message_ta,
+          target_district, target_division, target_crop_id,
+          severity, sent_count
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+        [
+          officerId, dir.title_en, dir.title_si, dir.title_ta,
+          dir.message_en, dir.message_si, dir.message_ta,
+          dir.target_district, dir.target_division, dir.target_crop_id,
+          dir.severity, dir.sent_count
+        ]
+      );
+    }
+  }
+  console.log(`✅ Seeded ${baselineDirectives.length} Baseline Directives into broadcast_warnings.`);
+
   // 8. Fetch Smart Recommendations from RecommendationService
   console.log('\n🧠 Fetching Smart Recommendations from RecommendationService...');
   const recs = await RecommendationService.getSmartRecommendations('Badulla');

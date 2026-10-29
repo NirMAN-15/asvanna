@@ -699,10 +699,11 @@ export default function MarketplaceSurplus() {
                         <button
                           type="button"
                           onClick={() => setActiveChatOrder(order)}
-                          className="bg-primary/10 text-primary hover:bg-primary/20 px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                          className="relative bg-primary/10 text-primary hover:bg-primary/20 px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
                         >
                           <span className="material-symbols-outlined text-sm">chat</span>
                           <span>Chat with Buyer</span>
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="Direct messaging active" />
                         </button>
 
                         {order.status === 'PENDING' && !isExpired && (
@@ -1072,10 +1073,11 @@ export default function MarketplaceSurplus() {
                         <button
                           type="button"
                           onClick={() => setActiveChatOrder(order)}
-                          className="bg-primary/10 text-primary hover:bg-primary/20 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                          className="relative bg-primary/10 text-primary hover:bg-primary/20 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
                         >
                           <span className="material-symbols-outlined text-sm">chat</span>
                           <span>Chat with Farmer</span>
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="Direct messaging active" />
                         </button>
                       </div>
                     </div>

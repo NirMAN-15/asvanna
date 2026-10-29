@@ -5,50 +5,82 @@ import { AuthContext } from '../context/AuthContext';
 import BroadcastModal from '../components/BroadcastModal';
 import Pagination from '../components/Pagination';
 import {
-  Radio, PlusCircle, CheckCircle2, ShieldAlert, AlertTriangle, Info,
-  TrendingUp, Calendar, MapPin, UserCheck, FileText, Check, Share2,
-  Printer, X, Eye, Sparkles, Filter
+  Radio, PlusCircle, CheckCircle2, ShieldAlert, AlertTriangle,
+  TrendingUp, Calendar, MapPin, UserCheck, FileText, Check,
+  Printer, X, Sparkles, Filter, Edit, Trash2
 } from 'lucide-react';
-
-const SEED_BROADCASTS = [];
 
 export default function Broadcasts() {
   const { lang, t } = useContext(LanguageContext);
   const { role } = useContext(AuthContext);
 
+  const isOfficerOrAdmin = role === 'OFFICER' || role === 'ADMIN';
+
   const [broadcasts, setBroadcasts] = useState([]);
-  const [activeCategory, setActiveCategory] = useState('ALL'); // 'ALL' | 'CULTIVATION_GLUT' | 'AGRO_WEATHER' | 'MARKET_PRICE'
+  const [activeCategory, setActiveCategory] = useState('ALL');
   const [page, setPage] = useState(1);
   const [selectedNoticeForModal, setSelectedNoticeForModal] = useState(null);
   const [acknowledgedAlerts, setAcknowledgedAlerts] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(() => new URLSearchParams(window.location.search).get('modal') === 'new_broadcast');
 
+  // Edit Directive State
+  const [editingBroadcast, setEditingBroadcast] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    title_en: '',
+    title_si: '',
+    title_ta: '',
+    message_en: '',
+    message_si: '',
+    message_ta: '',
+    severity: 'MEDIUM'
+  });
+  const [editSaving, setEditSaving] = useState(false);
+
+  // Delete Directive State
+  const [deletingId, setDeletingId] = useState(null);
+
   const fetchBroadcasts = async () => {
     try {
       const res = await API.get('/broadcasts?district=Badulla');
-      if (res.data && res.data.data && res.data.data.length > 0) {
-        // Merge with seed metadata for rich presentation
-        const merged = res.data.data.map((item, idx) => {
-          const fallback = SEED_BROADCASTS[idx % SEED_BROADCASTS.length];
+      if (res.data && res.data.data && Array.isArray(res.data.data)) {
+        const mapped = res.data.data.map((item, idx) => {
+          const sev = (item.severity || 'MEDIUM').toUpperCase();
+          const defaultCategory = (sev === 'CRITICAL' || sev === 'HIGH')
+            ? 'CULTIVATION_GLUT'
+            : sev === 'LOW'
+            ? 'MARKET_PRICE'
+            : 'AGRO_WEATHER';
+
           return {
-            ...fallback,
-            ...item,
-            id: item.id || fallback.id,
-            ref_code: item.ref_code || fallback.ref_code || `BW-DIR-${100 + (item.id || idx)}`,
-            category: item.category || fallback.category || 'CULTIVATION_GLUT',
-            severity: item.severity || fallback.severity || 'WARNING',
-            prescribed_actions: item.prescribed_actions || fallback.prescribed_actions,
-            affected_crops: item.affected_crops || fallback.affected_crops,
-            officer_name: item.officer_name || fallback.officer_name,
-            officer_designation: item.officer_designation || fallback.officer_designation
+            id: item.id || (idx + 1),
+            ref_code: item.ref_code || `BW-DIR-${100 + (item.id || idx)}`,
+            title_en: item.title_en || 'Official Agricultural Directive',
+            title_si: item.title_si || item.title_en || 'නිල කෘෂිකාර්මික නියෝගය',
+            title_ta: item.title_ta || item.title_en || 'அதிகாரபூர்வ விவசாய உத்தரவு',
+            message_en: item.message_en || '',
+            message_si: item.message_si || item.message_en || '',
+            message_ta: item.message_ta || item.message_en || '',
+            category: item.category || defaultCategory,
+            severity: sev,
+            prescribed_actions: item.prescribed_actions || [
+              'Review current planting allocations at Bandarawela Agrarian Centre.',
+              'Adhere to the advised diversification quota.'
+            ],
+            affected_crops: item.affected_crops || (item.target_crop_id === 3 ? 'Leeks' : item.target_crop_id === 4 ? 'Cabbage' : item.target_crop_id === 1 ? 'Green Beans' : 'Bandarawela Produce'),
+            officer_name: item.officer_name || 'W. M. Bandara (DO Officer)',
+            officer_designation: item.officer_designation || 'Agricultural Instructor (AI) • Bandarawela',
+            sent_count: item.sent_count || 50,
+            created_at: item.created_at || new Date().toISOString(),
+            target_division: item.target_division || 'Bandarawela',
+            target_district: item.target_district || 'Badulla'
           };
         });
-        setBroadcasts(merged);
+        setBroadcasts(mapped);
       } else {
         setBroadcasts([]);
       }
     } catch (err) {
-      console.warn('Utilizing Bandarawela seed broadcasts fallback:', err.message);
+      console.warn('Failed to load broadcasts from API:', err.message);
       setBroadcasts([]);
     }
   };
@@ -80,11 +112,49 @@ export default function Broadcasts() {
     }));
   };
 
+  const handleOpenEdit = (b) => {
+    setEditingBroadcast(b);
+    setEditFormData({
+      title_en: b.title_en || '',
+      title_si: b.title_si || '',
+      title_ta: b.title_ta || '',
+      message_en: b.message_en || '',
+      message_si: b.message_si || '',
+      message_ta: b.message_ta || '',
+      severity: b.severity || 'MEDIUM'
+    });
+  };
+
+  const handleSaveEdit = async (e) => {
+    if (e) e.preventDefault();
+    if (!editingBroadcast) return;
+    setEditSaving(true);
+    try {
+      await API.put(`/broadcasts/${editingBroadcast.id}`, editFormData);
+      setEditingBroadcast(null);
+      fetchBroadcasts();
+    } catch (err) {
+      console.error('Failed to update directive:', err);
+      alert('Failed to update directive: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
+  const handleDeleteDirective = async (id) => {
+    try {
+      await API.delete(`/broadcasts/${id}`);
+      setDeletingId(null);
+      fetchBroadcasts();
+    } catch (err) {
+      console.error('Failed to delete directive:', err);
+      alert('Failed to delete directive: ' + (err.response?.data?.message || err.message));
+    }
+  };
+
   return (
     <div className="space-y-6 animate-fadeIn pb-12">
-      {/* ========================================================================= */}
-      {/* 🏛️ MODERN HEADER WITH ASVANNA BRAND DESIGN                               */}
-      {/* ========================================================================= */}
+      {/* Page Header */}
       <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-3xl p-6 sm:p-7 shadow-card relative overflow-hidden">
         <div className="absolute top-0 right-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
 
@@ -100,11 +170,14 @@ export default function Broadcasts() {
             </h1>
 
             <p className="text-xs sm:text-sm font-medium text-slate-600 leading-relaxed">
-              {t('broadcast_page_desc', 'Official regulatory notifications, regional crop quota warnings, and agro-weather advisories published directly by the Department of Agrarian Development for upcountry growers.')}
+              {role === 'FARMER'
+                ? t('farmer_directives_desc', 'Official advisories, crop quota directives, and weather warnings issued by Agrarian Development Officers for your regional cluster.')
+                : t('broadcast_page_desc', 'Official regulatory notifications, regional crop quota warnings, and agro-weather advisories published directly by the Department of Agrarian Development for upcountry growers.')
+              }
             </p>
           </div>
 
-          {(role === 'OFFICER' || role === 'ADMIN') && (
+          {isOfficerOrAdmin && (
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setIsModalOpen(true)}
@@ -134,8 +207,8 @@ export default function Broadcasts() {
               <AlertTriangle className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('critical_gluts', 'Critical Gluts')}</p>
-              <p className="text-base font-black text-red-700">{broadcasts.filter(b => b.severity === 'CRITICAL' || b.category === 'CULTIVATION_GLUT').length} {t('over_planted', 'Over-Planted')}</p>
+              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('critical_gluts', 'Critical Directives')}</p>
+              <p className="text-base font-black text-red-700">{broadcasts.filter(b => b.severity === 'CRITICAL' || b.severity === 'HIGH').length} {t('high_priority', 'High Priority')}</p>
             </div>
           </div>
 
@@ -145,7 +218,7 @@ export default function Broadcasts() {
             </div>
             <div>
               <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('connected_farmers', 'Connected Farmers')}</p>
-              <p className="text-base font-black text-slate-900">{broadcasts.reduce((acc, b) => acc + (b.sent_count || 0), 0)} {t('verified', 'Verified')}</p>
+              <p className="text-base font-black text-slate-900">50 {t('verified', 'Verified')}</p>
             </div>
           </div>
 
@@ -161,9 +234,7 @@ export default function Broadcasts() {
         </div>
       </div>
 
-      {/* ========================================================================= */}
-      {/* 🏷️ FILTER TABS                                                           */}
-      {/* ========================================================================= */}
+      {/* Filter Tabs */}
       <div className="flex flex-wrap items-center gap-2">
         <button
           onClick={() => setActiveCategory('ALL')}
@@ -214,221 +285,190 @@ export default function Broadcasts() {
         </button>
       </div>
 
-      {/* ========================================================================= */}
-      {/* 🎨 SEVERITY OUTLINE COLOR SYSTEM GUIDE / LEGEND                           */}
-      {/* ========================================================================= */}
-      <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-4 shadow-xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-              <ShieldAlert className="w-4 h-4 text-primary" />
-              <span>{t('outline_classification', 'Officer Alert Outline Classification:')}</span>
-            </span>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs font-bold">
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-50 border-2 border-red-500 text-red-800 shadow-xs">
-              <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse"></span>
-              <span>{t('red_outline_desc', 'Red Outline: Warning & Emergency (Critical Glut / Quota Halt)')}</span>
-            </div>
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 border-2 border-amber-500 text-amber-800 shadow-xs">
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-              <span>{t('yellow_outline_desc', 'Yellow Outline: Normal Warning (Weather / Precautionary)')}</span>
-            </div>
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 border-2 border-emerald-500 text-emerald-800 shadow-xs">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-              <span>{t('green_outline_desc', 'Green Outline: Advisory & Opportunity (Deficit & Prices)')}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ========================================================================= */}
-      {/* 📋 DIRECTIVE CARDS (Structured with Dynamic Severity Outlines)             */}
-      {/* ========================================================================= */}
-      <div className="space-y-5">
+      {/* Broadcast Feed List */}
+      <div className="space-y-4">
         {filteredBroadcasts.length === 0 ? (
-          <div className="py-16 px-6 text-center bg-surface-container-low/40 border border-dashed border-outline-variant/40 rounded-3xl space-y-3">
-            <div className="w-14 h-14 rounded-2xl bg-secondary/10 text-secondary flex items-center justify-center mx-auto">
-              <Radio className="w-7 h-7 text-secondary" />
-            </div>
-            <h3 className="font-bold text-base text-on-surface">
-              {lang === 'si' ? 'මෙම කාණ්ඩය යටතේ නිවේදන නොමැත' : 'No Directives in this Category'}
+          <div className="bg-surface-container-lowest border border-dashed border-outline-variant/50 rounded-3xl p-12 text-center space-y-3">
+            <Radio className="w-10 h-10 text-outline mx-auto" />
+            <h3 className="font-headline font-bold text-slate-800 text-base">
+              {lang === 'si' ? 'සක්‍රීය නිවේදන නොමැත' : 'No active bulletins found'}
             </h3>
-            <p className="text-xs text-on-surface-variant max-w-md mx-auto">
+            <p className="text-xs text-slate-500 max-w-md mx-auto">
               {lang === 'si'
-                ? 'තෝරාගත් කාණ්ඩය යටතේ නිකුත් කරන ලද සක්‍රීය කෘෂිකාර්මික උපදේශන හෝ අනතුරු ඇඟවීම් නොමැත.'
-                : 'There are no active agrarian directives or alerts matching the selected category filter.'}
+                ? 'තෝරාගත් කාණ්ඩය යටතේ නිවේදන කිසිවක් හමු නොවීය.'
+                : 'There are currently no official directives posted for this filter category.'}
             </p>
           </div>
         ) : (
           <>
             {filteredBroadcasts.slice((page - 1) * 4, page * 4).map((b) => {
-          const isAcked = acknowledgedAlerts[b.id];
-          const sev = (b.severity || 'WARNING').toUpperCase();
-          const isEmergency = sev === 'CRITICAL' || sev === 'EMERGENCY' || sev === 'HIGH';
-          const isNormalWarning = sev === 'WARNING' || sev === 'MEDIUM' || sev === 'MODERATE';
-          
-          // Outline & Style Determination
-          let outlineClass = 'border-2 border-emerald-500 shadow-md shadow-emerald-500/10 ring-1 ring-emerald-400/20';
-          let topStripClass = 'bg-emerald-600';
-          let badgeClass = 'bg-emerald-100 text-emerald-900 border-2 border-emerald-400';
-          let severityLabel = t('routine_advisory', 'ROUTINE ADVISORY');
-          let subTag = t('routine_advisory_sub', 'Market Opportunity • Regular Agrarian Notice');
-          let messageBoxBorder = 'border-l-4 border-emerald-500 bg-emerald-50/30';
+              const isAcked = !!acknowledgedAlerts[b.id];
+              const cardBorder = b.severity === 'CRITICAL' || b.severity === 'HIGH'
+                ? 'border-red-400 bg-red-50/20'
+                : b.severity === 'MEDIUM'
+                ? 'border-amber-400 bg-amber-50/20'
+                : 'border-emerald-400 bg-emerald-50/20';
 
-          if (isEmergency) {
-            outlineClass = 'border-2 border-red-500 shadow-md shadow-red-500/15 ring-1 ring-red-400/30';
-            topStripClass = 'bg-red-600';
-            badgeClass = 'bg-red-100 text-red-900 border-2 border-red-500 font-black';
-            severityLabel = t('emergency_critical_warning', 'EMERGENCY & CRITICAL WARNING');
-            subTag = t('emergency_critical_sub', 'Immediate Regulatory Action • Quota Halt Enforced');
-            messageBoxBorder = 'border-l-4 border-red-500 bg-red-50/40 text-red-950';
-          } else if (isNormalWarning) {
-            outlineClass = 'border-2 border-amber-500 shadow-md shadow-amber-500/15 ring-1 ring-amber-400/30';
-            topStripClass = 'bg-amber-500';
-            badgeClass = 'bg-amber-100 text-amber-900 border-2 border-amber-500 font-black';
-            severityLabel = t('normal_warning', 'NORMAL WARNING');
-            subTag = t('normal_warning_sub', 'Precautionary Directive • Agro-Weather or Disease Alert');
-            messageBoxBorder = 'border-l-4 border-amber-500 bg-amber-50/40 text-amber-950';
-          }
+              const badgeColor = b.severity === 'CRITICAL' || b.severity === 'HIGH'
+                ? 'bg-red-100 text-red-900 border-red-300'
+                : b.severity === 'MEDIUM'
+                ? 'bg-amber-100 text-amber-900 border-amber-300'
+                : 'bg-emerald-100 text-emerald-900 border-emerald-300';
 
-          return (
-            <div
-              key={b.id}
-              className={`bg-surface-container-lowest rounded-3xl p-6 transition-all hover:shadow-xl relative overflow-hidden ${outlineClass}`}
-            >
-              {/* Category Top Strip Accent */}
-              <div className={`h-2 absolute top-0 left-0 right-0 ${topStripClass}`} />
+              const messageBoxBg = b.severity === 'CRITICAL' || b.severity === 'HIGH'
+                ? 'bg-red-50/60 border border-red-200 text-red-950'
+                : b.severity === 'MEDIUM'
+                ? 'bg-amber-50/60 border border-amber-200 text-amber-950'
+                : 'bg-emerald-50/60 border border-emerald-200 text-emerald-950';
 
-              {/* Card Header */}
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pt-1">
-                <div className="space-y-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-mono text-[11px] font-extrabold px-2.5 py-0.5 rounded-lg bg-surface-container text-slate-700 border border-outline-variant/40">
-                      REF: {b.ref_code || `BW-DIR-${b.id}`}
-                    </span>
+              return (
+                <div
+                  key={`bcast_${b.id}`}
+                  className={`bg-surface-container-lowest border-2 ${cardBorder} rounded-3xl p-5 sm:p-6 shadow-card hover:shadow-md transition space-y-4`}
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                    <div className="space-y-1.5">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className={`px-2.5 py-0.5 text-[11px] font-black uppercase rounded-full border ${badgeColor}`}>
+                          {b.severity}
+                        </span>
 
-                    <span className={`px-3 py-1 text-[11px] font-black rounded-lg uppercase tracking-wider flex items-center gap-1.5 ${badgeClass}`}>
-                      {isEmergency && <AlertTriangle className="w-3.5 h-3.5 text-red-600" />}
-                      {isNormalWarning && <Radio className="w-3.5 h-3.5 text-amber-600" />}
-                      {!isEmergency && !isNormalWarning && <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />}
-                      <span>{severityLabel}</span>
-                    </span>
+                        <span className="text-[11px] font-mono font-bold text-slate-500 bg-surface-container-high px-2 py-0.5 rounded">
+                          {b.ref_code}
+                        </span>
 
-                    <span className="text-[11px] font-semibold text-slate-500 bg-surface-container-low px-2 py-0.5 rounded-md border border-outline-variant/20">
-                      {subTag}
-                    </span>
+                        {b.affected_crops && (
+                          <span className="text-[11px] font-bold text-slate-800 bg-surface-container-low px-2.5 py-0.5 rounded-lg border border-outline-variant/30 flex items-center gap-1">
+                            <span>🌱</span>
+                            <span>{b.affected_crops}</span>
+                          </span>
+                        )}
+                      </div>
 
-                    {b.affected_crops && (
-                      <span className="text-[11px] font-bold text-slate-800 bg-surface-container-low px-2.5 py-0.5 rounded-lg border border-outline-variant/30 flex items-center gap-1">
-                        <span>🌱</span>
-                        <span>{b.affected_crops}</span>
-                      </span>
+                      <h3 className="font-headline font-black text-slate-900 text-lg sm:text-xl tracking-tight pt-0.5">
+                        {getBroadcastTitle(b)}
+                      </h3>
+
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 font-medium">
+                        <span className="flex items-center gap-1">
+                          <UserCheck className="w-3.5 h-3.5 text-primary" />
+                          <span>{b.officer_name || 'Divisional Officer'} ({b.officer_designation || 'Agricultural Instructor'})</span>
+                        </span>
+                        <span>•</span>
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                          <span>{new Date(b.created_at).toLocaleDateString()} at {new Date(b.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Actions: View Form, Edit, Delete */}
+                    <div className="flex flex-wrap items-center gap-2 self-start flex-shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedNoticeForModal(b)}
+                        className="px-3.5 py-2 rounded-xl bg-surface-container text-slate-800 hover:bg-surface-container-high border border-outline-variant/40 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                      >
+                        <FileText className="w-3.5 h-3.5 text-primary" />
+                        <span>{t('view_official_form', 'View Official Form')}</span>
+                      </button>
+
+                      {isOfficerOrAdmin && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEdit(b)}
+                            className="px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs"
+                            title="Edit Directive"
+                          >
+                            <Edit className="w-3.5 h-3.5 text-amber-700" />
+                            <span>{t('edit', 'Edit')}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDeletingId(b.id)}
+                            className="px-3 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-800 border border-red-300 text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs"
+                            title="Delete Directive"
+                          >
+                            <Trash2 className="w-3.5 h-3.5 text-red-700" />
+                            <span>{t('delete', 'Delete')}</span>
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Directive Message Box */}
+                  <div className={`p-4 rounded-2xl space-y-3 ${messageBoxBg}`}>
+                    <p className="text-xs sm:text-sm font-semibold leading-relaxed">
+                      {getBroadcastMessage(b)}
+                    </p>
+
+                    {b.prescribed_actions && b.prescribed_actions.length > 0 && (
+                      <div className="pt-2 border-t border-black/10 space-y-1.5">
+                        <p className="text-[11px] font-black uppercase tracking-wider text-primary flex items-center gap-1.5">
+                          <Sparkles className="w-3.5 h-3.5" />
+                          <span>{t('prescribed_actions_farmers', 'Prescribed Action Directives for Farmers:')}</span>
+                        </p>
+                        <div className="space-y-1">
+                          {b.prescribed_actions.map((act, i) => (
+                            <div key={i} className="flex items-start gap-2 text-xs font-medium text-slate-800">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 flex-shrink-0 mt-0.5" />
+                              <span>{act}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     )}
                   </div>
 
-                  <h3 className="font-headline font-black text-slate-900 text-lg sm:text-xl tracking-tight pt-0.5">
-                    {getBroadcastTitle(b)}
-                  </h3>
+                  {/* Card Footer */}
+                  <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                    <div className="flex items-center gap-2 text-slate-600 font-semibold">
+                      <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                      <span>{t('target_area', 'Target Area:')} <strong className="text-slate-800">{b.target_division || 'Bandarawela Division'}</strong></span>
+                    </div>
 
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 font-medium">
-                    <span className="flex items-center gap-1">
-                      <UserCheck className="w-3.5 h-3.5 text-primary" />
-                      <span>{b.officer_name || 'Divisional Officer'} ({b.officer_designation || 'Agricultural Instructor'})</span>
-                    </span>
-                    <span>•</span>
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                      <span>{new Date(b.created_at).toLocaleDateString()} at {new Date(b.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                    </span>
-                  </div>
-                </div>
+                    <div className="flex items-center gap-3">
+                      <span className="flex items-center gap-1.5 text-emerald-900 font-bold bg-emerald-100/80 px-3 py-1 rounded-lg border border-emerald-200 text-[11px]">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
+                        <span>{t('dispatched_to_growers', 'Dispatched to {count} Registered Growers', { count: b.sent_count || 50 }).replace('{count}', b.sent_count || 50)}</span>
+                      </span>
 
-                <div className="flex items-center gap-2 self-start flex-shrink-0">
-                  <button
-                    onClick={() => setSelectedNoticeForModal(b)}
-                    className="px-3.5 py-2 rounded-xl bg-surface-container text-slate-800 hover:bg-surface-container-high border border-outline-variant/40 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <FileText className="w-3.5 h-3.5 text-primary" />
-                    <span>{t('view_official_form', 'View Official Form')}</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Directive Body Notice Box */}
-              <div className={`mt-4 p-4 rounded-2xl space-y-3 ${messageBoxBorder}`}>
-                <p className="text-xs sm:text-sm font-semibold leading-relaxed">
-                  {getBroadcastMessage(b)}
-                </p>
-
-                {/* Prescribed Action Checklist */}
-                {b.prescribed_actions && b.prescribed_actions.length > 0 && (
-                  <div className="pt-2 border-t border-outline-variant/20 space-y-1.5">
-                    <p className="text-[11px] font-black uppercase tracking-wider text-primary flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>{t('prescribed_actions_farmers', 'Prescribed Action Directives for Farmers:')}</span>
-                    </p>
-                    <div className="space-y-1">
-                      {b.prescribed_actions.map((act, i) => (
-                        <div key={i} className="flex items-start gap-2 text-xs font-medium text-slate-700">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                          <span>{act}</span>
-                        </div>
-                      ))}
+                      {role === 'FARMER' && (
+                        <button
+                          type="button"
+                          onClick={() => toggleAcknowledge(b.id)}
+                          className={`px-3 py-1 rounded-lg font-bold text-xs transition flex items-center gap-1 cursor-pointer ${
+                            isAcked
+                              ? 'bg-emerald-600 text-white shadow-xs'
+                              : 'bg-surface-container text-slate-700 hover:bg-surface-container-high border border-outline-variant/30'
+                          }`}
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                          <span>{isAcked ? t('acknowledged', 'Acknowledged') : t('acknowledge_notice', 'Acknowledge Notice')}</span>
+                        </button>
+                      )}
                     </div>
                   </div>
-                )}
-              </div>
-
-              {/* Card Footer */}
-              <div className="mt-4 pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                <div className="flex items-center gap-2 text-slate-600 font-semibold">
-                  <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                  <span>{t('target_area', 'Target Area:')} <strong className="text-slate-800">{b.target_division || 'Bandarawela Division'}</strong></span>
                 </div>
+              );
+            })}
 
-                <div className="flex items-center gap-3">
-                  <span className="flex items-center gap-1.5 text-emerald-900 font-bold bg-emerald-100/80 px-3 py-1 rounded-lg border border-emerald-200 text-[11px]">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
-                    <span>{t('dispatched_to_growers', 'Dispatched to {count} Registered Growers', { count: b.sent_count || 142 }).replace('{count}', b.sent_count || 142)}</span>
-                  </span>
+            <Pagination
+              currentPage={page}
+              totalItems={filteredBroadcasts.length}
+              itemsPerPage={4}
+              onPageChange={setPage}
+            />
+          </>
+        )}
+      </div>
 
-                  {role === 'FARMER' && (
-                    <button
-                      onClick={() => toggleAcknowledge(b.id)}
-                      className={`px-3 py-1 rounded-lg font-bold text-xs transition flex items-center gap-1 cursor-pointer ${
-                        isAcked
-                          ? 'bg-emerald-600 text-white shadow-xs'
-                          : 'bg-surface-container text-slate-700 hover:bg-surface-container-high border border-outline-variant/30'
-                      }`}
-                    >
-                      <Check className="w-3.5 h-3.5" />
-                      <span>{isAcked ? t('acknowledged', 'Acknowledged') : t('acknowledge_notice', 'Acknowledge Notice')}</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-
-        <Pagination
-          currentPage={page}
-          totalItems={filteredBroadcasts.length}
-          itemsPerPage={4}
-          onPageChange={setPage}
-        />
-      </>
-    )}
-  </div>
-
-      {/* ========================================================================= */}
-      {/* 📄 WELL-DETAILED OFFICIAL DIRECTIVE FORM MODAL                           */}
-      {/* ========================================================================= */}
+      {/* Official Directive Form Modal */}
       {selectedNoticeForModal && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-surface-container-lowest rounded-3xl max-w-2xl w-full shadow-2xl p-6 sm:p-8 border border-outline-variant/30 my-8 animate-scaleUp space-y-6">
-            {/* Modal Header & Close */}
             <div className="flex items-center justify-between border-b border-outline-variant/20 pb-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold">
@@ -446,28 +486,22 @@ export default function Broadcasts() {
               <button
                 type="button"
                 onClick={() => setSelectedNoticeForModal(null)}
-                className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-slate-500 hover:text-slate-900 transition"
+                className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-slate-500 hover:text-slate-900 transition cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Official Letterhead / Detailed Form Layout */}
             <div className="border border-slate-300 rounded-2xl p-5 bg-white space-y-4 text-xs font-medium text-slate-800 shadow-xs">
-              {/* Form Top Strip */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3 text-[11px] text-slate-600 font-mono">
                 <div>
                   <span className="font-bold text-slate-800">FORM REF:</span> {selectedNoticeForModal.ref_code}
-                </div>
-                <div>
-                  <span className="font-bold text-slate-800">CIRCULAR TYPE:</span> AGR-DIR/BW-{selectedNoticeForModal.category}
                 </div>
                 <div>
                   <span className="font-bold text-slate-800">DATE:</span> {new Date(selectedNoticeForModal.created_at).toLocaleDateString()}
                 </div>
               </div>
 
-              {/* Title & Severity */}
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <span className="px-2 py-0.5 text-[10px] font-black rounded uppercase bg-red-100 text-red-900 border border-red-200">
@@ -485,41 +519,23 @@ export default function Broadcasts() {
                 </p>
               </div>
 
-              {/* Metadata Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 text-[11px]">
-                <div>
-                  <span className="text-slate-500 block">Affected Commodity:</span>
-                  <strong className="text-slate-900">{selectedNoticeForModal.affected_crops}</strong>
-                </div>
-                <div>
-                  <span className="text-slate-500 block">Saturation Level:</span>
-                  <strong className="text-red-700">{selectedNoticeForModal.saturation_pct ? `${selectedNoticeForModal.saturation_pct}% of Max Quota` : 'Elevated Risk'}</strong>
-                </div>
-                <div>
-                  <span className="text-slate-500 block">Issuing Officer:</span>
-                  <strong className="text-slate-900">{selectedNoticeForModal.officer_name}</strong>
-                </div>
-              </div>
-
-              {/* Full Notice Content (Trilingual Form Presentation) */}
               <div className="space-y-2 pt-1">
                 <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 border-b border-slate-200 pb-1">
-                  1. Official Statement & Market Evaluation
+                  1. Official Directive Statement
                 </h4>
                 <p className="text-xs text-slate-700 leading-relaxed">
                   {selectedNoticeForModal.message_en}
                 </p>
                 <div className="p-3 bg-emerald-50/70 border border-emerald-200 rounded-xl text-xs text-slate-800 leading-relaxed font-medium">
-                  <span className="font-bold block text-emerald-950 mb-0.5">සිංහල උපදේශය (Sinhala Translation):</span>
+                  <span className="font-bold block text-emerald-950 mb-0.5">සිංහල උපදේශය (Sinhala):</span>
                   {selectedNoticeForModal.message_si}
                 </div>
               </div>
 
-              {/* Prescribed Action Points */}
               {selectedNoticeForModal.prescribed_actions && (
                 <div className="space-y-2 pt-1">
                   <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 border-b border-slate-200 pb-1">
-                    2. Mandatory Regulatory Actions & Farmer Directives
+                    2. Mandatory Guidelines
                   </h4>
                   <ul className="space-y-1.5">
                     {selectedNoticeForModal.prescribed_actions.map((act, idx) => (
@@ -534,7 +550,6 @@ export default function Broadcasts() {
                 </div>
               )}
 
-              {/* Official Seal and Sign-off */}
               <div className="pt-3 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[11px] text-slate-600">
                 <div>
                   <p className="font-bold text-slate-800">Authorized by:</p>
@@ -546,17 +561,16 @@ export default function Broadcasts() {
                     ASC
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-slate-800 uppercase">Verified Government Directive</p>
-                    <p className="text-[9px] text-slate-500">Bandarawela Upcountry Agrarian Basin</p>
+                    <p className="text-[10px] font-black text-slate-800 uppercase">Verified Directive</p>
+                    <p className="text-[9px] text-slate-500">Bandarawela Division</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Modal Actions */}
             <div className="flex items-center justify-between gap-3 pt-2">
               <div className="text-xs text-slate-500 font-medium">
-                Distributed via ASVANNA push notifications & SMS.
+                Official regulatory bulletin issued for farmers.
               </div>
 
               <div className="flex items-center gap-2">
@@ -573,7 +587,7 @@ export default function Broadcasts() {
                   onClick={() => setSelectedNoticeForModal(null)}
                   className="px-5 py-2.5 rounded-xl bg-primary text-white font-bold text-xs shadow-md transition cursor-pointer"
                 >
-                  Done
+                  Close
                 </button>
               </div>
             </div>
@@ -581,7 +595,159 @@ export default function Broadcasts() {
         </div>
       )}
 
-      {/* Broadcast Modal for Officers */}
+      {/* Edit Directive Modal for Officers/Admins */}
+      {editingBroadcast && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-surface-container-lowest rounded-3xl max-w-lg w-full shadow-2xl p-6 sm:p-7 border border-outline-variant/30 my-8 animate-scaleUp space-y-5">
+            <div className="flex items-center justify-between border-b border-outline-variant/20 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
+                  <Edit className="w-4 h-4" />
+                </div>
+                <h3 className="font-headline font-black text-lg text-slate-900">
+                  Edit Advisory Directive
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingBroadcast(null)}
+                className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-slate-500 hover:text-slate-900 transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdit} className="space-y-4 text-xs">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">
+                  Title (English) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editFormData.title_en}
+                  onChange={(e) => setEditFormData({ ...editFormData, title_en: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary/20 text-slate-900 font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">
+                  Title (සිංහල)
+                </label>
+                <input
+                  type="text"
+                  value={editFormData.title_si}
+                  onChange={(e) => setEditFormData({ ...editFormData, title_si: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary/20 text-slate-900 font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">
+                  Directive Statement (English) <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  rows={3}
+                  required
+                  value={editFormData.message_en}
+                  onChange={(e) => setEditFormData({ ...editFormData, message_en: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary/20 text-slate-900"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">
+                  Directive Statement (සිංහල)
+                </label>
+                <textarea
+                  rows={3}
+                  value={editFormData.message_si}
+                  onChange={(e) => setEditFormData({ ...editFormData, message_si: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary/20 text-slate-900"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">
+                  Alert Severity
+                </label>
+                <select
+                  value={editFormData.severity}
+                  onChange={(e) => setEditFormData({ ...editFormData, severity: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary/20 text-slate-900 font-bold bg-white cursor-pointer"
+                >
+                  <option value="LOW">LOW — Market Notice</option>
+                  <option value="MEDIUM">MEDIUM — Agro Weather Alert</option>
+                  <option value="HIGH">HIGH — Overplanting Precaution</option>
+                  <option value="CRITICAL">CRITICAL — Immediate Cultivation Halt</option>
+                </select>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setEditingBroadcast(null)}
+                  className="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 font-bold hover:bg-slate-100 transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={editSaving}
+                  className="px-5 py-2 rounded-xl bg-primary hover:bg-primary-container text-white font-bold transition flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
+                >
+                  {editSaving ? (
+                    <>
+                      <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <span>Save Changes</span>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deletingId && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-surface-container-lowest rounded-3xl max-w-sm w-full shadow-2xl p-6 border border-outline-variant/30 animate-scaleUp space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-red-100 text-red-700 flex items-center justify-center mx-auto font-bold">
+              <Trash2 className="w-6 h-6" />
+            </div>
+            <div className="text-center space-y-1">
+              <h3 className="font-headline font-black text-lg text-slate-900">
+                Delete Advisory Directive?
+              </h3>
+              <p className="text-xs text-slate-600">
+                Are you sure you want to permanently remove this directive bulletin? This cannot be undone.
+              </p>
+            </div>
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setDeletingId(null)}
+                className="flex-1 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-bold text-xs hover:bg-slate-100 transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDeleteDirective(deletingId)}
+                className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs shadow-md transition cursor-pointer"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Broadcast Modal for Officers to issue new directives */}
       <BroadcastModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

@@ -446,21 +446,26 @@ class MarketplaceController {
 
   /**
    * GET /api/v1/marketplace/orders/:orderId/messages
+   * Direct order messages automatically expire after 5 days
    */
   static async getMessages(req, res, next) {
     try {
       const { orderId } = req.params;
-      // Fetch persisted history from DB first
+      // Fetch persisted history from DB first - Filter out messages older than 5 days
       const dbRes = await db.query(
-        'SELECT * FROM chat_messages WHERE order_id = $1 ORDER BY created_at ASC',
+        "SELECT * FROM chat_messages WHERE order_id = $1 AND created_at >= NOW() - INTERVAL '5 days' ORDER BY created_at ASC",
         [orderId]
       );
       if (dbRes.rows && dbRes.rows.length > 0) {
         return ApiResponse.success(res, dbRes.rows, 'Chat history retrieved from DB');
       }
 
-      // Fallback to real-time store
-      const history = realtimeStore.getChatHistory(orderId);
+      // Fallback to real-time store (filter out older than 5 days)
+      const fiveDaysAgo = Date.now() - 5 * 24 * 60 * 60 * 1000;
+      const history = (realtimeStore.getChatHistory(orderId) || []).filter(m => {
+        const time = new Date(m.created_at || m.timestamp || 0).getTime();
+        return time >= fiveDaysAgo;
+      });
       return ApiResponse.success(res, history, 'Chat history retrieved');
     } catch (err) {
       next(err);
@@ -486,6 +491,35 @@ class MarketplaceController {
            VALUES ($1, $2, $3, $4, $5, $6)`,
           [orderId, listingId, user.id, user.full_name, user.role, text]
         );
+
+        // 3. Create notification for counterpart (Buyer or Farmer)
+        const orderRes = await db.query(
+          `SELECT mo.buyer_id, ml.farmer_id, mo.order_code, c.name_en as crop_name
+           FROM marketplace_orders mo
+           JOIN marketplace_listings ml ON mo.listing_id = ml.id
+           JOIN crops c ON ml.crop_id = c.id
+           WHERE mo.id = $1`,
+          [orderId]
+        );
+
+        if (orderRes.rows && orderRes.rows.length > 0) {
+          const ord = orderRes.rows[0];
+          const isSenderFarmer = Number(user.id) === Number(ord.farmer_id) || user.role === 'FARMER';
+          const recipientId = isSenderFarmer ? ord.buyer_id : ord.farmer_id;
+
+          if (recipientId) {
+            await db.query(
+              `INSERT INTO notification_logs (
+                user_id, notification_type, channel, title, body, status, delivered_at
+              ) VALUES ($1, 'CHAT_MESSAGE', 'IN_APP', $2, $3, 'DELIVERED', CURRENT_TIMESTAMP)`,
+              [
+                recipientId,
+                `💬 New Message from ${user.full_name} (${user.role})`,
+                `Order #${ord.order_code || orderId} (${ord.crop_name}): "${text.slice(0, 60)}${text.length > 60 ? '...' : ''}"`
+              ]
+            );
+          }
+        }
       } catch (dbErr) {
         console.warn('⚠️ Note on persisting chat message to DB:', dbErr.message);
       }

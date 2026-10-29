@@ -153,6 +153,21 @@ export default function ChatDrawer({
           </div>
         )}
 
+        {/* 5-Day Auto-Expiration Notice Banner */}
+        <div className="px-4 py-1.5 bg-amber-50 dark:bg-amber-950/30 border-b border-amber-200/60 dark:border-amber-800/40 flex items-center justify-between text-[11px] text-amber-800 dark:text-amber-300 font-medium">
+          <div className="flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-xs text-amber-600">schedule</span>
+            <span>
+              {lang === 'si'
+                ? 'දින 5 කට පසු පණිවිඩ ස්වයංක්‍රීයව මැකී යයි (5-Day Auto-Expiry)'
+                : 'Direct messages automatically expire after 5 days'}
+            </span>
+          </div>
+          <span className="text-[10px] uppercase font-bold bg-amber-200/70 text-amber-900 px-1.5 py-0.5 rounded">
+            5 Days
+          </span>
+        </div>
+
         {/* Message Thread */}
         <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-surface-container-low/40">
           {loading && messages.length === 0 ? (

@@ -213,6 +213,12 @@ class PlantingController {
       `;
       const params = [];
 
+      // Role-scoped privacy: Farmers can only see their own cultivation records
+      if (req.user && req.user.role === 'FARMER') {
+        params.push(req.user.id);
+        query += ` AND pr.farmer_id = $${params.length}`;
+      }
+
       if (status && status !== 'All') {
         params.push(status);
         query += ` AND pr.status = $${params.length}`;

@@ -639,5 +639,11 @@
   "yield_est_actual": "Yield (Est. / Actual)",
   "status_land_area": "Status & Land Area",
   "plot_action": "Plot Action",
-  "buyer_purchaser": "Buyer / Purchaser"
+  "buyer_purchaser": "Buyer / Purchaser",
+  "officer_directives_title": "Officer Directives & Alerts",
+  "farmer_directives_desc": "Official advisories, crop quota directives, and weather warnings issued by Agrarian Development Officers for your regional cluster.",
+  "farmer_history_title": "My Farm Cultivation & Sales History",
+  "farmer_history_desc": "Personal ledger of your active and historical planting plots, yield records, and direct produce sales.",
+  "tab_my_farm_history": "My Farm Cultivation History",
+  "tab_my_orders_received": "Orders Received for My Crops"
 }

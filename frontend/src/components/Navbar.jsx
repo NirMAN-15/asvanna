@@ -72,7 +72,6 @@ export default function Navbar() {
         { path: '/prices', label: t('nav_wholesale_rates', 'Wholesale Rates'), icon: 'trending_up' },
         { path: '/weather', label: t('nav_agro_weather', 'Agro Weather'), icon: 'cloud' },
         { path: '/farmers', label: t('nav_farmer_directory'), icon: 'group' },
-        { path: '/marketplace', label: t('nav_surplus_marketplace'), icon: 'storefront' },
         { path: '/broadcasts', label: t('nav_advisory_broadcasts'), icon: 'campaign' },
         { path: '/settings', label: t('settings'), icon: 'settings' },
       ];
@@ -235,13 +234,14 @@ export default function Navbar() {
 
           {/* Notifications Icon with Badge */}
           <div 
-            className="relative cursor-pointer hover:scale-105 transition-transform p-1 flex-shrink-0 flex items-center justify-center text-on-surface-variant hover:text-primary"
-            onClick={() => navigate('/broadcasts')}
-            title="Notifications"
+            className="relative cursor-pointer hover:scale-105 transition-transform p-1.5 flex-shrink-0 flex items-center justify-center text-on-surface-variant hover:text-primary"
+            onClick={() => navigate(role === 'BUYER' ? '/marketplace' : '/broadcasts')}
+            title={role === 'BUYER' ? "Notifications & Orders" : "Notifications & Directives"}
           >
             <span className="material-symbols-outlined text-[24px] sm:text-[26px]">
               notifications
             </span>
+            <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white ring-1 ring-red-400 animate-pulse" />
           </div>
 
           {/* Avatar with Ring */}
